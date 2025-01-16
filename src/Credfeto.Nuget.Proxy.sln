@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.181
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{6BDAE5C1-D308-42EF-8B1C-60964D58A384}"
+ProjectSection(SolutionItems) = preProject
+	CodeAnalysis.ruleset = CodeAnalysis.ruleset
+	global.json = global.json
+	..\CHANGELOG.md = ..\CHANGELOG.md
+	..\README.md = ..\README.md
+EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Proxy", "Credfeto.Nuget.Proxy\Credfeto.Nuget.Proxy.csproj", "{2E5D5941-7383-4D39-9BA6-915AE063C072}"
+EndProject
+Global
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+EndGlobal

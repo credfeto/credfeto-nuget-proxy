@@ -1,0 +1,6 @@
+@credfeto_proxy_HostAddress = http://localhost:5166
+
+GET {{credfeto_proxy_HostAddress}}:/v3/index.json
+Accept: application/json
+
+###
