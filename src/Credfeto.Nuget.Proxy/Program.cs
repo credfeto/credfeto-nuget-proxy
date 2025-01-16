@@ -40,9 +40,8 @@ public static class Program
     private static Task RunAsync(WebApplication application)
     {
         Console.WriteLine("App Created");
+        WebApplication app = (WebApplication) application.UseMiddleware<JsonMiddleware>();
 
-        application.UseMiddleware<JsonMiddleware>();
-
-        return application.RunAsync();
+        return app.RunAsync();
     }
 }

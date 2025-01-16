@@ -1,6 +1,16 @@
-@credfeto_proxy_HostAddress = http://localhost:5166
+@credfeto_proxy_HostAddress = https://localhost:5167
+
+###
 
 GET {{credfeto_proxy_HostAddress}}:/v3/index.json
 Accept: application/json
 
 ###
+
+GET https://api.nuget.org/v3/index.json
+Accept: application/json
+
+###
+
+GET https://api.nuget.local:5555/v3/index.json
+Accept: application/json

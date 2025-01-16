@@ -29,7 +29,7 @@ internal static class HttpClientSetup
     private static void InitializeJsonClient(Uri upstreamUrl, HttpClient httpClient, TimeSpan httpTimeout)
     {
         httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
-        httpClient.DefaultRequestVersion = HttpVersion.Version20;
+        httpClient.DefaultRequestVersion = HttpVersion.Version11;
         httpClient.BaseAddress = upstreamUrl;
         httpClient.DefaultRequestHeaders.Accept.Add(new(mediaType: "application/json"));
         httpClient.DefaultRequestHeaders.UserAgent.Add(new(new ProductHeaderValue(name: VersionInformation.Product, version: VersionInformation.Version)));
