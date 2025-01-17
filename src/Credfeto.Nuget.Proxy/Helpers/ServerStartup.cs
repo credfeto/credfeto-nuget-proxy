@@ -67,10 +67,10 @@ internal static class ServerStartup
 
         foreach (Uri upstream in appConfig.UpstreamUrls)
         {
-            Console.WriteLine($"* {upstream}");
+            Console.WriteLine($"* {upstream.CleanUri()}");
         }
 
-        Console.WriteLine($"Public Uri: {appConfig.PublicUrl}");
+        Console.WriteLine($"Public Uri: {appConfig.PublicUrl.CleanUri()}");
         Console.WriteLine($"Data: {appConfig.Packages}");
 
         Directory.CreateDirectory(appConfig.Packages);
