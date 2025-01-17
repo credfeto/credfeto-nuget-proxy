@@ -57,7 +57,7 @@ echo "Clear $OUTFOLDER" \
       -p 8080:8080/tcp \
       -p 8081:8081/tcp \
       -p 8081:8081/udp \
-      -e Proxy__UpstreamUrl__0=http://api.nuget.org \
+      -e Proxy__UpstreamUrl__0=https://api.nuget.org \
       -e Proxy__PublicUrl=https://localhost:8081 \
       -e Proxy__Packages=/cache \
       -v /cache/nuget-proxy-test:/cache \

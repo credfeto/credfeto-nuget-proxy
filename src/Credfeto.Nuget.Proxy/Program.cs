@@ -40,13 +40,12 @@ public static class Program
     private static Task RunAsync(WebApplication application)
     {
         Console.WriteLine("App Created");
-        WebApplication app = (WebApplication) application.UseMiddleware<JsonMiddleware>()
-                                                         .UseMiddleware<NuPkgMiddleware>()
-            ;
+        return AddMiddleware(application).RunAsync();
+    }
 
-        // TODO: Add Exception middleware to handle things like polly
-        //  Polly.Timeout.TimeoutRejectedException -> 429 with 5 second delay
-        //  Polly.Bulkhead.BulkheadRejectedException-> 429 with 10 second delay
-        return app.RunAsync();
+    private static WebApplication AddMiddleware(WebApplication application)
+    {
+        return (WebApplication)application.UseMiddleware<JsonMiddleware>()
+                                          .UseMiddleware<NuPkgMiddleware>();
     }
 }
