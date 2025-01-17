@@ -69,7 +69,7 @@ public sealed class NuPkgMiddleware
     {
         if (File.Exists(packagePath))
         {
-            await ServeCachedFileAsync(context: context, packagePath: packagePath, cancellationToken: cancellationToken);
+            await this.ServeCachedFileAsync(context: context, packagePath: packagePath, cancellationToken: cancellationToken);
 
             return;
         }
@@ -79,7 +79,7 @@ public sealed class NuPkgMiddleware
 
     private string BuildPackagePath(string path)
     {
-        return Path.Combine(path1: this._config.Packages, path2: path.TrimStart('/'));
+        return Path.Combine(path1: this._config.Packages, path.TrimStart('/'));
     }
 
     private async Task GetFromUpstreamAsync(HttpContext context, string packagePath, CancellationToken cancellationToken)
@@ -102,6 +102,8 @@ public sealed class NuPkgMiddleware
 
             byte[] buffer = memoryStream.ToArray();
             await context.Response.Body.WriteAsync(buffer: buffer, cancellationToken: cancellationToken);
+
+            this._logger.UpstreamOk(upstream: requestUri, statusCode: result.StatusCode, length: buffer.Length);
 
             await this.SaveFileAsync(packagePath: packagePath, buffer: buffer, cancellationToken: cancellationToken);
         }
@@ -145,13 +147,14 @@ public sealed class NuPkgMiddleware
         return result;
     }
 
-    private static async Task ServeCachedFileAsync(HttpContext context, string packagePath, CancellationToken cancellationToken)
+    private async Task ServeCachedFileAsync(HttpContext context, string packagePath, CancellationToken cancellationToken)
     {
-        OkHeaders(context);
-
+        Uri requestUri = this.GetRequestUri(context);
         await using (Stream s = File.OpenRead(packagePath))
         {
+            OkHeaders(context);
             await s.CopyToAsync(destination: context.Response.Body, cancellationToken: cancellationToken);
+            this._logger.Cached(upstream: requestUri, length: s.Position);
         }
     }
 
