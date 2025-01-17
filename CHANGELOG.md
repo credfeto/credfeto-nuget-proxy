@@ -11,6 +11,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Changed
 - FF-3881 - Updated DotNet SDK to 7.0.200
 - SDK - Updated DotNet SDK to 9.0.102
+- Dependencies - Updated Credfeto.Enumeration to 1.2.53.824
 ### Removed
 ### Deployment Changes
 
