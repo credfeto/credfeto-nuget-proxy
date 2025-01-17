@@ -10,6 +10,8 @@ using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Polly.Bulkhead;
+using Polly.Timeout;
 
 namespace Credfeto.Nuget.Proxy.Middleware;
 
@@ -45,11 +47,22 @@ public sealed class NuPkgMiddleware
 
             if (context.Request.Path.Value.EndsWith(value: ".nupkg", comparisonType: StringComparison.OrdinalIgnoreCase))
             {
+                try
+                {
                 string packagePath = this.BuildPackagePath(context.Request.Path.Value);
 
                 await this.HandlePackageDownloadAsync(context: context, packagePath: packagePath, cancellationToken: context.RequestAborted);
 
                 return;
+                }
+                catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
+                {
+                    context.Response.Clear();
+                    context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
+                    context.Response.Headers.Append(key: "Retry-After", value: "5");
+
+                    return;
+                }
             }
         }
 

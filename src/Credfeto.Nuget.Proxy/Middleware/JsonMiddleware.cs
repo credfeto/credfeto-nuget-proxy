@@ -12,8 +12,9 @@ using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Polly.Bulkhead;
+using Polly.Timeout;
 
 namespace Credfeto.Nuget.Proxy.Middleware;
 
@@ -48,16 +49,27 @@ public sealed class JsonMiddleware
     {
         if (StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET") && context.Request.Path.HasValue)
         {
-            if (this._publicNugetServer && StringComparer.OrdinalIgnoreCase.Equals(x: context.Request.Path.Value, y: "/v3/index.json"))
+            try
             {
-                await this.UpstreamIndexAsync(context: context, cancellationToken: context.RequestAborted);
+                if (this._publicNugetServer && StringComparer.OrdinalIgnoreCase.Equals(x: context.Request.Path.Value, y: "/v3/index.json"))
+                {
+                    await this.UpstreamIndexAsync(context: context, cancellationToken: context.RequestAborted);
 
-                return;
+                    return;
+                }
+
+                if (context.Request.Path.Value.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
+                {
+                    await this.GetFromUpstreamAsync(context: context, cancellationToken: context.RequestAborted);
+
+                    return;
+                }
             }
-
-            if (context.Request.Path.Value.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
+            catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
             {
-                await this.GetFromUpstreamAsync(context: context, cancellationToken: context.RequestAborted);
+                context.Response.Clear();
+                context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
+                context.Response.Headers.Append(key: "Retry-After", value: "5");
 
                 return;
             }
@@ -90,11 +102,11 @@ public sealed class JsonMiddleware
             return;
         }
 
-        NugetResources resources = new(version: data.Version, [
+        NugetResources resources = new(version: data.Version,
+        [
             ..data.Resources.Where(IsNeeded)
-                                       .Select( this.RewriteResource)
-            ]
-            );
+                  .Select(this.RewriteResource)
+        ]);
 
         await SaveJsonResponseAsync(context: context, data: resources, cancellationToken: cancellationToken);
     }
@@ -104,14 +116,14 @@ public sealed class JsonMiddleware
         return NeededResources.Any(n => StringComparer.Ordinal.Equals(x: n, y: resource.Type));
     }
 
-    [SuppressMessage("SonarAnalyzer.CSharp", "S3267: Use Linq", Justification = "Not Here")]
+    [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
     private NugetResource RewriteResource(NugetResource resource)
     {
         foreach (Uri uri in this._config.UpstreamUrls)
         {
-            if (resource.Id.StartsWith(uri.CleanUri(), StringComparison.OrdinalIgnoreCase))
+            if (resource.Id.StartsWith(uri.CleanUri(), comparisonType: StringComparison.OrdinalIgnoreCase))
             {
-                return new(id: resource.Id.Replace(uri.CleanUri(), this._config.PublicUrl.CleanUri(), StringComparison.Ordinal), type: resource.Type, comment: resource.Comment);
+                return new(resource.Id.Replace(uri.CleanUri(), this._config.PublicUrl.CleanUri(), comparisonType: StringComparison.Ordinal), type: resource.Type, comment: resource.Comment);
             }
         }
 

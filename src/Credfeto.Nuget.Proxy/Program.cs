@@ -44,6 +44,9 @@ public static class Program
                                                          .UseMiddleware<NuPkgMiddleware>()
             ;
 
+        // TODO: Add Exception middleware to handle things like polly
+        //  Polly.Timeout.TimeoutRejectedException -> 429 with 5 second delay
+        //  Polly.Bulkhead.BulkheadRejectedException-> 429 with 10 second delay
         return app.RunAsync();
     }
 }
