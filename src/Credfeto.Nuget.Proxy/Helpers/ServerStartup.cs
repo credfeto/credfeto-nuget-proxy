@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using Credfeto.Date;
 using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Proxy.Config;
 using Credfeto.Nuget.Proxy.Extensions;
@@ -63,6 +64,7 @@ internal static class ServerStartup
 
         ProxyServerConfig appConfig = LoadConfig(config);
         builder.Services.AddSingleton(appConfig)
+               .AddDate()
                .AddJsonClient(appConfig)
                .AddNupkgClient(appConfig);
 

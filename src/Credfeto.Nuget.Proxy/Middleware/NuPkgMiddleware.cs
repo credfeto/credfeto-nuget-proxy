@@ -1,10 +1,12 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Proxy.Config;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
@@ -20,15 +22,17 @@ namespace Credfeto.Nuget.Proxy.Middleware;
 public sealed class NuPkgMiddleware
 {
     private readonly ProxyServerConfig _config;
+    private readonly ICurrentTimeSource _currentTimeSource;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<NuPkgMiddleware> _logger;
     private readonly RequestDelegate _next;
 
-    public NuPkgMiddleware(RequestDelegate next, ProxyServerConfig config, IHttpClientFactory httpClientFactory, ILogger<NuPkgMiddleware> logger)
+    public NuPkgMiddleware(RequestDelegate next, ProxyServerConfig config, IHttpClientFactory httpClientFactory, ICurrentTimeSource currentTimeSource, ILogger<NuPkgMiddleware> logger)
     {
         this._next = next;
         this._config = config;
         this._httpClientFactory = httpClientFactory;
+        this._currentTimeSource = currentTimeSource;
         this._logger = logger;
     }
 
@@ -49,11 +53,11 @@ public sealed class NuPkgMiddleware
             {
                 try
                 {
-                string packagePath = this.BuildPackagePath(context.Request.Path.Value);
+                    string packagePath = this.BuildPackagePath(context.Request.Path.Value);
 
-                await this.HandlePackageDownloadAsync(context: context, packagePath: packagePath, cancellationToken: context.RequestAborted);
+                    await this.HandlePackageDownloadAsync(context: context, packagePath: packagePath, cancellationToken: context.RequestAborted);
 
-                return;
+                    return;
                 }
                 catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
                 {
@@ -102,7 +106,7 @@ public sealed class NuPkgMiddleware
         {
             await result.Content.CopyToAsync(stream: memoryStream, cancellationToken: cancellationToken);
 
-            OkHeaders(context);
+            this.OkHeaders(context);
 
             byte[] buffer = memoryStream.ToArray();
             await context.Response.Body.WriteAsync(buffer: buffer, cancellationToken: cancellationToken);
@@ -154,18 +158,23 @@ public sealed class NuPkgMiddleware
     private async Task ServeCachedFileAsync(HttpContext context, string packagePath, CancellationToken cancellationToken)
     {
         Uri requestUri = this.GetRequestUri(context);
+
         await using (Stream s = File.OpenRead(packagePath))
         {
-            OkHeaders(context);
+            this.OkHeaders(context);
             await s.CopyToAsync(destination: context.Response.Body, cancellationToken: cancellationToken);
             this._logger.Cached(upstream: requestUri, length: s.Position);
         }
     }
 
-    private static void OkHeaders(HttpContext context)
+    private void OkHeaders(HttpContext context)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
         context.Response.Headers.Append(key: "Content-Type", value: "application/octet-stream");
+        context.Response.Headers.CacheControl = "public, max-age=63072000, immutable";
+        context.Response.Headers.Expires = this._currentTimeSource.UtcNow()
+                                               .AddSeconds(63072000)
+                                               .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
     }
 
     private Uri GetRequestUri(HttpContext context)
