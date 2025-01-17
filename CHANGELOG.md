@@ -7,9 +7,9 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 
 ## [Unreleased]
 ### Added
+- Initial version
 ### Fixed
 ### Changed
-- FF-3881 - Updated DotNet SDK to 7.0.200
 - SDK - Updated DotNet SDK to 9.0.102
 - Dependencies - Updated Credfeto.Enumeration to 1.2.53.824
 - Dependencies - Updated FunFair.CodeAnalysis to 7.0.55.846
