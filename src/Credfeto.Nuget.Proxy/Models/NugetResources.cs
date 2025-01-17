@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 namespace Credfeto.Nuget.Proxy.Models;
 
+[DebuggerDisplay("{Version}")]
 internal sealed class NugetResources
 {
     [JsonConstructor]
@@ -12,5 +14,6 @@ internal sealed class NugetResources
     }
 
     public string Version { get; }
+
     public NugetResource[] Resources { get; }
 }

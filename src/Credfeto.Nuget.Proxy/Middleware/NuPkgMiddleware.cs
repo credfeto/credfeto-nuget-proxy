@@ -21,7 +21,6 @@ public sealed class NuPkgMiddleware
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<NuPkgMiddleware> _logger;
     private readonly RequestDelegate _next;
-    private readonly bool _publicNugetServer;
 
     public NuPkgMiddleware(RequestDelegate next, ProxyServerConfig config, IHttpClientFactory httpClientFactory, ILogger<NuPkgMiddleware> logger)
     {
@@ -29,7 +28,6 @@ public sealed class NuPkgMiddleware
         this._config = config;
         this._httpClientFactory = httpClientFactory;
         this._logger = logger;
-        this._publicNugetServer = this._config.IsNugetPublicServer;
     }
 
     public static string ClientName => "UpStreamJson";
@@ -38,13 +36,6 @@ public sealed class NuPkgMiddleware
     {
         if (StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET") && context.Request.Path.HasValue)
         {
-            if (this._publicNugetServer)
-            {
-                await this._next(context);
-
-                return;
-            }
-
             if (context.Request.Path.Value.Contains(value: "../", comparisonType: StringComparison.Ordinal))
             {
                 await this._next(context);

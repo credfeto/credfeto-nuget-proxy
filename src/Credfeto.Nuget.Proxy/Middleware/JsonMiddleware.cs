@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -10,12 +12,21 @@ using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace Credfeto.Nuget.Proxy.Middleware;
 
 public sealed class JsonMiddleware
 {
+    private static readonly IReadOnlyList<string> NeededResources =
+    [
+        "SearchAutocompleteService/3.0.0-beta",
+        "SearchQueryService/3.0.0-beta",
+        "PackageBaseAddress/3.0.0",
+        "RegistrationsBaseUrl/3.4.0"
+    ];
+
     private readonly ProxyServerConfig _config;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<JsonMiddleware> _logger;
@@ -79,7 +90,41 @@ public sealed class JsonMiddleware
             return;
         }
 
+        NugetResources resources = new(version: data.Version, [
+            ..data.Resources.Where(IsNeeded)
+                                       .Select( this.RewriteResource)
+            ]
+            );
+
+        await SaveJsonResponseAsync(context: context, data: resources, cancellationToken: cancellationToken);
+    }
+
+    private static bool IsNeeded(NugetResource resource)
+    {
+        return NeededResources.Any(n => StringComparer.Ordinal.Equals(x: n, y: resource.Type));
+    }
+
+    [SuppressMessage("SonarAnalyzer.CSharp", "S3267: Use Linq", Justification = "Not Here")]
+    private NugetResource RewriteResource(NugetResource resource)
+    {
+        foreach (Uri uri in this._config.UpstreamUrls)
+        {
+            if (resource.Id.StartsWith(uri.CleanUri(), StringComparison.OrdinalIgnoreCase))
+            {
+                return new(id: resource.Id.Replace(uri.CleanUri(), this._config.PublicUrl.CleanUri(), StringComparison.Ordinal), type: resource.Type, comment: resource.Comment);
+            }
+        }
+
+        return resource;
+    }
+
+    private static Task SaveJsonResponseAsync(HttpContext context, NugetResources data, CancellationToken cancellationToken)
+    {
+        string result = JsonSerializer.Serialize(value: data, jsonTypeInfo: AppJsonContexts.Default.NugetResources);
         context.Response.StatusCode = (int)HttpStatusCode.OK;
+        context.Response.ContentType = "application/json";
+
+        return context.Response.WriteAsync(text: result, cancellationToken: cancellationToken);
     }
 
     private Task UpstreamFailedAsync(HttpContext context, Uri requestUri, HttpResponseMessage result, CancellationToken cancellationToken)
@@ -136,6 +181,11 @@ public sealed class JsonMiddleware
     private string ReplaceUrls(string json)
     {
         json = this._config.UpstreamUrls.Aggregate(seed: json, func: (current, uri) => current.Replace(uri.CleanUri(), this._config.PublicUrl.CleanUri(), comparisonType: StringComparison.Ordinal));
+
+        if (this._publicNugetServer)
+        {
+            json = json.Replace(oldValue: "https://www.nuget.org", this._config.PublicUrl.CleanUri(), comparisonType: StringComparison.Ordinal);
+        }
 
         return json;
     }
