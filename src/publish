@@ -49,7 +49,7 @@ echo "Clear $OUTFOLDER" \
   && cp "$BASEDIR/../Dockerfile" . \
   && cp "$BASEDIR/../healthcheck" . \
   && ls -lar \
-  && sudo docker buildx build  . -t "credfeto/nuget-proxy:latest" \
+  && sudo docker buildx build  . -t "credfeto/nuget-proxy:test" \
   && sudo docker run \
       --name nuget-proxy \
       -it \
@@ -62,5 +62,5 @@ echo "Clear $OUTFOLDER" \
       -e Proxy__Packages=/cache \
       -v /cache/nuget-proxy-test:/cache \
       -v $BASEDIR/Credfeto.Nuget.Proxy/server.pfx:/usr/src/app/server.pfx \
-      "credfeto/nuget-proxy:latest"
+      "credfeto/nuget-proxy:test"
       
