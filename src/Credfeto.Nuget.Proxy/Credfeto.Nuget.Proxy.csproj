@@ -74,9 +74,9 @@
   <ItemGroup>
     <PackageReference Include="Credfeto.Date" Version="1.1.61.756" />
     <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.64.618" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.1" />
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Enrichers.Demystifier" Version="1.0.3" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
