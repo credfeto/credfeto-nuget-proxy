@@ -63,7 +63,8 @@ internal static class ServerStartup
 
         ProxyServerConfig appConfig = LoadConfig(config);
         builder.Services.AddSingleton(appConfig)
-               .AddJsonClient(appConfig);
+               .AddJsonClient(appConfig)
+               .AddNupkgClient(appConfig);
 
         builder.Host.UseWindowsService()
                .UseSystemd();

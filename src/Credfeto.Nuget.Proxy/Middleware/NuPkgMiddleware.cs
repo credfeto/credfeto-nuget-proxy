@@ -30,7 +30,7 @@ public sealed class NuPkgMiddleware
         this._logger = logger;
     }
 
-    public static string ClientName => "UpStreamJson";
+    public static string ClientName => "UpStreamNuPkg";
 
     public async Task InvokeAsync(HttpContext context)
     {
