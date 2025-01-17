@@ -2,6 +2,11 @@
 
 ###
 
+GET {{credfeto_proxy_HostAddress}}:/index.json
+Accept: application/json
+
+###
+
 GET {{credfeto_proxy_HostAddress}}:/v3/index.json
 Accept: application/json
 

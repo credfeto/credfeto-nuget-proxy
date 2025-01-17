@@ -1,9 +1,8 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Config;
@@ -21,6 +20,7 @@ public sealed class JsonMiddleware
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<JsonMiddleware> _logger;
     private readonly RequestDelegate _next;
+    private readonly bool _publicNugetServer;
 
     public JsonMiddleware(RequestDelegate next, ProxyServerConfig config, IHttpClientFactory httpClientFactory, ILogger<JsonMiddleware> logger)
     {
@@ -28,6 +28,7 @@ public sealed class JsonMiddleware
         this._config = config;
         this._httpClientFactory = httpClientFactory;
         this._logger = logger;
+        this._publicNugetServer = this._config.IsNugetPublicServer;
     }
 
     public static string ClientName => "UpStreamJson";
@@ -36,11 +37,13 @@ public sealed class JsonMiddleware
     {
         if (StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET") && context.Request.Path.HasValue)
         {
-            if (StringComparer.OrdinalIgnoreCase.Equals(context.Request.Path.Value, "/v3/index.json"))
+            if (this._publicNugetServer && StringComparer.OrdinalIgnoreCase.Equals(x: context.Request.Path.Value, y: "/v3/index.json"))
             {
                 await this.UpstreamIndexAsync(context: context, cancellationToken: context.RequestAborted);
+
                 return;
             }
+
             if (context.Request.Path.Value.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 await this.GetFromUpstreamAsync(context: context, cancellationToken: context.RequestAborted);
@@ -51,62 +54,6 @@ public sealed class JsonMiddleware
 
         await this._next(context);
     }
-#if OVERRIDE_INDEX
-    const string INDEX_RESOURCES = @"{
-  ""version"": ""3.0.0"",
-  ""resources"": [
-    {
-      ""@id"": ""$$PUBLICURI$$/api/v2/package"",
-      ""@type"": ""PackagePublish/2.0.0""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/api/v2/symbol"",
-      ""@type"": ""SymbolPackagePublish/4.9.0""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/search"",
-      ""@type"": ""SearchQueryService""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/search"",
-      ""@type"": ""SearchQueryService/3.0.0-beta""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/search"",
-      ""@type"": ""SearchQueryService/3.0.0-rc""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/registration"",
-      ""@type"": ""RegistrationsBaseUrl""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/registration"",
-      ""@type"": ""RegistrationsBaseUrl/3.0.0-rc""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/registration"",
-      ""@type"": ""RegistrationsBaseUrl/3.0.0-beta""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/package"",
-      ""@type"": ""PackageBaseAddress/3.0.0""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/autocomplete"",
-      ""@type"": ""SearchAutocompleteService""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/autocomplete"",
-      ""@type"": ""SearchAutocompleteService/3.0.0-rc""
-    },
-    {
-      ""@id"": ""$$PUBLICURI$$/v3/autocomplete"",
-      ""@type"": ""SearchAutocompleteService/3.0.0-beta""
-    }
-  ]
-}";
-#endif
-
 
     private async Task UpstreamIndexAsync(HttpContext context, CancellationToken cancellationToken)
     {
@@ -121,31 +68,32 @@ public sealed class JsonMiddleware
             return;
         }
 
-        string json  = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
+        string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
 
-        NugetResources? data = JsonSerializer.Deserialize<NugetResources>(json, AppJsonContexts.Default.NugetResources);
+        NugetResources? data = JsonSerializer.Deserialize<NugetResources>(json: json, jsonTypeInfo: AppJsonContexts.Default.NugetResources);
 
         if (data is null)
         {
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
             return;
         }
 
         context.Response.StatusCode = (int)HttpStatusCode.OK;
-
     }
 
     private Task UpstreamFailedAsync(HttpContext context, Uri requestUri, HttpResponseMessage result, CancellationToken cancellationToken)
     {
         this._logger.UpstreamFailed(upstream: requestUri, statusCode: result.StatusCode);
         context.Response.StatusCode = (int)result.StatusCode;
+
         return result.Content.CopyToAsync(stream: context.Response.Body, cancellationToken: cancellationToken);
     }
 
     private HttpClient GetClient()
     {
         HttpClient client = this._httpClientFactory.CreateClient(ClientName);
-        client.BaseAddress = this._config.UpstreamUrl;
+        client.BaseAddress = this._config.UpstreamUrls[0];
 
         return client;
     }
@@ -179,18 +127,16 @@ public sealed class JsonMiddleware
 
     private Uri GetRequestUri(HttpContext context)
     {
-        Uri requestUri = new(this._config.UpstreamUrl.CleanUri() + context.Request.Path.Value);
+        Uri requestUri = new(this._config.UpstreamUrls[0]
+                                 .CleanUri() + context.Request.Path.Value);
 
         return requestUri;
     }
 
     private string ReplaceUrls(string json)
     {
-        json = json.Replace(this._config.UpstreamUrl.CleanUri(), this._config.PublicUrl.CleanUri(), comparisonType: StringComparison.Ordinal);
-
-        json = json.Replace(oldValue: "https://www.nuget.org", this._config.PublicUrl.CleanUri(), comparisonType: StringComparison.Ordinal);
+        json = this._config.UpstreamUrls.Aggregate(seed: json, func: (current, uri) => current.Replace(uri.CleanUri(), this._config.PublicUrl.CleanUri(), comparisonType: StringComparison.Ordinal));
 
         return json;
     }
 }
-

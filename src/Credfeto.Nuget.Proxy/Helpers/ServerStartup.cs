@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
+using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Proxy.Config;
 using Credfeto.Nuget.Proxy.Extensions;
 using Microsoft.AspNetCore.Builder;
@@ -73,7 +76,19 @@ internal static class ServerStartup
 
     private static ProxyServerConfig LoadConfig(IConfigurationRoot configuration)
     {
-        return new(new(configuration["Proxy:UpstreamUrl"] ?? throw new UnreachableException("Proxy:UpstreamUrl not provided")),
+        IReadOnlyList<Uri> upstream = [.. configuration
+                                          .GetSection("Proxy:UpstreamUrl")
+                                          .GetChildren()
+                                          .Select(x => Uri.TryCreate(x.Value, UriKind.Absolute, out Uri? uri) ? uri : null)
+                                          .RemoveNulls()
+                         ];
+
+        if (upstream.Count == 0)
+        {
+            throw new UnreachableException("Proxy:UpstreamUrl not provided");
+        }
+
+        return new(upstream,
                    new(configuration["Proxy:PublicUrl"] ?? throw new UnreachableException("Proxy:PublicUrl not provided")),
                    configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath);
     }

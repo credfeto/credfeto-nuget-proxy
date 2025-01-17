@@ -19,7 +19,7 @@ internal static class HttpClientSetup
     public static IServiceCollection AddJsonClient(this IServiceCollection services,  ProxyServerConfig appConfig)
     {
         return services.AddHttpClient(name: JsonMiddleware.ClientName,
-                                      configureClient: httpClient => InitializeJsonClient(upstreamUrl: appConfig.UpstreamUrl, httpClient: httpClient, httpTimeout: HttpTimeout))
+                                      configureClient: httpClient => InitializeJsonClient(upstreamUrl: appConfig.UpstreamUrls[0], httpClient: httpClient, httpTimeout: HttpTimeout))
                        .SetHandlerLifetime(TimeSpan.FromMinutes(5))
                        .ConfigurePrimaryHttpMessageHandler(configureHandler: _ => new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All })
                        .AddPolicyHandler(Policy.BulkheadAsync<HttpResponseMessage>(maxParallelization: CONCURRENT_ACTIONS, maxQueuingActions: QUEUED_ACTIONS))
