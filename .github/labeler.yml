@@ -10,6 +10,8 @@
  - any: [ 'CHANGELOG.md' ]
 "Config Change":
  - any: [ 'src/**/*.json', '!src/global.json' ]
+"credfeto-nuget-proxy":
+ - any: [ 'src/$Credfeto.Nuget.Proxy/**/*' ]
 "github-actions":
  - any: [ '.github/workflows/*.yml' ]
 "Legal Text":
