@@ -25,8 +25,8 @@ namespace Credfeto.Nuget.Proxy.Helpers;
 
 internal static class ServerStartup
 {
-    private const int HTTP_PORT = 5166;
-    private const int HTTPS_PORT = 5167;
+    private const int HTTP_PORT = 8080;
+    private const int HTTPS_PORT = 8081;
     private const int H2_PORT = 0;
 
     public static void SetThreads(int minThreads)
@@ -63,6 +63,18 @@ internal static class ServerStartup
         IConfigurationRoot config = LoadConfiguration(configPath);
 
         ProxyServerConfig appConfig = LoadConfig(config);
+        Console.WriteLine("Upstream Servers:");
+
+        foreach (Uri upstream in appConfig.UpstreamUrls)
+        {
+            Console.WriteLine($"* {upstream}");
+        }
+
+        Console.WriteLine($"Public Uri: {appConfig.PublicUrl}");
+        Console.WriteLine($"Data: {appConfig.Packages}");
+
+        Directory.CreateDirectory(appConfig.Packages);
+
         builder.Services.AddSingleton(appConfig)
                .AddDate()
                .AddJsonClient(appConfig)
@@ -145,20 +157,12 @@ internal static class ServerStartup
         listenOptions.Protocols = HttpProtocols.Http2;
     }
 
-    private static void SetHttpsListenOptions(ListenOptions listenOptions, string configurationFiledPath)
+    private static void SetHttpsListenOptions(ListenOptions listenOptions, string certFile)
     {
-        string certFile = Path.Combine(path1: configurationFiledPath, path2: "server.pfx");
 
-        if (!File.Exists(certFile))
-        {
-            listenOptions.Protocols = HttpProtocols.Http1;
-            listenOptions.UseHttps();
-        }
-        else
-        {
-            listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
-            listenOptions.UseHttps(fileName: certFile);
-        }
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
+        listenOptions.UseHttps(fileName: certFile);
+
     }
 
     private static void SetKestrelOptions(KestrelServerOptions options, int httpPort, int httpsPort, int h2Port, string configurationFiledPath)
@@ -170,10 +174,12 @@ internal static class ServerStartup
         options.Limits.MinResponseDataRate = null;
         options.Limits.MinRequestBodyDataRate = null;
 
-        if (httpsPort != 0)
+        string certFile = Path.Combine(path1: configurationFiledPath, path2: "server.pfx");
+
+        if (httpsPort != 0 && File.Exists(certFile))
         {
             Console.WriteLine($"Listening on HTTPS port: {httpsPort}");
-            options.Listen(address: IPAddress.Any, port: httpsPort, configure: o => SetHttpsListenOptions(listenOptions: o, configurationFiledPath: configurationFiledPath));
+            options.Listen(address: IPAddress.Any, port: httpsPort, configure: o => SetHttpsListenOptions(listenOptions: o, certFile:certFile));
         }
 
         if (h2Port != 0)

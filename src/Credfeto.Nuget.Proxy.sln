@@ -9,6 +9,9 @@ ProjectSection(SolutionItems) = preProject
 	global.json = global.json
 	..\CHANGELOG.md = ..\CHANGELOG.md
 	..\README.md = ..\README.md
+	..\Dockerfile = ..\Dockerfile
+	..\healthcheck = ..\healthcheck
+	publish = publish
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Proxy", "Credfeto.Nuget.Proxy\Credfeto.Nuget.Proxy.csproj", "{2E5D5941-7383-4D39-9BA6-915AE063C072}"

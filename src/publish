@@ -1,0 +1,66 @@
+#! /bin/sh
+
+die() {
+    echo "$@"
+    exit 1
+}
+
+BASEDIR=$(dirname "$(readlink -f "$0")")
+
+PLATFORM=linux-x64
+OUTFOLDER="$BASEDIR/server-dist/$PLATFORM"
+
+#[ -z "$DISCORDTOKEN" ] && die "DISCORDTOKEN not set"
+
+echo "Clear $OUTFOLDER" \
+  && rm -fr "$BASEDIR/server-dist" \
+  && cd "$BASEDIR" \
+  && dotnet restore \
+  && echo "CD" \
+  && cd "$BASEDIR/Credfeto.Nuget.Proxy" \
+  && echo "Build Credfeto.Nuget.Proxy" \
+  && dotnet publish \
+          --no-restore \
+          -warnaserror \
+          --configuration:Release \
+          "-r:$PLATFORM" \
+          --self-contained \
+          -nodeReuse:False \
+          "-p:Deterministic=True" \
+          "-p:DisableSwagger=True" \
+          "-p:FFPublishing=True" \
+          "-p:IncludeNativeLibrariesForSelfExtract=True" \
+          "-p:IsProduction=True" \
+          "-p:NoWarn=NETSDK1179" \
+          "-p:Optimize=true" \
+          "-p:PublishAot=false" \
+          "-p:PublishReadyToRun=False" \
+          "-p:PublishReadyToRunShowWarnings=True" \
+          "-p:PublishSingleFile=true" \
+          "-p:SolutionDir=..\\" \
+          "-p:SuppressNETCoreSdkPreviewMessage=true" \
+          "-p:TreatWarningsAsErrors=True" \
+          "-p:Version=2.0.1.179-main" \
+          "-p:FFPublishing=True" \
+          "-p:SolutionDir=..\\" \
+          "-p:IsProduction=false" \
+          --output "$OUTFOLDER" \
+  && cd "$BASEDIR/server-dist/$PLATFORM" \
+  && cp "$BASEDIR/../Dockerfile" . \
+  && cp "$BASEDIR/../healthcheck" . \
+  && ls -lar \
+  && sudo docker buildx build  . -t "credfeto/nuget-proxy:latest" \
+  && sudo docker run \
+      --name nuget-proxy \
+      -it \
+      --rm \
+      -p 8080:8080/tcp \
+      -p 8081:8081/tcp \
+      -p 8081:8081/udp \
+      -e Proxy__UpstreamUrl__0=http://api.nuget.org \
+      -e Proxy__PublicUrl=https://localhost:8081 \
+      -e Proxy__Packages=/cache \
+      -v /cache/nuget-proxy-test:/cache \
+      -v $BASEDIR/Credfeto.Nuget.Proxy/server.pfx:/usr/src/app/server.pfx \
+      "credfeto/nuget-proxy:latest"
+      
