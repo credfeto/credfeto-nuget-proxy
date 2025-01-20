@@ -14,6 +14,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Extracted classes for dealing with the specific nuget.org path and sleet paths
 - Dependencies - Updated Credfeto.Enumeration to 1.2.55.854
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.43.281
+- Dependencies - Updated Credfeto.Date to 1.1.62.778
 ### Removed
 ### Deployment Changes
 
