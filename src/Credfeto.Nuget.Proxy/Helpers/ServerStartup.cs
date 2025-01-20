@@ -10,6 +10,8 @@ using Credfeto.Date;
 using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Proxy.Config;
 using Credfeto.Nuget.Proxy.Extensions;
+using Credfeto.Nuget.Proxy.Interfaces;
+using Credfeto.Nuget.Proxy.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -70,6 +72,15 @@ internal static class ServerStartup
             Console.WriteLine($"* {upstream.CleanUri()}");
         }
 
+        if (appConfig.IsNugetPublicServer)
+        {
+            builder.Services.AddSingleton<IJsonTransformer, ApiNugetOrgJsonIndexTransformer>();
+        }
+        else
+        {
+            builder.Services.AddSingleton<IJsonTransformer, StandardJsonIndexTransformer>();
+        }
+
         Console.WriteLine($"Public Uri: {appConfig.PublicUrl.CleanUri()}");
         Console.WriteLine($"Data: {appConfig.Packages}");
 
@@ -91,19 +102,22 @@ internal static class ServerStartup
 
     private static ProxyServerConfig LoadConfig(IConfigurationRoot configuration)
     {
-        IReadOnlyList<Uri> upstream = [.. configuration
-                                          .GetSection("Proxy:UpstreamUrl")
-                                          .GetChildren()
-                                          .Select(x => Uri.TryCreate(x.Value, UriKind.Absolute, out Uri? uri) ? uri : null)
-                                          .RemoveNulls()
-                         ];
+        IReadOnlyList<Uri> upstream =
+        [
+            .. configuration.GetSection("Proxy:UpstreamUrl")
+                            .GetChildren()
+                            .Select(x => Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri)
+                                        ? uri
+                                        : null)
+                            .RemoveNulls()
+        ];
 
         if (upstream.Count == 0)
         {
             throw new UnreachableException("Proxy:UpstreamUrl not provided");
         }
 
-        return new(upstream,
+        return new(UpstreamUrls: upstream,
                    new(configuration["Proxy:PublicUrl"] ?? throw new UnreachableException("Proxy:PublicUrl not provided")),
                    configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath);
     }
@@ -159,10 +173,8 @@ internal static class ServerStartup
 
     private static void SetHttpsListenOptions(ListenOptions listenOptions, string certFile)
     {
-
         listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
         listenOptions.UseHttps(fileName: certFile);
-
     }
 
     private static void SetKestrelOptions(KestrelServerOptions options, int httpPort, int httpsPort, int h2Port, string configurationFiledPath)
@@ -179,7 +191,7 @@ internal static class ServerStartup
         if (httpsPort != 0 && File.Exists(certFile))
         {
             Console.WriteLine($"Listening on HTTPS port: {httpsPort}");
-            options.Listen(address: IPAddress.Any, port: httpsPort, configure: o => SetHttpsListenOptions(listenOptions: o, certFile:certFile));
+            options.Listen(address: IPAddress.Any, port: httpsPort, configure: o => SetHttpsListenOptions(listenOptions: o, certFile: certFile));
         }
 
         if (h2Port != 0)

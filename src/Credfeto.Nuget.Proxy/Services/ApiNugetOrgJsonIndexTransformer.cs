@@ -1,0 +1,113 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Credfeto.Nuget.Proxy.Config;
+using Credfeto.Nuget.Proxy.Extensions;
+using Credfeto.Nuget.Proxy.Interfaces;
+using Credfeto.Nuget.Proxy.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+
+namespace Credfeto.Nuget.Proxy.Services;
+
+public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, IJsonTransformer
+{
+    private static readonly IReadOnlyList<string> NeededResources =
+    [
+        "SearchAutocompleteService/3.0.0-beta",
+        "SearchQueryService/3.0.0-beta",
+        "PackageBaseAddress/3.0.0",
+        "RegistrationsBaseUrl/3.4.0"
+    ];
+
+    public ApiNugetOrgJsonIndexTransformer(ProxyServerConfig config, IHttpClientFactory httpClientFactory, ILogger<ApiNugetOrgJsonIndexTransformer> logger)
+        : base(config: config, httpClientFactory: httpClientFactory, logger: logger)
+    {
+    }
+
+    public async ValueTask<bool> GetFromUpstreamAsync(HttpContext context, string path, CancellationToken cancellationToken)
+    {
+        if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (StringComparer.OrdinalIgnoreCase.Equals(x: path, y: "/v3/index.json"))
+        {
+            await this.UpstreamIndexAsync(context: context, path:path, cancellationToken: context.RequestAborted);
+
+            return true;
+        }
+
+        await this.DoGetFromUpstreamAsync(context: context, path:path, cancellationToken: context.RequestAborted);
+
+        return true;
+    }
+
+    private async Task UpstreamIndexAsync(HttpContext context, string path, CancellationToken cancellationToken)
+    {
+        Uri requestUri = this.GetRequestUri(path);
+
+        HttpResponseMessage result = await this.ReadUpstreamAsync(cancellationToken: cancellationToken, requestUri: requestUri);
+
+        if (result.StatusCode != HttpStatusCode.OK)
+        {
+            await this.UpstreamFailedAsync(context: context, requestUri: requestUri, result: result, cancellationToken: cancellationToken);
+
+            return;
+        }
+
+        string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
+
+        NugetResources? data = JsonSerializer.Deserialize<NugetResources>(json: json, jsonTypeInfo: AppJsonContexts.Default.NugetResources);
+
+        if (data is null)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
+            return;
+        }
+
+        NugetResources resources = new(version: data.Version,
+        [
+            ..data.Resources.Where(IsNeeded)
+                  .Select(this.RewriteResource)
+        ]);
+
+        await SaveJsonResponseAsync(context: context, data: resources, cancellationToken: cancellationToken);
+    }
+
+    private static bool IsNeeded(NugetResource resource)
+    {
+        return NeededResources.Any(n => StringComparer.Ordinal.Equals(x: n, y: resource.Type));
+    }
+
+    [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
+    private NugetResource RewriteResource(NugetResource resource)
+    {
+        foreach (Uri uri in this.Config.UpstreamUrls)
+        {
+            if (resource.Id.StartsWith(uri.CleanUri(), comparisonType: StringComparison.OrdinalIgnoreCase))
+            {
+                return new(resource.Id.Replace(uri.CleanUri(), this.Config.PublicUrl.CleanUri(), comparisonType: StringComparison.Ordinal), type: resource.Type, comment: resource.Comment);
+            }
+        }
+
+        return resource;
+    }
+
+    private static Task SaveJsonResponseAsync(HttpContext context, NugetResources data, CancellationToken cancellationToken)
+    {
+        string result = JsonSerializer.Serialize(value: data, jsonTypeInfo: AppJsonContexts.Default.NugetResources);
+        context.Response.StatusCode = (int)HttpStatusCode.OK;
+        context.Response.ContentType = "application/json";
+
+        return context.Response.WriteAsync(text: result, cancellationToken: cancellationToken);
+    }
+}
