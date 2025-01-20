@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Proxy.Config;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Interfaces;
@@ -26,8 +27,8 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         "RegistrationsBaseUrl/3.4.0"
     ];
 
-    public ApiNugetOrgJsonIndexTransformer(ProxyServerConfig config, IHttpClientFactory httpClientFactory, ILogger<ApiNugetOrgJsonIndexTransformer> logger)
-        : base(config: config, httpClientFactory: httpClientFactory, logger: logger)
+    public ApiNugetOrgJsonIndexTransformer(ProxyServerConfig config, IHttpClientFactory httpClientFactory, ICurrentTimeSource currentTimeSource, ILogger<ApiNugetOrgJsonIndexTransformer> logger)
+        : base(config: config, httpClientFactory: httpClientFactory, currentTimeSource: currentTimeSource, logger: logger)
     {
     }
 
@@ -70,6 +71,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         if (data is null)
         {
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            context.Response.Headers.CacheControl = $"no-cache, no-store, must-revalidate";
 
             return;
         }
@@ -80,7 +82,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
                   .Select(this.RewriteResource)
         ]);
 
-        await SaveJsonResponseAsync(context: context, data: resources, cancellationToken: cancellationToken);
+        await this.SaveJsonResponseAsync(context: context, data: resources, cancellationToken: cancellationToken);
     }
 
     private static bool IsNeeded(NugetResource resource)
@@ -102,12 +104,11 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         return resource;
     }
 
-    private static Task SaveJsonResponseAsync(HttpContext context, NugetResources data, CancellationToken cancellationToken)
+    private Task SaveJsonResponseAsync(HttpContext context, NugetResources data, CancellationToken cancellationToken)
     {
         string result = JsonSerializer.Serialize(value: data, jsonTypeInfo: AppJsonContexts.Default.NugetResources);
-        context.Response.StatusCode = (int)HttpStatusCode.OK;
-        context.Response.ContentType = "application/json";
 
+        this.OkHeaders(context);
         return context.Response.WriteAsync(text: result, cancellationToken: cancellationToken);
     }
 }

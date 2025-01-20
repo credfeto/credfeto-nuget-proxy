@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Proxy.Config;
 using Credfeto.Nuget.Proxy.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -11,8 +12,8 @@ namespace Credfeto.Nuget.Proxy.Services;
 
 public sealed class StandardJsonIndexTransformer : JsonIndexTransformerBase, IJsonTransformer
 {
-    public StandardJsonIndexTransformer(ProxyServerConfig config, IHttpClientFactory httpClientFactory, ILogger<StandardJsonIndexTransformer> logger)
-        : base(config: config, httpClientFactory: httpClientFactory, logger: logger)
+    public StandardJsonIndexTransformer(ProxyServerConfig config, IHttpClientFactory httpClientFactory, ICurrentTimeSource currentTimeSource, ILogger<StandardJsonIndexTransformer> logger)
+        : base(config: config, httpClientFactory: httpClientFactory, currentTimeSource: currentTimeSource, logger: logger)
     {
     }
 

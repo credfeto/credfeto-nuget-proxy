@@ -63,6 +63,7 @@ public sealed class NuPkgMiddleware
                 {
                     context.Response.Clear();
                     context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
+                    context.Response.Headers.CacheControl = $"no-cache, no-store, must-revalidate";
                     context.Response.Headers.Append(key: "Retry-After", value: "5");
 
                     return;
@@ -142,6 +143,7 @@ public sealed class NuPkgMiddleware
     {
         this._logger.UpstreamFailed(upstream: requestUri, statusCode: result.StatusCode);
         context.Response.StatusCode = (int)result.StatusCode;
+        context.Response.Headers.CacheControl = $"no-cache, no-store, must-revalidate";
 
         return result.Content.CopyToAsync(stream: context.Response.Body, cancellationToken: cancellationToken);
     }
