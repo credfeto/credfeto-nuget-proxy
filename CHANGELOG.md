@@ -9,6 +9,14 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.2] - 2025-01-21
+### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.0.57.858
 - Extracted classes for dealing with the specific nuget.org path and sleet paths
 - Dependencies - Updated Credfeto.Enumeration to 1.2.55.854
@@ -16,12 +24,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Credfeto.Date to 1.1.62.778
 - Dependencies - Updated Credfeto.Extensions.Linq to 1.0.66.649
 - Set cache headers for all expected responses
-### Removed
-### Deployment Changes
 
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 ## [0.0.1] - 2025-01-18
 ### Added
 - Initial version
