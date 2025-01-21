@@ -65,12 +65,7 @@ internal static class ServerStartup
         IConfigurationRoot config = LoadConfiguration(configPath);
 
         ProxyServerConfig appConfig = LoadConfig(config);
-        Console.WriteLine("Upstream Servers:");
-
-        foreach (Uri upstream in appConfig.UpstreamUrls)
-        {
-            Console.WriteLine($"* {upstream.CleanUri()}");
-        }
+        LogAppConfig(appConfig);
 
         if (appConfig.IsNugetPublicServer)
         {
@@ -80,9 +75,6 @@ internal static class ServerStartup
         {
             builder.Services.AddSingleton<IJsonTransformer, StandardJsonIndexTransformer>();
         }
-
-        Console.WriteLine($"Public Uri: {appConfig.PublicUrl.CleanUri()}");
-        Console.WriteLine($"Data: {appConfig.Packages}");
 
         Directory.CreateDirectory(appConfig.Packages);
 
@@ -98,6 +90,19 @@ internal static class ServerStartup
                .ConfigureLogging((_, logger) => ConfigureLogging(logger));
 
         return builder.Build();
+    }
+
+    private static void LogAppConfig(ProxyServerConfig appConfig)
+    {
+        Console.WriteLine("Upstream Servers:");
+
+        foreach (Uri upstream in appConfig.UpstreamUrls)
+        {
+            Console.WriteLine($"* {upstream.CleanUri()}");
+        }
+
+        Console.WriteLine($"Public Uri: {appConfig.PublicUrl.CleanUri()}");
+        Console.WriteLine($"Data: {appConfig.Packages}");
     }
 
     private static ProxyServerConfig LoadConfig(IConfigurationRoot configuration)
