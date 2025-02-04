@@ -11,11 +11,11 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Changed
 - Dependencies - Updated Roslynator.Analyzers to 4.12.11
 - Dependencies - Updated SonarAnalyzer.CSharp to 10.6.0.109712
-- Dependencies - Updated Credfeto.Enumeration to 1.2.65.902
 - Dependencies - Updated FunFair.CodeAnalysis to 7.0.66.900
 - Dependencies - Updated Credfeto.Date to 1.1.72.832
 - Dependencies - Updated Credfeto.Extensions.Linq to 1.0.76.703
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.52.332
+- Dependencies - Updated Credfeto.Enumeration to 1.2.66.909
 ### Removed
 ### Deployment Changes
 
