@@ -40,12 +40,19 @@ public sealed class JsonMiddleware
 
         try
         {
-            if (await this._jsonTransformer.GetFromUpstreamAsync(context: context, path: context.Request.Path.Value, cancellationToken: context.RequestAborted))
+            if (
+                await this._jsonTransformer.GetFromUpstreamAsync(
+                    context: context,
+                    path: context.Request.Path.Value,
+                    cancellationToken: context.RequestAborted
+                )
+            )
             {
                 return;
             }
         }
-        catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
+        catch (Exception exception)
+            when (exception is TimeoutRejectedException or BulkheadRejectedException)
         {
             context.Response.Clear();
             context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;

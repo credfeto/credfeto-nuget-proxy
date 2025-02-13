@@ -6,5 +6,9 @@ namespace Credfeto.Nuget.Proxy.Interfaces;
 
 public interface IJsonTransformer
 {
-    ValueTask<bool> GetFromUpstreamAsync(HttpContext context, string path, CancellationToken cancellationToken);
+    ValueTask<bool> GetFromUpstreamAsync(
+        HttpContext context,
+        string path,
+        CancellationToken cancellationToken
+    );
 }

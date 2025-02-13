@@ -7,7 +7,8 @@ internal static class StartupBanner
     public static void Show()
     {
         // Generated from https://fsymbols.com/generators/carty/
-        const string banner = @"
+        const string banner =
+            @"
 ███╗░░██╗██╗░░░██╗░██████╗░███████╗████████╗  ██████╗░██████╗░░█████╗░██╗░░██╗██╗░░░██╗
 ████╗░██║██║░░░██║██╔════╝░██╔════╝╚══██╔══╝  ██╔══██╗██╔══██╗██╔══██╗╚██╗██╔╝╚██╗░██╔╝
 ██╔██╗██║██║░░░██║██║░░██╗░█████╗░░░░░██║░░░  ██████╔╝██████╔╝██║░░██║░╚███╔╝░░╚████╔╝░
