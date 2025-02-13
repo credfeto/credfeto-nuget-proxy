@@ -114,7 +114,7 @@ internal static class ServerStartup
                             .Select(x => Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri)
                                         ? uri
                                         : null)
-                            .RemoveNulls()
+                            .RemoveNulls(),
         ];
 
         if (upstream.Count == 0)

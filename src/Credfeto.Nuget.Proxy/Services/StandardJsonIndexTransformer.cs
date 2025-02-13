@@ -12,19 +12,35 @@ namespace Credfeto.Nuget.Proxy.Services;
 
 public sealed class StandardJsonIndexTransformer : JsonIndexTransformerBase, IJsonTransformer
 {
-    public StandardJsonIndexTransformer(ProxyServerConfig config, IHttpClientFactory httpClientFactory, ICurrentTimeSource currentTimeSource, ILogger<StandardJsonIndexTransformer> logger)
-        : base(config: config, httpClientFactory: httpClientFactory, currentTimeSource: currentTimeSource, logger: logger)
-    {
-    }
+    public StandardJsonIndexTransformer(
+        ProxyServerConfig config,
+        IHttpClientFactory httpClientFactory,
+        ICurrentTimeSource currentTimeSource,
+        ILogger<StandardJsonIndexTransformer> logger
+    )
+        : base(
+            config: config,
+            httpClientFactory: httpClientFactory,
+            currentTimeSource: currentTimeSource,
+            logger: logger
+        ) { }
 
-    public async ValueTask<bool> GetFromUpstreamAsync(HttpContext context, string path, CancellationToken cancellationToken)
+    public async ValueTask<bool> GetFromUpstreamAsync(
+        HttpContext context,
+        string path,
+        CancellationToken cancellationToken
+    )
     {
         if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
 
-        await this.DoGetFromUpstreamAsync(context: context, path: path, cancellationToken: context.RequestAborted);
+        await this.DoGetFromUpstreamAsync(
+            context: context,
+            path: path,
+            cancellationToken: context.RequestAborted
+        );
 
         return true;
     }

@@ -15,7 +15,6 @@ internal static partial class NuPkgMiddlewareLoggingExtensions
     [LoggerMessage(LogLevel.Information, EventId = 2, Message = "Retrieved Cached NUPKG from {upstream} Length: {length}")]
     public static partial void Cached(this ILogger<NuPkgMiddleware> logger, Uri upstream, long length);
 
-
     [LoggerMessage(LogLevel.Error, EventId = 3, Message = "Failed to save cached package: {filename}: {message}")]
     public static partial void SaveFailed(this ILogger<NuPkgMiddleware> logger, string filename, string message, Exception exception);
 }

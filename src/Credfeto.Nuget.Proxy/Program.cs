@@ -11,7 +11,11 @@ public static class Program
 {
     private const int MIN_THREADS = 32;
 
-    [SuppressMessage(category: "Meziantou.Analyzer", checkId: "MA0109: Add an overload with a Span or Memory parameter", Justification = "Won't work here")]
+    [SuppressMessage(
+        category: "Meziantou.Analyzer",
+        checkId: "MA0109: Add an overload with a Span or Memory parameter",
+        Justification = "Won't work here"
+    )]
     public static async Task<int> Main(string[] args)
     {
         StartupBanner.Show();
@@ -45,7 +49,7 @@ public static class Program
 
     private static WebApplication AddMiddleware(WebApplication application)
     {
-        return (WebApplication)application.UseMiddleware<JsonMiddleware>()
-                                          .UseMiddleware<NuPkgMiddleware>();
+        return (WebApplication)
+            application.UseMiddleware<JsonMiddleware>().UseMiddleware<NuPkgMiddleware>();
     }
 }

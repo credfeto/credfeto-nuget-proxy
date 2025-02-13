@@ -24,15 +24,27 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         "SearchAutocompleteService/3.0.0-beta",
         "SearchQueryService/3.0.0-beta",
         "PackageBaseAddress/3.0.0",
-        "RegistrationsBaseUrl/3.4.0"
+        "RegistrationsBaseUrl/3.4.0",
     ];
 
-    public ApiNugetOrgJsonIndexTransformer(ProxyServerConfig config, IHttpClientFactory httpClientFactory, ICurrentTimeSource currentTimeSource, ILogger<ApiNugetOrgJsonIndexTransformer> logger)
-        : base(config: config, httpClientFactory: httpClientFactory, currentTimeSource: currentTimeSource, logger: logger)
-    {
-    }
+    public ApiNugetOrgJsonIndexTransformer(
+        ProxyServerConfig config,
+        IHttpClientFactory httpClientFactory,
+        ICurrentTimeSource currentTimeSource,
+        ILogger<ApiNugetOrgJsonIndexTransformer> logger
+    )
+        : base(
+            config: config,
+            httpClientFactory: httpClientFactory,
+            currentTimeSource: currentTimeSource,
+            logger: logger
+        ) { }
 
-    public async ValueTask<bool> GetFromUpstreamAsync(HttpContext context, string path, CancellationToken cancellationToken)
+    public async ValueTask<bool> GetFromUpstreamAsync(
+        HttpContext context,
+        string path,
+        CancellationToken cancellationToken
+    )
     {
         if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
@@ -41,32 +53,55 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
         if (StringComparer.OrdinalIgnoreCase.Equals(x: path, y: "/v3/index.json"))
         {
-            await this.UpstreamIndexAsync(context: context, path:path, cancellationToken: context.RequestAborted);
+            await this.UpstreamIndexAsync(
+                context: context,
+                path: path,
+                cancellationToken: context.RequestAborted
+            );
 
             return true;
         }
 
-        await this.DoGetFromUpstreamAsync(context: context, path:path, cancellationToken: context.RequestAborted);
+        await this.DoGetFromUpstreamAsync(
+            context: context,
+            path: path,
+            cancellationToken: context.RequestAborted
+        );
 
         return true;
     }
 
-    private async Task UpstreamIndexAsync(HttpContext context, string path, CancellationToken cancellationToken)
+    private async Task UpstreamIndexAsync(
+        HttpContext context,
+        string path,
+        CancellationToken cancellationToken
+    )
     {
         Uri requestUri = this.GetRequestUri(path);
 
-        HttpResponseMessage result = await this.ReadUpstreamAsync(cancellationToken: cancellationToken, requestUri: requestUri);
+        HttpResponseMessage result = await this.ReadUpstreamAsync(
+            cancellationToken: cancellationToken,
+            requestUri: requestUri
+        );
 
         if (result.StatusCode != HttpStatusCode.OK)
         {
-            await this.UpstreamFailedAsync(context: context, requestUri: requestUri, result: result, cancellationToken: cancellationToken);
+            await this.UpstreamFailedAsync(
+                context: context,
+                requestUri: requestUri,
+                result: result,
+                cancellationToken: cancellationToken
+            );
 
             return;
         }
 
         string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
 
-        NugetResources? data = JsonSerializer.Deserialize<NugetResources>(json: json, jsonTypeInfo: AppJsonContexts.Default.NugetResources);
+        NugetResources? data = JsonSerializer.Deserialize<NugetResources>(
+            json: json,
+            jsonTypeInfo: AppJsonContexts.Default.NugetResources
+        );
 
         if (data is null)
         {
@@ -76,13 +111,16 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
             return;
         }
 
-        NugetResources resources = new(version: data.Version,
-        [
-            ..data.Resources.Where(IsNeeded)
-                  .Select(this.RewriteResource)
-        ]);
+        NugetResources resources = new(
+            version: data.Version,
+            [.. data.Resources.Where(IsNeeded).Select(this.RewriteResource)]
+        );
 
-        await this.SaveJsonResponseAsync(context: context, data: resources, cancellationToken: cancellationToken);
+        await this.SaveJsonResponseAsync(
+            context: context,
+            data: resources,
+            cancellationToken: cancellationToken
+        );
     }
 
     private static bool IsNeeded(NugetResource resource)
@@ -90,23 +128,47 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         return NeededResources.Any(n => StringComparer.Ordinal.Equals(x: n, y: resource.Type));
     }
 
-    [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
+    [SuppressMessage(
+        category: "SonarAnalyzer.CSharp",
+        checkId: "S3267: Use Linq",
+        Justification = "Not Here"
+    )]
     private NugetResource RewriteResource(NugetResource resource)
     {
         foreach (Uri uri in this.Config.UpstreamUrls)
         {
-            if (resource.Id.StartsWith(uri.CleanUri(), comparisonType: StringComparison.OrdinalIgnoreCase))
+            if (
+                resource.Id.StartsWith(
+                    uri.CleanUri(),
+                    comparisonType: StringComparison.OrdinalIgnoreCase
+                )
+            )
             {
-                return new(resource.Id.Replace(uri.CleanUri(), this.Config.PublicUrl.CleanUri(), comparisonType: StringComparison.Ordinal), type: resource.Type, comment: resource.Comment);
+                return new(
+                    resource.Id.Replace(
+                        uri.CleanUri(),
+                        this.Config.PublicUrl.CleanUri(),
+                        comparisonType: StringComparison.Ordinal
+                    ),
+                    type: resource.Type,
+                    comment: resource.Comment
+                );
             }
         }
 
         return resource;
     }
 
-    private Task SaveJsonResponseAsync(HttpContext context, NugetResources data, CancellationToken cancellationToken)
+    private Task SaveJsonResponseAsync(
+        HttpContext context,
+        NugetResources data,
+        CancellationToken cancellationToken
+    )
     {
-        string result = JsonSerializer.Serialize(value: data, jsonTypeInfo: AppJsonContexts.Default.NugetResources);
+        string result = JsonSerializer.Serialize(
+            value: data,
+            jsonTypeInfo: AppJsonContexts.Default.NugetResources
+        );
 
         this.OkHeaders(context);
         return context.Response.WriteAsync(text: result, cancellationToken: cancellationToken);

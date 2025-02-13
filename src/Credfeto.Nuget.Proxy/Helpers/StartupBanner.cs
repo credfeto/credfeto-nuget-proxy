@@ -15,7 +15,6 @@ internal static class StartupBanner
 ██║░╚███║╚██████╔╝╚██████╔╝███████╗░░░██║░░░  ██║░░░░░██║░░██║╚█████╔╝██╔╝╚██╗░░░██║░░░
 ╚═╝░░╚══╝░╚═════╝░░╚═════╝░╚══════╝░░░╚═╝░░░  ╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚═╝░░╚═╝░░░╚═╝░░░";
 
-
         Console.WriteLine(banner);
 
         Console.WriteLine("Starting version " + VersionInformation.Version + "...");

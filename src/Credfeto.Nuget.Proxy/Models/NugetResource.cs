@@ -15,6 +15,7 @@ internal sealed class NugetResource
 
     [JsonPropertyName("@id")]
     public string Id { get; }
+
     [JsonPropertyName("@type")]
     public string Type { get; }
 
