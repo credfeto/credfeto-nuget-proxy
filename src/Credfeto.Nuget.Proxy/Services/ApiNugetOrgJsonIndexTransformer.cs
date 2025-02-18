@@ -21,10 +21,15 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 {
     private static readonly IReadOnlyList<string> NeededResources =
     [
+        "Catalog/3.0.0",
+        "PackageBaseAddress/3.0.0",
+        "ReadmeUriTemplate/6.13.0",
+        "RegistrationsBaseUrl/3.4.0",
+        "RepositorySignatures/4.7.0",
+        "RepositorySignatures/5.0.0",
         "SearchAutocompleteService/3.0.0-beta",
         "SearchQueryService/3.0.0-beta",
-        "PackageBaseAddress/3.0.0",
-        "RegistrationsBaseUrl/3.4.0",
+        "VulnerabilityInfo/6.7.0",
     ];
 
     public ApiNugetOrgJsonIndexTransformer(
