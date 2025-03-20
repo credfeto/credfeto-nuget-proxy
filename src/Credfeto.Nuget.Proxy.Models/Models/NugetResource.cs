@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Credfeto.Nuget.Proxy.Models;
 
 [DebuggerDisplay("{Id}: {Type}")]
-internal sealed class NugetResource
+public sealed class NugetResource
 {
     public NugetResource(string id, string type, string? comment)
     {

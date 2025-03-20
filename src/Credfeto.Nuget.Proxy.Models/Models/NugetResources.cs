@@ -1,12 +1,18 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace Credfeto.Nuget.Proxy.Models;
 
 [DebuggerDisplay("{Version}")]
-internal sealed class NugetResources
+public sealed class NugetResources
 {
     [JsonConstructor]
+    [SuppressMessage(
+        category: "Meziantou.Analyzer",
+        checkId: "MA0109: Add an overload with a Span or Memory parameter",
+        Justification = "Won't work here"
+    )]
     public NugetResources(string version, NugetResource[] resources)
     {
         this.Version = version;

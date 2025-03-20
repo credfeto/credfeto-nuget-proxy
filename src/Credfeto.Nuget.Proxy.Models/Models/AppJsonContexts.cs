@@ -11,4 +11,4 @@ namespace Credfeto.Nuget.Proxy.Models;
 )]
 [JsonSerializable(typeof(NugetResources))]
 [JsonSerializable(typeof(NugetResource))]
-internal sealed partial class AppJsonContexts : JsonSerializerContext;
+public sealed partial class AppJsonContexts : JsonSerializerContext;

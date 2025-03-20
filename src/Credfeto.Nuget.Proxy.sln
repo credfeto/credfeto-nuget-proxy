@@ -16,12 +16,18 @@ EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Proxy", "Credfeto.Nuget.Proxy\Credfeto.Nuget.Proxy.csproj", "{2E5D5941-7383-4D39-9BA6-915AE063C072}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Proxy.Models", "Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj", "{C1B8DC41-42C6-4CE4-A4C2-B5CC0B383DC5}"
+EndProject
 Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1B8DC41-42C6-4CE4-A4C2-B5CC0B383DC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1B8DC41-42C6-4CE4-A4C2-B5CC0B383DC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1B8DC41-42C6-4CE4-A4C2-B5CC0B383DC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1B8DC41-42C6-4CE4-A4C2-B5CC0B383DC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
