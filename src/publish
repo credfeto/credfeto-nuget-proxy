@@ -17,8 +17,8 @@ echo "Clear $OUTFOLDER" \
   && cd "$BASEDIR" \
   && dotnet restore \
   && echo "CD" \
-  && cd "$BASEDIR/Credfeto.Nuget.Proxy" \
-  && echo "Build Credfeto.Nuget.Proxy" \
+  && cd "$BASEDIR/Credfeto.Nuget.Proxy.Server" \
+  && echo "Build Credfeto.Nuget.Proxy.Server" \
   && dotnet publish \
           --no-restore \
           -warnaserror \
