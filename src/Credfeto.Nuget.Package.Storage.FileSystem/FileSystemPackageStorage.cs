@@ -32,13 +32,14 @@ public sealed class FileSystemPackageStorage : IPackageStorage
     {
         string packagePath = this.BuildPackagePath(sourcePath);
 
-        if (!File.Exists(packagePath))
+        if (File.Exists(packagePath))
         {
-            await Task.CompletedTask;
-            return null;
+            return File.OpenRead(packagePath);
         }
 
-        return File.OpenRead(packagePath);
+        await Task.CompletedTask;
+        return null;
+
     }
 
     public async ValueTask SaveFileAsync(
