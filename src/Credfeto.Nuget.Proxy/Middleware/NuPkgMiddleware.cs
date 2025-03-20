@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
+using Credfeto.Nuget.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Config;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
@@ -34,10 +35,12 @@ public sealed class NuPkgMiddleware
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<NuPkgMiddleware> _logger;
     private readonly RequestDelegate _next;
+    private readonly IPackageStorage _packageStorage;
 
     public NuPkgMiddleware(
         RequestDelegate next,
         ProxyServerConfig config,
+        IPackageStorage packageStorage,
         IHttpClientFactory httpClientFactory,
         ICurrentTimeSource currentTimeSource,
         ILogger<NuPkgMiddleware> logger
@@ -45,6 +48,7 @@ public sealed class NuPkgMiddleware
     {
         this._next = next;
         this._config = config;
+        this._packageStorage = packageStorage;
         this._httpClientFactory = httpClientFactory;
         this._currentTimeSource = currentTimeSource;
         this._logger = logger;
@@ -71,8 +75,10 @@ public sealed class NuPkgMiddleware
                 return;
             }
 
+            string sourcePath = context.Request.Path.Value;
+
             if (
-                context.Request.Path.Value.EndsWith(
+                sourcePath.EndsWith(
                     value: ".nupkg",
                     comparisonType: StringComparison.OrdinalIgnoreCase
                 )
@@ -80,23 +86,27 @@ public sealed class NuPkgMiddleware
             {
                 try
                 {
-                    string packagePath = this.BuildPackagePath(context.Request.Path.Value);
-
-                    await this.HandlePackageDownloadAsync(
-                        context: context,
-                        packagePath: packagePath,
-                        cancellationToken: context.RequestAborted
-                    );
+                    if (
+                        !await this.TryToGetFromCacheAsync(
+                            context: context,
+                            sourcePath: sourcePath,
+                            cancellationToken: context.RequestAborted
+                        )
+                    )
+                    {
+                        await this.GetFromUpstreamAsync(
+                            context: context,
+                            sourcePath: sourcePath,
+                            cancellationToken: context.RequestAborted
+                        );
+                    }
 
                     return;
                 }
                 catch (Exception exception)
                     when (exception is TimeoutRejectedException or BulkheadRejectedException)
                 {
-                    context.Response.Clear();
-                    context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
-                    context.Response.Headers.CacheControl = $"no-cache, no-store, must-revalidate";
-                    context.Response.Headers.Append(key: "Retry-After", value: "5");
+                    TooManyRequestsResponse(context);
 
                     return;
                 }
@@ -106,38 +116,45 @@ public sealed class NuPkgMiddleware
         await this._next(context);
     }
 
-    private async Task HandlePackageDownloadAsync(
+    private static void TooManyRequestsResponse(HttpContext context)
+    {
+        context.Response.Clear();
+        context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
+        context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+        context.Response.Headers.Append(key: "Retry-After", value: "5");
+    }
+
+    private async ValueTask<bool> TryToGetFromCacheAsync(
         HttpContext context,
-        string packagePath,
+        string sourcePath,
         CancellationToken cancellationToken
     )
     {
-        if (File.Exists(packagePath))
-        {
-            await this.ServeCachedFileAsync(
-                context: context,
-                packagePath: packagePath,
+        await using (
+            Stream? stream = await this._packageStorage.ReadFileAsync(
+                sourcePath: sourcePath,
                 cancellationToken: cancellationToken
-            );
+            )
+        )
+        {
+            if (stream is not null)
+            {
+                await this.ServeCachedFileAsync(
+                    context: context,
+                    stream: stream,
+                    cancellationToken: cancellationToken
+                );
 
-            return;
+                return true;
+            }
         }
 
-        await this.GetFromUpstreamAsync(
-            context: context,
-            packagePath: packagePath,
-            cancellationToken: cancellationToken
-        );
+        return false;
     }
 
-    private string BuildPackagePath(string path)
-    {
-        return Path.Combine(path1: this._config.Packages, path.TrimStart('/'));
-    }
-
-    private async Task GetFromUpstreamAsync(
+    private async ValueTask GetFromUpstreamAsync(
         HttpContext context,
-        string packagePath,
+        string sourcePath,
         CancellationToken cancellationToken
     )
     {
@@ -180,43 +197,10 @@ public sealed class NuPkgMiddleware
                 length: buffer.Length
             );
 
-            await this.SaveFileAsync(
-                packagePath: packagePath,
+            await this._packageStorage.SaveFileAsync(
+                sourcePath: sourcePath,
                 buffer: buffer,
                 cancellationToken: cancellationToken
-            );
-        }
-    }
-
-    private async Task SaveFileAsync(
-        string packagePath,
-        byte[] buffer,
-        CancellationToken cancellationToken
-    )
-    {
-        // ! Doesn't
-        string? dir = Path.GetDirectoryName(packagePath);
-
-        if (string.IsNullOrEmpty(dir))
-        {
-            return;
-        }
-
-        try
-        {
-            Directory.CreateDirectory(dir);
-            await File.WriteAllBytesAsync(
-                path: packagePath,
-                bytes: buffer,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (Exception exception)
-        {
-            this._logger.SaveFailed(
-                filename: packagePath,
-                message: exception.Message,
-                exception: exception
             );
         }
     }
@@ -230,7 +214,7 @@ public sealed class NuPkgMiddleware
     {
         this._logger.UpstreamFailed(upstream: requestUri, statusCode: result.StatusCode);
         context.Response.StatusCode = (int)result.StatusCode;
-        context.Response.Headers.CacheControl = $"no-cache, no-store, must-revalidate";
+        context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
 
         return result.Content.CopyToAsync(
             stream: context.Response.Body,
@@ -255,21 +239,18 @@ public sealed class NuPkgMiddleware
 
     private async Task ServeCachedFileAsync(
         HttpContext context,
-        string packagePath,
+        Stream stream,
         CancellationToken cancellationToken
     )
     {
         Uri requestUri = this.GetRequestUri(context);
 
-        await using (Stream s = File.OpenRead(packagePath))
-        {
-            this.OkHeaders(context);
-            await s.CopyToAsync(
-                destination: context.Response.Body,
-                cancellationToken: cancellationToken
-            );
-            this._logger.Cached(upstream: requestUri, length: s.Position);
-        }
+        this.OkHeaders(context);
+        await stream.CopyToAsync(
+            destination: context.Response.Body,
+            cancellationToken: cancellationToken
+        );
+        this._logger.Cached(upstream: requestUri, length: stream.Position);
     }
 
     private void OkHeaders(HttpContext context)
