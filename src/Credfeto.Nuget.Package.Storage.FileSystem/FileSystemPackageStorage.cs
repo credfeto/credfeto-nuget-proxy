@@ -34,7 +34,16 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
         if (File.Exists(packagePath))
         {
-            return File.OpenRead(packagePath);
+            try
+            {
+                return File.OpenRead(packagePath);
+            }
+            catch (Exception exception)
+            {
+                this._logger.FailedToReadFileFromCache(sourcePath, exception.Message, exception );
+
+                return null;
+            }
         }
 
         await Task.CompletedTask;
