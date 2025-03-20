@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-noble
 WORKDIR /usr/src/app
 
 # Bundle App and basic config
-COPY Credfeto.Nuget.Proxy .
+COPY Credfeto.Nuget.Proxy.Server .
 COPY appsettings.json .
 COPY healthcheck .
 
