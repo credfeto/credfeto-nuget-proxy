@@ -8,16 +8,15 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
-using Credfeto.Nuget.Proxy.Extensions;
-using Credfeto.Nuget.Proxy.Interfaces;
-using Credfeto.Nuget.Proxy.Models;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
+using Credfeto.Nuget.Proxy.Server.Extensions;
+using Credfeto.Nuget.Proxy.Server.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using AppJsonContexts = Credfeto.Nuget.Proxy.Models.Models.AppJsonContexts;
 
-namespace Credfeto.Nuget.Proxy.Services;
+namespace Credfeto.Nuget.Proxy.Server.Services;
 
 public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, IJsonTransformer
 {

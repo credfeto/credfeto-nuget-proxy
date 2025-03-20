@@ -1,11 +1,11 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using Credfeto.Nuget.Proxy.Helpers;
-using Credfeto.Nuget.Proxy.Middleware;
+using Credfeto.Nuget.Proxy.Server.Helpers;
+using Credfeto.Nuget.Proxy.Server.Middleware;
 using Microsoft.AspNetCore.Builder;
 
-namespace Credfeto.Nuget.Proxy;
+namespace Credfeto.Nuget.Proxy.Server;
 
 public static class Program
 {

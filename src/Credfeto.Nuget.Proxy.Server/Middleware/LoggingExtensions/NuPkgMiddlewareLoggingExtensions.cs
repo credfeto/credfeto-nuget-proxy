@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
+namespace Credfeto.Nuget.Proxy.Server.Middleware.LoggingExtensions;
 
 internal static partial class NuPkgMiddlewareLoggingExtensions
 {

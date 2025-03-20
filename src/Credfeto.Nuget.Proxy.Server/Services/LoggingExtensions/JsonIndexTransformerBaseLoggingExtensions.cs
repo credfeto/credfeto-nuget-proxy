@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Nuget.Proxy.Services.LoggingExtensions;
+namespace Credfeto.Nuget.Proxy.Server.Services.LoggingExtensions;
 
 internal static partial class JsonIndexTransformerBaseLoggingExtensions
 {

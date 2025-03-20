@@ -9,10 +9,10 @@ using System.Threading;
 using Credfeto.Date;
 using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Package.Storage.FileSystem;
-using Credfeto.Nuget.Proxy.Extensions;
-using Credfeto.Nuget.Proxy.Interfaces;
 using Credfeto.Nuget.Proxy.Models.Config;
-using Credfeto.Nuget.Proxy.Services;
+using Credfeto.Nuget.Proxy.Server.Extensions;
+using Credfeto.Nuget.Proxy.Server.Interfaces;
+using Credfeto.Nuget.Proxy.Server.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -24,7 +24,7 @@ using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
 
-namespace Credfeto.Nuget.Proxy.Helpers;
+namespace Credfeto.Nuget.Proxy.Server.Helpers;
 
 internal static class ServerStartup
 {

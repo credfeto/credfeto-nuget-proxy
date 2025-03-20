@@ -2,12 +2,12 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Models.Config;
+using Credfeto.Nuget.Proxy.Server.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 
-namespace Credfeto.Nuget.Proxy.Extensions;
+namespace Credfeto.Nuget.Proxy.Server.Extensions;
 
 internal static class HttpClientSetup
 {

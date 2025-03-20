@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
-namespace Credfeto.Nuget.Proxy.Helpers;
+namespace Credfeto.Nuget.Proxy.Server.Helpers;
 
 [SuppressMessage(
     category: "ReSharper",

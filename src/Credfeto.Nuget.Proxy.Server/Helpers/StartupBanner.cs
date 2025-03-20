@@ -1,6 +1,6 @@
 using System;
 
-namespace Credfeto.Nuget.Proxy.Helpers;
+namespace Credfeto.Nuget.Proxy.Server.Helpers;
 
 internal static class StartupBanner
 {

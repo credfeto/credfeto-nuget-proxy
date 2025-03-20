@@ -3,12 +3,12 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
-using Credfeto.Nuget.Proxy.Interfaces;
 using Credfeto.Nuget.Proxy.Models.Config;
+using Credfeto.Nuget.Proxy.Server.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Nuget.Proxy.Services;
+namespace Credfeto.Nuget.Proxy.Server.Services;
 
 public sealed class StandardJsonIndexTransformer : JsonIndexTransformerBase, IJsonTransformer
 {

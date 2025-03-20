@@ -8,15 +8,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Package.Storage.Interfaces;
-using Credfeto.Nuget.Proxy.Extensions;
-using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
+using Credfeto.Nuget.Proxy.Server.Extensions;
+using Credfeto.Nuget.Proxy.Server.Middleware.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Polly.Bulkhead;
 using Polly.Timeout;
 
-namespace Credfeto.Nuget.Proxy.Middleware;
+namespace Credfeto.Nuget.Proxy.Server.Middleware;
 
 [SuppressMessage(
     category: "Microsoft.Security",

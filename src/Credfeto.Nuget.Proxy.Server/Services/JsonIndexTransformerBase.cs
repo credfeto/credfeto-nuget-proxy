@@ -6,14 +6,14 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
-using Credfeto.Nuget.Proxy.Extensions;
-using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Models.Config;
-using Credfeto.Nuget.Proxy.Services.LoggingExtensions;
+using Credfeto.Nuget.Proxy.Server.Extensions;
+using Credfeto.Nuget.Proxy.Server.Middleware;
+using Credfeto.Nuget.Proxy.Server.Services.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Nuget.Proxy.Services;
+namespace Credfeto.Nuget.Proxy.Server.Services;
 
 public abstract class JsonIndexTransformerBase
 {

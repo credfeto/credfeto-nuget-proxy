@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace Credfeto.Nuget.Proxy.Interfaces;
+namespace Credfeto.Nuget.Proxy.Server.Interfaces;
 
 public interface IJsonTransformer
 {
