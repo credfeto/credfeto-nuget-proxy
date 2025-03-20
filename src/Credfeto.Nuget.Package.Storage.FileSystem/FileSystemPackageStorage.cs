@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Package.Storage.FileSystem.LoggingExtensions;
 using Credfeto.Nuget.Package.Storage.Interfaces;
-using Credfeto.Nuget.Proxy.Config;
+using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.Extensions.Logging;
 
 namespace Credfeto.Nuget.Package.Storage.FileSystem;
@@ -21,6 +21,8 @@ public sealed class FileSystemPackageStorage : IPackageStorage
     {
         this._config = config;
         this._logger = logger;
+
+        Directory.CreateDirectory(config.Packages);
     }
 
     public async ValueTask<Stream?> ReadFileAsync(

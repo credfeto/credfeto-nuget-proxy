@@ -8,12 +8,14 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
-using Credfeto.Nuget.Proxy.Config;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Interfaces;
 using Credfeto.Nuget.Proxy.Models;
+using Credfeto.Nuget.Proxy.Models.Config;
+using Credfeto.Nuget.Proxy.Models.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using AppJsonContexts = Credfeto.Nuget.Proxy.Models.Models.AppJsonContexts;
 
 namespace Credfeto.Nuget.Proxy.Services;
 

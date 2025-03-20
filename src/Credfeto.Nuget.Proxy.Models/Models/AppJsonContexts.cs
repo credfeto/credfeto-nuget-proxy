@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Credfeto.Nuget.Proxy.Models;
+namespace Credfeto.Nuget.Proxy.Models.Models;
 
 [JsonSourceGenerationOptions(
     GenerationMode = JsonSourceGenerationMode.Serialization | JsonSourceGenerationMode.Metadata,

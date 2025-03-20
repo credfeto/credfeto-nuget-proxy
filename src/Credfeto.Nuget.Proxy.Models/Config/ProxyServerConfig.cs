@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Credfeto.Nuget.Proxy.Config;
+namespace Credfeto.Nuget.Proxy.Models.Config;
 
 [DebuggerDisplay("Upstream: {UpstreamUrls.Count} Public: {PublicUrl} Package: {Packages}")]
 public sealed record ProxyServerConfig(

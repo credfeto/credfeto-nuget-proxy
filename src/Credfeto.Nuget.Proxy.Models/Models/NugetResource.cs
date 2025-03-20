@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 
-namespace Credfeto.Nuget.Proxy.Models;
+namespace Credfeto.Nuget.Proxy.Models.Models;
 
 [DebuggerDisplay("{Id}: {Type}")]
 public sealed class NugetResource

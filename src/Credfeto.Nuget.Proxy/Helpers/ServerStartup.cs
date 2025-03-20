@@ -8,9 +8,10 @@ using System.Net;
 using System.Threading;
 using Credfeto.Date;
 using Credfeto.Extensions.Linq;
-using Credfeto.Nuget.Proxy.Config;
+using Credfeto.Nuget.Package.Storage.FileSystem;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Interfaces;
+using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -80,11 +81,10 @@ internal static class ServerStartup
             builder.Services.AddSingleton<IJsonTransformer, StandardJsonIndexTransformer>();
         }
 
-        Directory.CreateDirectory(appConfig.Packages);
-
         builder
             .Services.AddSingleton(appConfig)
             .AddDate()
+            .AddFileSystemStorage()
             .AddJsonClient(appConfig)
             .AddNupkgClient(appConfig);
 
