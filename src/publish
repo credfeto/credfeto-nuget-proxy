@@ -47,7 +47,6 @@ echo "Clear $OUTFOLDER" \
           --output "$OUTFOLDER" \
   && cd "$BASEDIR/server-dist/$PLATFORM" \
   && cp "$BASEDIR/../Dockerfile" . \
-  && cp "$BASEDIR/../healthcheck" . \
   && ls -lar \
   && sudo docker buildx build  . -t "credfeto/nuget-proxy:test" \
   && sudo docker run \
