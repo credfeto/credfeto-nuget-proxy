@@ -46,9 +46,33 @@
    color: "d8bb50"
    description: "Configuration files changes"
 
- - name: "credfeto-nuget-proxy"
+ - name: "credfeto-nuget-index-transformer-interfaces"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy project"
+   description: "Changes in $Credfeto.Nuget.Index.Transformer.Interfaces project"
+
+ - name: "credfeto-nuget-package-storage-filesystem"
+   color: "96f7d2"
+   description: "Changes in $Credfeto.Nuget.Package.Storage.FileSystem project"
+
+ - name: "credfeto-nuget-package-storage-filesystem-tests"
+   color: "0e8a16"
+   description: "Changes in $Credfeto.Nuget.Package.Storage.FileSystem.Tests project"
+
+ - name: "credfeto-nuget-package-storage-interfaces"
+   color: "96f7d2"
+   description: "Changes in $Credfeto.Nuget.Package.Storage.Interfaces project"
+
+ - name: "credfeto-nuget-proxy-middleware"
+   color: "96f7d2"
+   description: "Changes in $Credfeto.Nuget.Proxy.Middleware project"
+
+ - name: "credfeto-nuget-proxy-models"
+   color: "96f7d2"
+   description: "Changes in $Credfeto.Nuget.Proxy.Models project"
+
+ - name: "credfeto-nuget-proxy-server"
+   color: "96f7d2"
+   description: "Changes in $Credfeto.Nuget.Proxy.Server project"
 
  - name: "dependencies"
    color: "0366d6"

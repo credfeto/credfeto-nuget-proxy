@@ -10,8 +10,20 @@
  - any: [ 'CHANGELOG.md' ]
 "Config Change":
  - any: [ 'src/**/*.json', '!src/global.json' ]
-"credfeto-nuget-proxy":
- - any: [ 'src/$Credfeto.Nuget.Proxy/**/*' ]
+"credfeto-nuget-index-transformer-interfaces":
+ - any: [ 'src/$Credfeto.Nuget.Index.Transformer.Interfaces/**/*' ]
+"credfeto-nuget-package-storage-filesystem":
+ - any: [ 'src/$Credfeto.Nuget.Package.Storage.FileSystem/**/*' ]
+"credfeto-nuget-package-storage-filesystem-tests":
+ - any: [ 'src/$Credfeto.Nuget.Package.Storage.FileSystem.Tests/**/*' ]
+"credfeto-nuget-package-storage-interfaces":
+ - any: [ 'src/$Credfeto.Nuget.Package.Storage.Interfaces/**/*' ]
+"credfeto-nuget-proxy-middleware":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Middleware/**/*' ]
+"credfeto-nuget-proxy-models":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Models/**/*' ]
+"credfeto-nuget-proxy-server":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Server/**/*' ]
 "github-actions":
  - any: [ '.github/workflows/*.yml' ]
 "Legal Text":
