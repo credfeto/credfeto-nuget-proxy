@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.Docker.HealthCheck.Http.Client;
 using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Server.Helpers;
 using Microsoft.AspNetCore.Builder;
@@ -23,11 +25,11 @@ public static class Program
             Console.WriteLine(arg);
         }
 
-        return Credfeto.Docker.HealthCheck.Http.Client.HealthCheckClient.IsHealthCheck(
-            args,
-            out string? checkUrl
-        )
-            ? await Credfeto.Docker.HealthCheck.Http.Client.HealthCheckClient.ExecuteAsync(checkUrl)
+        return HealthCheckClient.IsHealthCheck(args: args, out string? checkUrl)
+            ? await HealthCheckClient.ExecuteAsync(
+                targetUrl: checkUrl,
+                cancellationToken: CancellationToken.None
+            )
             : await RunServerAsync(args);
     }
 
