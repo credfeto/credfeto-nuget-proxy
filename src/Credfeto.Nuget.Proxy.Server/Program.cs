@@ -20,11 +20,6 @@ public static class Program
     )]
     public static async Task<int> Main(string[] args)
     {
-        foreach (string arg in args)
-        {
-            Console.WriteLine(arg);
-        }
-
         return HealthCheckClient.IsHealthCheck(args: args, out string? checkUrl)
             ? await HealthCheckClient.ExecuteAsync(
                 targetUrl: checkUrl,
