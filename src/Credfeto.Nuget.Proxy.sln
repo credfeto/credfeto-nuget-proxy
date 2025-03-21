@@ -10,7 +10,6 @@ ProjectSection(SolutionItems) = preProject
 	..\CHANGELOG.md = ..\CHANGELOG.md
 	..\README.md = ..\README.md
 	..\Dockerfile = ..\Dockerfile
-	..\healthcheck = ..\healthcheck
 	publish = publish
 EndProjectSection
 EndProject

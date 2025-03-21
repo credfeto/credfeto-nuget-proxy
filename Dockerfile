@@ -5,7 +5,6 @@ WORKDIR /usr/src/app
 # Bundle App and basic config
 COPY Credfeto.Nuget.Proxy.Server .
 COPY appsettings.json .
-COPY healthcheck .
 
 EXPOSE 8080
 ENTRYPOINT [ "/usr/src/app/Credfeto.Nuget.Proxy.Server" ]
