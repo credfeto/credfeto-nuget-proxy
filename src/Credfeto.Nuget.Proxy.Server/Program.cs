@@ -23,8 +23,11 @@ public static class Program
             Console.WriteLine(arg);
         }
 
-        return HealthCheck.IsHealthCheck(args)
-            ? await HealthCheck.ExecuteAsync(args[1])
+        return Credfeto.Docker.HealthCheck.Http.Client.HealthCheckClient.IsHealthCheck(
+            args,
+            out string? checkUrl
+        )
+            ? await Credfeto.Docker.HealthCheck.Http.Client.HealthCheckClient.ExecuteAsync(checkUrl)
             : await RunServerAsync(args);
     }
 

@@ -7,10 +7,11 @@
     <GenerateNeutralResourcesLanguageAttribute>true</GenerateNeutralResourcesLanguageAttribute>
     <ImplicitUsings>disable</ImplicitUsings>
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
-    <IsPackable>true</IsPackable>
+    <IsPackable>false</IsPackable>
     <GenerateSBOM>true</GenerateSBOM>
     <IsPublishable>false</IsPublishable>
     <IncludeSymbols>true</IncludeSymbols>
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <LangVersion>latest</LangVersion>
     <NoWarn />

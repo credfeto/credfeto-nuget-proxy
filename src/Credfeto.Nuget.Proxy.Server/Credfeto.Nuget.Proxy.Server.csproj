@@ -45,7 +45,7 @@
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <ValidateExecutableReferencesMatchSelfContained>true</ValidateExecutableReferencesMatchSelfContained>
     <WarningsAsErrors />
-    
+
   </PropertyGroup>
   <ItemGroup>
     <!-- error NU1903: Warning As Error: Package 'System.Private.Uri' 4.3.0 has a known high severity vulnerability -->
@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Credfeto.Date" Version="1.1.74.856" />
+    <PackageReference Include="Credfeto.Docker.HealthCheck.Http.Client" Version="0.0.1.6" />
     <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.77.730" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.2" />
