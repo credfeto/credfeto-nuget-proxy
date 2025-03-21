@@ -19,6 +19,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.56.380
 - Dependencies - Updated Meziantou.Analyzer to 2.0.189
 - Dependencies - Updated Microsoft.VisualStudio.Threading.Analyzers to 17.13.61
+- Dependencies - Updated SonarAnalyzer.CSharp to 10.7.0.110445
 ### Removed
 ### Deployment Changes
 
