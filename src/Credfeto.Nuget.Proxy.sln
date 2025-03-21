@@ -24,6 +24,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Package.Stor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Package.Storage.FileSystem.Tests", "Credfeto.Nuget.Package.Storage.FileSystem.Tests\Credfeto.Nuget.Package.Storage.FileSystem.Tests.csproj", "{54D0DA42-1A1A-4358-8FAA-CE0E69E060FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Proxy.Middleware", "Credfeto.Nuget.Proxy.Middleware\Credfeto.Nuget.Proxy.Middleware.csproj", "{3A5C1150-FBD2-4DC7-BAD7-B80B544BCAE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Index.Transformer.Interfaces", "Credfeto.Nuget.Index.Transformer.Interfaces\Credfeto.Nuget.Index.Transformer.Interfaces.csproj", "{7B03A736-22B7-41C2-BC95-FAF27AA4B630}"
+EndProject
 Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -46,6 +50,14 @@ Global
 		{54D0DA42-1A1A-4358-8FAA-CE0E69E060FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54D0DA42-1A1A-4358-8FAA-CE0E69E060FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54D0DA42-1A1A-4358-8FAA-CE0E69E060FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A5C1150-FBD2-4DC7-BAD7-B80B544BCAE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A5C1150-FBD2-4DC7-BAD7-B80B544BCAE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A5C1150-FBD2-4DC7-BAD7-B80B544BCAE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A5C1150-FBD2-4DC7-BAD7-B80B544BCAE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B03A736-22B7-41C2-BC95-FAF27AA4B630}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B03A736-22B7-41C2-BC95-FAF27AA4B630}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B03A736-22B7-41C2-BC95-FAF27AA4B630}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B03A736-22B7-41C2-BC95-FAF27AA4B630}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

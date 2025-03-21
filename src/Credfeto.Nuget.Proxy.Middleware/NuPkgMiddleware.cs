@@ -8,15 +8,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Package.Storage.Interfaces;
+using Credfeto.Nuget.Proxy.Middleware.Extensions;
+using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
-using Credfeto.Nuget.Proxy.Server.Extensions;
-using Credfeto.Nuget.Proxy.Server.Middleware.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Polly.Bulkhead;
 using Polly.Timeout;
 
-namespace Credfeto.Nuget.Proxy.Server.Middleware;
+namespace Credfeto.Nuget.Proxy.Middleware;
 
 [SuppressMessage(
     category: "Microsoft.Security",
@@ -209,7 +209,7 @@ public sealed class NuPkgMiddleware
         HttpContext context,
         Uri requestUri,
         HttpResponseMessage result,
-        CancellationToken cancellationToken
+        in CancellationToken cancellationToken
     )
     {
         this._logger.UpstreamFailed(upstream: requestUri, statusCode: result.StatusCode);
@@ -222,19 +222,14 @@ public sealed class NuPkgMiddleware
         );
     }
 
-    private async Task<HttpResponseMessage> ReadUpstreamAsync(
+    private Task<HttpResponseMessage> ReadUpstreamAsync(
         Uri requestUri,
-        CancellationToken cancellationToken
+        in CancellationToken cancellationToken
     )
     {
         HttpClient client = this.GetClient();
 
-        HttpResponseMessage result = await client.GetAsync(
-            requestUri: requestUri,
-            cancellationToken: cancellationToken
-        );
-
-        return result;
+        return client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken);
     }
 
     private async Task ServeCachedFileAsync(

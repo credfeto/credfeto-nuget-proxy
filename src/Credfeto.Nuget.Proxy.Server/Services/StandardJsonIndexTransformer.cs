@@ -3,8 +3,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
+using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Models.Config;
-using Credfeto.Nuget.Proxy.Server.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 

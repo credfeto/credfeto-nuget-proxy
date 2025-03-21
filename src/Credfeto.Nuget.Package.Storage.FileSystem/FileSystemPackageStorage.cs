@@ -40,7 +40,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
             }
             catch (Exception exception)
             {
-                this._logger.FailedToReadFileFromCache(sourcePath, exception.Message, exception );
+                this._logger.FailedToReadFileFromCache(sourcePath, exception.Message, exception);
 
                 return null;
             }
@@ -48,7 +48,6 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
         await Task.CompletedTask;
         return null;
-
     }
 
     public async ValueTask SaveFileAsync(

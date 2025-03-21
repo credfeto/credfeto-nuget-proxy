@@ -28,6 +28,4 @@ internal static partial class FileSystemPackageStorageLoggerExtensions
         string message,
         Exception exception
     );
-
-
 }

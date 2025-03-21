@@ -1,12 +1,12 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using Credfeto.Nuget.Proxy.Server.Interfaces;
+using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Polly.Bulkhead;
 using Polly.Timeout;
 
-namespace Credfeto.Nuget.Proxy.Server.Middleware;
+namespace Credfeto.Nuget.Proxy.Middleware;
 
 public sealed class JsonMiddleware
 {
