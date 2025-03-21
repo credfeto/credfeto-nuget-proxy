@@ -57,17 +57,22 @@
   <ItemGroup>
     <PackageReference Include="Credfeto.Date.Interfaces" Version="1.1.74.856" />
     <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.77.730" />
-<!--    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.2" />-->
-<!--    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.2" />-->
+    <!--    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.2" />-->
+    <!--    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.2" />-->
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.2" />
-<!--    <PackageReference Include="Serilog" Version="4.2.0" />-->
-<!--    <PackageReference Include="Serilog.Enrichers.Demystifier" Version="1.0.3" />-->
-<!--    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />-->
-<!--    <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />-->
-<!--    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />-->
-<!--    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />-->
-<!--    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />-->
-<!--    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />-->
+    <!--    <PackageReference Include="Serilog" Version="4.2.0" />-->
+    <!--    <PackageReference Include="Serilog.Enrichers.Demystifier" Version="1.0.3" />-->
+    <!--    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />-->
+    <!--    <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />-->
+    <!--    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />-->
+    <!--    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />-->
+    <!--    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />-->
+    <!--    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />-->
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Credfeto.Nuget.Index.Transformer.Interfaces\Credfeto.Nuget.Index.Transformer.Interfaces.csproj" />
+    <ProjectReference Include="..\Credfeto.Nuget.Package.Storage.Interfaces\Credfeto.Nuget.Package.Storage.Interfaces.csproj" />
+    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsyncFixer" Version="1.6.0" PrivateAssets="All" ExcludeAssets="runtime" />
@@ -88,10 +93,5 @@
     <PackageReference Include="SonarAnalyzer.CSharp" Version="10.7.0.110445" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="ToStringWithoutOverrideAnalyzer" Version="0.6.0" PrivateAssets="All" ExcludeAssets="runtime" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Credfeto.Nuget.Index.Transformer.Interfaces\Credfeto.Nuget.Index.Transformer.Interfaces.csproj" />
-    <ProjectReference Include="..\Credfeto.Nuget.Package.Storage.Interfaces\Credfeto.Nuget.Package.Storage.Interfaces.csproj" />
-    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
   </ItemGroup>
 </Project>
