@@ -113,8 +113,4 @@
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Middleware\Credfeto.Nuget.Proxy.Middleware.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
-    <Folder Include="Middleware\" />
-  </ItemGroup>
 </Project>

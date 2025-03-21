@@ -18,6 +18,18 @@ public static class Program
     )]
     public static async Task<int> Main(string[] args)
     {
+        foreach (string arg in args)
+        {
+            Console.WriteLine(arg);
+        }
+
+        return HealthCheck.IsHealthCheck(args)
+            ? await HealthCheck.ExecuteAsync(args[1])
+            : await RunServerAsync(args);
+    }
+
+    private static async ValueTask<int> RunServerAsync(string[] args)
+    {
         StartupBanner.Show();
 
         ServerStartup.SetThreads(MIN_THREADS);
@@ -44,12 +56,16 @@ public static class Program
     private static Task RunAsync(WebApplication application)
     {
         Console.WriteLine("App Created");
+
         return AddMiddleware(application).RunAsync();
     }
 
     private static WebApplication AddMiddleware(WebApplication application)
     {
         return (WebApplication)
-            application.UseMiddleware<JsonMiddleware>().UseMiddleware<NuPkgMiddleware>();
+            application
+                .ConfigureEndpoints()
+                .UseMiddleware<JsonMiddleware>()
+                .UseMiddleware<NuPkgMiddleware>();
     }
 }

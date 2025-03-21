@@ -11,6 +11,7 @@ using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Package.Storage.FileSystem;
 using Credfeto.Nuget.Proxy.Models.Config;
+using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Server.Extensions;
 using Credfeto.Nuget.Proxy.Server.Services;
 using Microsoft.AspNetCore.Builder;
@@ -101,6 +102,13 @@ internal static class ServerStartup
             )
             .UseSetting(key: WebHostDefaults.SuppressStatusMessagesKey, value: "True")
             .ConfigureLogging((_, logger) => ConfigureLogging(logger));
+
+        builder.Services.ConfigureHttpJsonOptions(options =>
+            options.SerializerOptions.TypeInfoResolverChain.Insert(
+                index: 0,
+                item: AppJsonContexts.Default
+            )
+        );
 
         return builder.Build();
     }
