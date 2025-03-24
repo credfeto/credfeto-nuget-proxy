@@ -9,17 +9,20 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.57.416
-- Dependencies - Updated FunFair.CodeAnalysis to 7.0.74.984
-- Dependencies - Updated Credfeto.Date to 1.1.77.912
-- Dependencies - Updated Credfeto.Extensions.Linq to 1.0.80.786
-- Dependencies - Updated FunFair.Test.Common to 6.1.265.1215
 ### Removed
 ### Deployment Changes
 
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
+## [0.0.6] - 2025-03-24
+### Changed
+- Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.57.416
+- Dependencies - Updated FunFair.CodeAnalysis to 7.0.74.984
+- Dependencies - Updated Credfeto.Date to 1.1.77.912
+- Dependencies - Updated Credfeto.Extensions.Linq to 1.0.80.786
+- Dependencies - Updated FunFair.Test.Common to 6.1.265.1215
+
 ## [0.0.5] - 2025-03-24
 ### Changed
 - Dependencies - Updated Roslynator.Analyzers to 4.13.0
