@@ -6,7 +6,6 @@ using Credfeto.Nuget.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Models.Config;
 using FunFair.Test.Common;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Credfeto.Nuget.Package.Storage.FileSystem.Tests;
 
@@ -30,10 +29,12 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     [Fact]
     public async Task FileDoesNotExistAsync()
     {
+        CancellationToken cancellationToken = this.CancellationToken();
+
         await using (
             Stream? stream = await this._packageStorage.ReadFileAsync(
                 sourcePath: "doesnotexist",
-                cancellationToken: CancellationToken.None
+                cancellationToken: cancellationToken
             )
         )
         {
@@ -44,16 +45,18 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     [Fact]
     public async Task FileExistsAsync()
     {
+        CancellationToken cancellationToken = this.CancellationToken();
+
         await File.WriteAllTextAsync(
             Path.Combine(path1: this.TempFolder, path2: "file.txt"),
             contents: "test",
-            cancellationToken: CancellationToken.None
+            cancellationToken: cancellationToken
         );
 
         await using (
             Stream? stream = await this._packageStorage.ReadFileAsync(
                 sourcePath: "file.txt",
-                cancellationToken: CancellationToken.None
+                cancellationToken: cancellationToken
             )
         )
         {
