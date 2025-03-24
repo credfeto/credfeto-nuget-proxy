@@ -127,7 +127,7 @@ public abstract class JsonIndexTransformerBase
 
     protected void OkHeaders(HttpContext context)
     {
-        const int ageSeconds = 60 * 10;
+        const int ageSeconds = 60;
         context.Response.StatusCode = (int)HttpStatusCode.OK;
         context.Response.Headers.Append(key: "Content-Type", value: "application/json");
         context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
