@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -146,13 +147,28 @@ internal static class ServerStartup
             throw new UnreachableException("Proxy:UpstreamUrl not provided");
         }
 
+        if (
+            !int.TryParse(
+                configuration["Proxy:JsonMaxAgeSeconds"],
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out int jsonMaxAgeSeconds
+            )
+            || jsonMaxAgeSeconds <= 5
+        )
+        {
+            jsonMaxAgeSeconds = 5;
+        }
+
         return new(
             UpstreamUrls: upstream,
-            new(
+            PublicUrl: new(
                 configuration["Proxy:PublicUrl"]
                     ?? throw new UnreachableException("Proxy:PublicUrl not provided")
             ),
-            configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath
+            Packages: configuration["Proxy:Packages"]
+                ?? ApplicationConfigLocator.ConfigurationFilesPath,
+            JsonMaxAgeSeconds: jsonMaxAgeSeconds
         );
     }
 

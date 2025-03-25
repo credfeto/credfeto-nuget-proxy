@@ -18,7 +18,12 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     {
         Uri upstream = new("https://upstream.example.org");
         Uri publicUri = new("https://nuget.example.org");
-        ProxyServerConfig config = new([upstream], PublicUrl: publicUri, Packages: this.TempFolder);
+        ProxyServerConfig config = new(
+            [upstream],
+            PublicUrl: publicUri,
+            Packages: this.TempFolder,
+            60
+        );
 
         this._packageStorage = new FileSystemPackageStorage(
             config: config,

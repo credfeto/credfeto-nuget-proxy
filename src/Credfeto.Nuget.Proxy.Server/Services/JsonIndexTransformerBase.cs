@@ -127,7 +127,8 @@ public abstract class JsonIndexTransformerBase
 
     protected void OkHeaders(HttpContext context)
     {
-        const int ageSeconds = 60;
+        int ageSeconds = this.GetJsonCacheMaxAge(context);
+
         context.Response.StatusCode = (int)HttpStatusCode.OK;
         context.Response.Headers.Append(key: "Content-Type", value: "application/json");
         context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
@@ -138,5 +139,21 @@ public abstract class JsonIndexTransformerBase
                 format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'",
                 formatProvider: CultureInfo.InvariantCulture
             );
+    }
+
+    private int GetJsonCacheMaxAge(HttpContext context)
+    {
+        if (
+            context.Request.Path.HasValue
+            && context.Request.Path.StartsWithSegments(
+                "/v3/vulnerabilties",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        {
+            return this.Config.JsonMaxAgeSeconds * 10;
+        }
+
+        return this.Config.JsonMaxAgeSeconds;
     }
 }

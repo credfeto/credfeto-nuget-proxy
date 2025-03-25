@@ -9,7 +9,8 @@ namespace Credfeto.Nuget.Proxy.Models.Config;
 public sealed record ProxyServerConfig(
     IReadOnlyList<Uri> UpstreamUrls,
     Uri PublicUrl,
-    string Packages
+    string Packages,
+    int JsonMaxAgeSeconds
 )
 {
     public bool IsNugetPublicServer =>
