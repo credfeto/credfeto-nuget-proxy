@@ -18,6 +18,10 @@
  - any: [ 'src/$Credfeto.Nuget.Package.Storage.FileSystem.Tests/**/*' ]
 "credfeto-nuget-package-storage-interfaces":
  - any: [ 'src/$Credfeto.Nuget.Package.Storage.Interfaces/**/*' ]
+"credfeto-nuget-proxy-extensions":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Extensions/**/*' ]
+"credfeto-nuget-proxy-logic":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Logic/**/*' ]
 "credfeto-nuget-proxy-middleware":
  - any: [ 'src/$Credfeto.Nuget.Proxy.Middleware/**/*' ]
 "credfeto-nuget-proxy-models":
