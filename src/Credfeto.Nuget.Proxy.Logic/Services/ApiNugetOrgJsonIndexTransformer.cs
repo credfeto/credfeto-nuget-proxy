@@ -86,7 +86,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
             JsonSerializer.Deserialize<NugetResources>(
                 json: json,
                 jsonTypeInfo: AppJsonContexts.Default.NugetResources
-            ) ?? throw new JsonException("XXXXXXXX");
+            ) ?? throw new JsonException("Invalid json");
 
         NugetResources resources = new(
             version: data.Version,
