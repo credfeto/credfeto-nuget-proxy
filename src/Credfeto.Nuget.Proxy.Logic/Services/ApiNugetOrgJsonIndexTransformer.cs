@@ -5,12 +5,10 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using AppJsonContexts = Credfeto.Nuget.Proxy.Models.Models.AppJsonContexts;
 
@@ -63,34 +61,6 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
         return NoMatch;
     }
-
-    // public async ValueTask<JsonResult?> GetFromUpstreamAsync(
-    //     HttpContext context,
-    //     string path,
-    //     CancellationToken cancellationToken
-    // )
-    // {
-    //     // TODO: Refactor this into the base class and use template method for the special cases
-    //     if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
-    //     {
-    //         return false;
-    //     }
-    //
-    //     if (StringComparer.OrdinalIgnoreCase.Equals(x: path, y: "/v3/index.json"))
-    //     {
-    //         return await this.DoGetFromUpstreamAsync(
-    //             path: path,
-    //             transformer: this.ReplaceIndex,
-    //             cancellationToken: cancellationToken
-    //         );
-    //     }
-    //
-    //     return await this.DoGetFromUpstreamAsync(
-    //         path: path,
-    //         transformer: this.ReplaceUrls,
-    //         cancellationToken: cancellationToken
-    //     );
-    // }
 
     private string ReplaceIndex(string json)
     {

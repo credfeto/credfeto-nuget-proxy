@@ -1,14 +1,9 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
@@ -99,7 +94,6 @@ public abstract class JsonIndexTransformerBase
 
         json = transformer(json);
 
-        json = this.ReplaceUrls(json);
         this._logger.UpstreamJsonOk(
             upstream: requestUri,
             statusCode: HttpStatusCode.OK,
