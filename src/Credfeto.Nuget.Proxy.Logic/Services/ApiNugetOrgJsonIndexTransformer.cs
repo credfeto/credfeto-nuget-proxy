@@ -52,6 +52,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         CancellationToken cancellationToken
     )
     {
+        // TODO: Refactor this into the base class and use template method for the special cases
         if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
             return false;
