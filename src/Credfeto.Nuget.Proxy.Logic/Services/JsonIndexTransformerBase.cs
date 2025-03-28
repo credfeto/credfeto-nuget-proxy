@@ -1,50 +1,90 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
+using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
 
 public abstract class JsonIndexTransformerBase
 {
-    private readonly ICurrentTimeSource _currentTimeSource;
     private readonly IJsonDownloader _jsonDownloader;
+    private readonly bool _indexReplacement;
     private readonly ILogger _logger;
 
     protected JsonIndexTransformerBase(
         ProxyServerConfig config,
         IJsonDownloader jsonDownloader,
-        ICurrentTimeSource currentTimeSource,
+        bool indexReplacement,
         ILogger logger
     )
     {
         this.Config = config;
         this._jsonDownloader = jsonDownloader;
-        this._currentTimeSource = currentTimeSource;
+        this._indexReplacement = indexReplacement;
         this._logger = logger;
     }
 
     protected ProxyServerConfig Config { get; }
 
-    protected void UpstreamFailed(HttpContext context, Uri requestUri, HttpStatusCode result)
+    public async ValueTask<JsonResult?> GetFromUpstreamAsync(
+        string path,
+        CancellationToken cancellationToken
+    )
     {
-        this._logger.UpstreamJsonFailed(upstream: requestUri, statusCode: result);
-        context.Response.StatusCode = (int)result;
-        context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+        if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        if (this._indexReplacement)
+        {
+            (bool match, JsonResult? result) = await this.DoIndexReplacementAsync(
+                path,
+                cancellationToken
+            );
+
+            if (match)
+            {
+                return result;
+            }
+        }
+
+        return await this.GetJsonFromUpstreamWithReplacementsAsync(
+            path: path,
+            transformer: this.ReplaceUrls,
+            cancellationToken: cancellationToken
+        );
     }
 
-    protected async Task DoGetFromUpstreamAsync(
-        HttpContext context,
+    [SuppressMessage(
+        "Roslynator.Analyzers",
+        "RCS1231: Make ref read-only",
+        Justification = "Derived classes need it without in"
+    )]
+    protected virtual ValueTask<(bool Match, JsonResult? Result)> DoIndexReplacementAsync(
+        string path,
+        CancellationToken cancellationToken
+    )
+    {
+        return ValueTask.FromResult(NoMatch);
+    }
+
+    protected static (bool Match, JsonResult? Result) NoMatch { get; } =
+        (Match: false, Result: null);
+
+    protected async ValueTask<JsonResult?> GetJsonFromUpstreamWithReplacementsAsync(
         string path,
         Func<string, string> transformer,
         CancellationToken cancellationToken
@@ -52,41 +92,21 @@ public abstract class JsonIndexTransformerBase
     {
         Uri requestUri = this.GetRequestUri(path);
 
-        try
-        {
-            string json = await this._jsonDownloader.ReadUpstreamAsync(
-                requestUri: requestUri,
-                cancellationToken: cancellationToken
-            );
+        string json = await this._jsonDownloader.ReadUpstreamAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
 
-            json = transformer(json);
+        json = transformer(json);
 
-            json = this.ReplaceUrls(json);
-            this._logger.UpstreamJsonOk(
-                upstream: requestUri,
-                statusCode: HttpStatusCode.OK,
-                length: json.Length
-            );
+        json = this.ReplaceUrls(json);
+        this._logger.UpstreamJsonOk(
+            upstream: requestUri,
+            statusCode: HttpStatusCode.OK,
+            length: json.Length
+        );
 
-            this.OkHeaders(context);
-            await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
-        }
-        catch (HttpRequestException exception)
-        {
-            this.UpstreamFailed(
-                context: context,
-                requestUri: requestUri,
-                result: exception.StatusCode ?? HttpStatusCode.InternalServerError
-            );
-        }
-        catch (JsonException)
-        {
-            this.UpstreamFailed(
-                context: context,
-                requestUri: requestUri,
-                result: HttpStatusCode.InternalServerError
-            );
-        }
+        return new(Json: json, this.GetJsonCacheMaxAge(path));
     }
 
     protected Uri GetRequestUri(string path)
@@ -107,35 +127,13 @@ public abstract class JsonIndexTransformerBase
         );
     }
 
-    protected void OkHeaders(HttpContext context)
+    private int GetJsonCacheMaxAge(string path)
     {
-        int ageSeconds = this.GetJsonCacheMaxAge(context);
-
-        context.Response.StatusCode = (int)HttpStatusCode.OK;
-        context.Response.Headers.Append(key: "Content-Type", value: "application/json");
-        context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
-        context.Response.Headers.Expires = this
-            ._currentTimeSource.UtcNow()
-            .AddSeconds(ageSeconds)
-            .ToString(
-                format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'",
-                formatProvider: CultureInfo.InvariantCulture
-            );
-    }
-
-    private int GetJsonCacheMaxAge(HttpContext context)
-    {
-        if (
-            context.Request.Path.HasValue
-            && context.Request.Path.StartsWithSegments(
-                other: "/v3/vulnerabilties",
-                comparisonType: StringComparison.OrdinalIgnoreCase
-            )
+        return path.StartsWith(
+            "/v3/vulnerabilties/",
+            comparisonType: StringComparison.OrdinalIgnoreCase
         )
-        {
-            return this.Config.JsonMaxAgeSeconds * 10;
-        }
-
-        return this.Config.JsonMaxAgeSeconds;
+            ? this.Config.JsonMaxAgeSeconds * 10
+            : this.Config.JsonMaxAgeSeconds;
     }
 }

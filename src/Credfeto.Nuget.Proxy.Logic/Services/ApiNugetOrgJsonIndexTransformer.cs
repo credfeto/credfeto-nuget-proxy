@@ -36,49 +36,61 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     public ApiNugetOrgJsonIndexTransformer(
         ProxyServerConfig config,
         IJsonDownloader jsonDownloader,
-        ICurrentTimeSource currentTimeSource,
         ILogger<ApiNugetOrgJsonIndexTransformer> logger
     )
         : base(
             config: config,
             jsonDownloader: jsonDownloader,
-            currentTimeSource: currentTimeSource,
+            indexReplacement: true,
             logger: logger
         ) { }
 
-    public async ValueTask<bool> GetFromUpstreamAsync(
-        HttpContext context,
+    protected override async ValueTask<(bool Match, JsonResult? Result)> DoIndexReplacementAsync(
         string path,
         CancellationToken cancellationToken
     )
     {
-        // TODO: Refactor this into the base class and use template method for the special cases
-        if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
         if (StringComparer.OrdinalIgnoreCase.Equals(x: path, y: "/v3/index.json"))
         {
-            await this.DoGetFromUpstreamAsync(
-                context: context,
+            JsonResult? result = await this.GetJsonFromUpstreamWithReplacementsAsync(
                 path: path,
                 transformer: this.ReplaceIndex,
-                cancellationToken: context.RequestAborted
+                cancellationToken: cancellationToken
             );
 
-            return true;
+            return (Match: true, Result: result);
         }
 
-        await this.DoGetFromUpstreamAsync(
-            context: context,
-            path: path,
-            transformer: this.ReplaceUrls,
-            cancellationToken: context.RequestAborted
-        );
-
-        return true;
+        return NoMatch;
     }
+
+    // public async ValueTask<JsonResult?> GetFromUpstreamAsync(
+    //     HttpContext context,
+    //     string path,
+    //     CancellationToken cancellationToken
+    // )
+    // {
+    //     // TODO: Refactor this into the base class and use template method for the special cases
+    //     if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
+    //     {
+    //         return false;
+    //     }
+    //
+    //     if (StringComparer.OrdinalIgnoreCase.Equals(x: path, y: "/v3/index.json"))
+    //     {
+    //         return await this.DoGetFromUpstreamAsync(
+    //             path: path,
+    //             transformer: this.ReplaceIndex,
+    //             cancellationToken: cancellationToken
+    //         );
+    //     }
+    //
+    //     return await this.DoGetFromUpstreamAsync(
+    //         path: path,
+    //         transformer: this.ReplaceUrls,
+    //         cancellationToken: cancellationToken
+    //     );
+    // }
 
     private string ReplaceIndex(string json)
     {
