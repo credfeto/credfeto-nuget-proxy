@@ -22,7 +22,7 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
             [upstream],
             PublicUrl: publicUri,
             Packages: this.TempFolder,
-            60
+            JsonMaxAgeSeconds: 60
         );
 
         this._packageStorage = new FileSystemPackageStorage(
@@ -36,15 +36,12 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
-        await using (
-            Stream? stream = await this._packageStorage.ReadFileAsync(
-                sourcePath: "doesnotexist",
-                cancellationToken: cancellationToken
-            )
-        )
-        {
-            Assert.Null(stream);
-        }
+        byte[]? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "doesnotexist",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Null(result);
     }
 
     [Fact]
@@ -58,15 +55,12 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
             cancellationToken: cancellationToken
         );
 
-        await using (
-            Stream? stream = await this._packageStorage.ReadFileAsync(
-                sourcePath: "file.txt",
-                cancellationToken: cancellationToken
-            )
-        )
-        {
-            Assert.NotNull(stream);
-            Assert.Equal(4, stream.Length);
-        }
+        byte[]? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "file.txt",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Equal(expected: 4, actual: result.Length);
     }
 }

@@ -1,13 +1,11 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
 namespace Credfeto.Nuget.Index.Transformer.Interfaces;
 
 public interface INupkgSource
 {
-    ValueTask<bool> GetFromUpstreamAsync(
-        HttpContext context,
+    ValueTask<PackageResult?> GetFromUpstreamAsync(
         string path,
         CancellationToken cancellationToken
     );

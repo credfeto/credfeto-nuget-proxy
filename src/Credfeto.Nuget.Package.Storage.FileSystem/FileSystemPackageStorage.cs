@@ -41,28 +41,30 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    public async ValueTask<Stream?> ReadFileAsync(
+    public async ValueTask<byte[]?> ReadFileAsync(
         string sourcePath,
         CancellationToken cancellationToken
     )
     {
         string packagePath = this.BuildPackagePath(sourcePath);
 
-        if (File.Exists(packagePath))
+        try
         {
-            try
+            if (File.Exists(packagePath))
             {
-                return File.OpenRead(packagePath);
-            }
-            catch (Exception exception)
-            {
-                this._logger.FailedToReadFileFromCache(sourcePath, exception.Message, exception);
-
-                return null;
+                return await File.ReadAllBytesAsync(
+                    packagePath,
+                    cancellationToken: cancellationToken
+                );
             }
         }
+        catch (Exception exception)
+        {
+            this._logger.FailedToReadFileFromCache(sourcePath, exception.Message, exception);
 
-        await Task.CompletedTask;
+            return null;
+        }
+
         return null;
     }
 

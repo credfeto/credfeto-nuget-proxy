@@ -7,7 +7,7 @@ namespace Credfeto.Nuget.Package.Storage.Interfaces;
 
 public interface IPackageStorage
 {
-    ValueTask<Stream?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken);
+    ValueTask<byte[]?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken);
 
     [SuppressMessage(
         category: "Meziantou.Analyzer",
