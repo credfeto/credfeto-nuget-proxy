@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Logic.Extensions;
 using Credfeto.Nuget.Proxy.Models.Config;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
 
