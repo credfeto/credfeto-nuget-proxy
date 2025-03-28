@@ -22,7 +22,10 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         this._config = config;
         this._logger = logger;
 
-        Directory.CreateDirectory(config.Packages);
+        if (!Directory.Exists(config.Packages))
+        {
+            Directory.CreateDirectory(config.Packages);
+        }
     }
 
     public async ValueTask<Stream?> ReadFileAsync(
