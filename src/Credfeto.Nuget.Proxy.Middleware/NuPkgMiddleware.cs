@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.IO.Pipelines;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -90,10 +91,10 @@ public sealed class NuPkgMiddleware
         }
     }
 
-    private async ValueTask SuccessAsync(
+    private ValueTask<FlushResult> SuccessAsync(
         HttpContext context,
-        PackageResult data,
-        CancellationToken cancellationToken
+        in PackageResult data,
+        in CancellationToken cancellationToken
     )
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -107,16 +108,7 @@ public sealed class NuPkgMiddleware
                 formatProvider: CultureInfo.InvariantCulture
             );
 
-        await WriteAsync(context.Response.Body, data, cancellationToken);
-    }
-
-    private static Task WriteAsync(
-        Stream stream,
-        in PackageResult data,
-        in CancellationToken cancellationToken
-    )
-    {
-        return stream.WriteAsync(data.Data, 0, data.Data.Length, cancellationToken);
+        return context.Response.BodyWriter.WriteAsync(data.Data, cancellationToken);
     }
 
     private static bool IsMatchingRequest(HttpContext context, [NotNullWhen(true)] out string? path)
