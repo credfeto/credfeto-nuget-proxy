@@ -7,8 +7,5 @@ namespace Credfeto.Nuget.Proxy.Logic;
 
 public interface IPackageDownloader
 {
-    ValueTask<HttpResponseMessage> ReadUpstreamAsync(
-        Uri requestUri,
-        CancellationToken cancellationToken
-    );
+    ValueTask<byte[]> ReadUpstreamAsync(Uri requestUri, CancellationToken cancellationToken);
 }

@@ -1,8 +1,12 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.Nuget.Proxy.Logic.Extensions;
 using Credfeto.Nuget.Proxy.Models.Config;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
 
@@ -17,14 +21,34 @@ public sealed class PackageDownloader : IPackageDownloader
         this._httpClientFactory = httpClientFactory;
     }
 
-    public async ValueTask<HttpResponseMessage> ReadUpstreamAsync(
+    public async ValueTask<byte[]> ReadUpstreamAsync(
         Uri requestUri,
         CancellationToken cancellationToken
     )
     {
         HttpClient client = this.GetClient();
 
-        return await client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken);
+        using (
+            HttpResponseMessage result = await client.GetAsync(
+                requestUri: requestUri,
+                cancellationToken: cancellationToken
+            )
+        )
+        {
+            return !result.IsSuccessStatusCode
+                ? Failed(requestUri, result.StatusCode)
+                : await result.Content.ReadAsByteArrayAsync(cancellationToken: cancellationToken);
+        }
+    }
+
+    [DoesNotReturn]
+    private static byte[] Failed(Uri requestUri, HttpStatusCode resultStatusCode)
+    {
+        throw new HttpRequestException(
+            $"Failed to download {requestUri}: {resultStatusCode.GetName()}",
+            inner: null,
+            statusCode: resultStatusCode
+        );
     }
 
     private HttpClient GetClient()

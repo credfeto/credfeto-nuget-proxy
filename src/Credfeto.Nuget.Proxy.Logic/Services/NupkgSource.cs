@@ -123,67 +123,43 @@ public sealed class NupkgSource : INupkgSource
     )
     {
         Uri requestUri = this.GetRequestUri(context);
-        HttpResponseMessage result = await this._packageDownloader.ReadUpstreamAsync(
-            requestUri: requestUri,
-            cancellationToken: cancellationToken
-        );
 
-        if (result.StatusCode != HttpStatusCode.OK)
+        try
         {
-            await this.UpstreamFailedAsync(
-                context: context,
+            byte[] data = await this._packageDownloader.ReadUpstreamAsync(
                 requestUri: requestUri,
-                result: result,
-                cancellationToken: cancellationToken
-            );
-
-            return;
-        }
-
-        await using (MemoryStream memoryStream = new())
-        {
-            await result.Content.CopyToAsync(
-                stream: memoryStream,
                 cancellationToken: cancellationToken
             );
 
             this.OkHeaders(context);
 
-            byte[] buffer = memoryStream.ToArray();
-            await context.Response.Body.WriteAsync(
-                buffer: buffer,
-                cancellationToken: cancellationToken
-            );
-
             this._logger.UpstreamPackageOk(
                 upstream: requestUri,
-                statusCode: result.StatusCode,
-                length: buffer.Length
+                statusCode: HttpStatusCode.OK,
+                length: data.Length
             );
 
             await this._packageStorage.SaveFileAsync(
                 sourcePath: sourcePath,
-                buffer: buffer,
+                buffer: data,
                 cancellationToken: cancellationToken
+            );
+        }
+        catch (HttpRequestException exception)
+        {
+            this.UpstreamFailed(
+                context: context,
+                requestUri: requestUri,
+                statusCode: exception.StatusCode ?? HttpStatusCode.InternalServerError
             );
         }
     }
 
-    private Task UpstreamFailedAsync(
-        HttpContext context,
-        Uri requestUri,
-        HttpResponseMessage result,
-        in CancellationToken cancellationToken
-    )
+    private void UpstreamFailed(HttpContext context, Uri requestUri, HttpStatusCode statusCode)
     {
-        this._logger.UpstreamPackageFailed(upstream: requestUri, statusCode: result.StatusCode);
-        context.Response.StatusCode = (int)result.StatusCode;
+        this._logger.UpstreamPackageFailed(upstream: requestUri, statusCode: statusCode);
+        context.Response.StatusCode = (int)statusCode;
         context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
-
-        return result.Content.CopyToAsync(
-            stream: context.Response.Body,
-            cancellationToken: cancellationToken
-        );
     }
 
     private async Task ServeCachedFileAsync(
