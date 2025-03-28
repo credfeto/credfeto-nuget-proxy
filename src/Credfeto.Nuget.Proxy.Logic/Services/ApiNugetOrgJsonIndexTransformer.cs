@@ -31,6 +31,12 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         "VulnerabilityInfo/6.7.0",
     ];
 
+    private static readonly IReadOnlyList<Uri> UpstreamUrl =
+    [
+        new Uri("https://api.nuget.org"),
+        new Uri("https://azuresearch-ussc.nuget.org"),
+    ];
+
     public ApiNugetOrgJsonIndexTransformer(
         ProxyServerConfig config,
         IJsonDownloader jsonDownloader,
@@ -93,7 +99,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     )]
     private NugetResource RewriteResource(NugetResource resource)
     {
-        foreach (Uri uri in this.Config.UpstreamUrls)
+        foreach (Uri uri in UpstreamUrl)
         {
             if (
                 resource.Id.StartsWith(
