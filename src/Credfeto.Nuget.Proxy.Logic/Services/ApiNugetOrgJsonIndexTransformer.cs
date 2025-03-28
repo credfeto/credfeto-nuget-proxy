@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,9 +59,10 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
         if (StringComparer.OrdinalIgnoreCase.Equals(x: path, y: "/v3/index.json"))
         {
-            await this.UpstreamIndexAsync(
+            await this.DoGetFromUpstreamAsync(
                 context: context,
                 path: path,
+                transformer: this.ReplaceIndex,
                 cancellationToken: context.RequestAborted
             );
 
@@ -73,61 +72,29 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         await this.DoGetFromUpstreamAsync(
             context: context,
             path: path,
+            transformer: this.ReplaceUrls,
             cancellationToken: context.RequestAborted
         );
 
         return true;
     }
 
-    private async Task UpstreamIndexAsync(
-        HttpContext context,
-        string path,
-        CancellationToken cancellationToken
-    )
+    private string ReplaceIndex(string json)
     {
-        Uri requestUri = this.GetRequestUri(path);
-
-        HttpResponseMessage result = await this.ReadUpstreamAsync(
-            requestUri: requestUri,
-            cancellationToken: cancellationToken
-        );
-
-        if (result.StatusCode != HttpStatusCode.OK)
-        {
-            await this.UpstreamFailedAsync(
-                context: context,
-                requestUri: requestUri,
-                result: result,
-                cancellationToken: cancellationToken
-            );
-
-            return;
-        }
-
-        string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
-
-        NugetResources? data = JsonSerializer.Deserialize<NugetResources>(
-            json: json,
-            jsonTypeInfo: AppJsonContexts.Default.NugetResources
-        );
-
-        if (data is null)
-        {
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
-
-            return;
-        }
+        NugetResources data =
+            JsonSerializer.Deserialize<NugetResources>(
+                json: json,
+                jsonTypeInfo: AppJsonContexts.Default.NugetResources
+            ) ?? throw new JsonException("XXXXXXXX");
 
         NugetResources resources = new(
             version: data.Version,
             [.. data.Resources.Where(IsNeeded).Select(this.RewriteResource)]
         );
 
-        await this.SaveJsonResponseAsync(
-            context: context,
-            data: resources,
-            cancellationToken: cancellationToken
+        return JsonSerializer.Serialize(
+            value: resources,
+            jsonTypeInfo: AppJsonContexts.Default.NugetResources
         );
     }
 
@@ -165,20 +132,5 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         }
 
         return resource;
-    }
-
-    private Task SaveJsonResponseAsync(
-        HttpContext context,
-        NugetResources data,
-        in CancellationToken cancellationToken
-    )
-    {
-        string result = JsonSerializer.Serialize(
-            value: data,
-            jsonTypeInfo: AppJsonContexts.Default.NugetResources
-        );
-
-        this.OkHeaders(context);
-        return context.Response.WriteAsync(text: result, cancellationToken: cancellationToken);
     }
 }

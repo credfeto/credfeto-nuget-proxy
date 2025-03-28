@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
@@ -35,68 +36,57 @@ public abstract class JsonIndexTransformerBase
 
     protected ProxyServerConfig Config { get; }
 
-    protected Task UpstreamFailedAsync(
-        HttpContext context,
-        Uri requestUri,
-        HttpResponseMessage result,
-        in CancellationToken cancellationToken
-    )
+    protected void UpstreamFailed(HttpContext context, Uri requestUri, HttpStatusCode result)
     {
-        this._logger.UpstreamJsonFailed(upstream: requestUri, statusCode: result.StatusCode);
-        context.Response.StatusCode = (int)result.StatusCode;
+        this._logger.UpstreamJsonFailed(upstream: requestUri, statusCode: result);
+        context.Response.StatusCode = (int)result;
         context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
-
-        return result.Content.CopyToAsync(
-            stream: context.Response.Body,
-            cancellationToken: cancellationToken
-        );
     }
 
     protected async Task DoGetFromUpstreamAsync(
         HttpContext context,
         string path,
+        Func<string, string> transformer,
         CancellationToken cancellationToken
     )
     {
         Uri requestUri = this.GetRequestUri(path);
-        HttpResponseMessage result = await this.ReadUpstreamAsync(
-            requestUri: requestUri,
-            cancellationToken: cancellationToken
-        );
 
-        if (result.StatusCode != HttpStatusCode.OK)
+        try
         {
-            await this.UpstreamFailedAsync(
-                context: context,
+            string json = await this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: requestUri,
-                result: result,
                 cancellationToken: cancellationToken
             );
 
-            return;
+            json = transformer(json);
+
+            json = this.ReplaceUrls(json);
+            this._logger.UpstreamJsonOk(
+                upstream: requestUri,
+                statusCode: HttpStatusCode.OK,
+                length: json.Length
+            );
+
+            this.OkHeaders(context);
+            await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
         }
-
-        string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
-        json = this.ReplaceUrls(json);
-        this._logger.UpstreamJsonOk(
-            upstream: requestUri,
-            statusCode: result.StatusCode,
-            length: json.Length
-        );
-
-        this.OkHeaders(context);
-        await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
-    }
-
-    protected ValueTask<HttpResponseMessage> ReadUpstreamAsync(
-        Uri requestUri,
-        in CancellationToken cancellationToken
-    )
-    {
-        return this._jsonDownloader.ReadUpstreamAsync(
-            requestUri: requestUri,
-            cancellationToken: cancellationToken
-        );
+        catch (HttpRequestException exception)
+        {
+            this.UpstreamFailed(
+                context: context,
+                requestUri: requestUri,
+                result: exception.StatusCode ?? HttpStatusCode.InternalServerError
+            );
+        }
+        catch (JsonException)
+        {
+            this.UpstreamFailed(
+                context: context,
+                requestUri: requestUri,
+                result: HttpStatusCode.InternalServerError
+            );
+        }
     }
 
     protected Uri GetRequestUri(string path)
@@ -104,7 +94,7 @@ public abstract class JsonIndexTransformerBase
         return new(this.Config.UpstreamUrls[0].CleanUri() + path);
     }
 
-    private string ReplaceUrls(string json)
+    protected string ReplaceUrls(string json)
     {
         return this.Config.UpstreamUrls.Aggregate(
             seed: json,

@@ -38,6 +38,7 @@ public sealed class StandardJsonIndexTransformer : JsonIndexTransformerBase, IJs
         await this.DoGetFromUpstreamAsync(
             context: context,
             path: path,
+            this.ReplaceUrls,
             cancellationToken: context.RequestAborted
         );
 
