@@ -1,6 +1,6 @@
 using System;
 
-namespace Credfeto.Nuget.Proxy.Middleware.Extensions;
+namespace Credfeto.Nuget.Proxy.Extensions;
 
 public static class UriExtensions
 {

@@ -6,30 +6,29 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
-using Credfeto.Nuget.Proxy.Middleware;
-using Credfeto.Nuget.Proxy.Middleware.Extensions;
+using Credfeto.Nuget.Proxy.Extensions;
+using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
-using Credfeto.Nuget.Proxy.Server.Services.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Nuget.Proxy.Server.Services;
+namespace Credfeto.Nuget.Proxy.Logic.Services;
 
 public abstract class JsonIndexTransformerBase
 {
     private readonly ICurrentTimeSource _currentTimeSource;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IJsonDownloader _jsonDownloader;
     private readonly ILogger _logger;
 
     protected JsonIndexTransformerBase(
         ProxyServerConfig config,
-        IHttpClientFactory httpClientFactory,
+        IJsonDownloader jsonDownloader,
         ICurrentTimeSource currentTimeSource,
         ILogger logger
     )
     {
         this.Config = config;
-        this._httpClientFactory = httpClientFactory;
+        this._jsonDownloader = jsonDownloader;
         this._currentTimeSource = currentTimeSource;
         this._logger = logger;
     }
@@ -40,10 +39,10 @@ public abstract class JsonIndexTransformerBase
         HttpContext context,
         Uri requestUri,
         HttpResponseMessage result,
-        CancellationToken cancellationToken
+        in CancellationToken cancellationToken
     )
     {
-        this._logger.UpstreamFailed(upstream: requestUri, statusCode: result.StatusCode);
+        this._logger.UpstreamJsonFailed(upstream: requestUri, statusCode: result.StatusCode);
         context.Response.StatusCode = (int)result.StatusCode;
         context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
 
@@ -51,14 +50,6 @@ public abstract class JsonIndexTransformerBase
             stream: context.Response.Body,
             cancellationToken: cancellationToken
         );
-    }
-
-    private HttpClient GetClient()
-    {
-        HttpClient client = this._httpClientFactory.CreateClient(JsonMiddleware.ClientName);
-        client.BaseAddress = this.Config.UpstreamUrls[0];
-
-        return client;
     }
 
     protected async Task DoGetFromUpstreamAsync(
@@ -69,8 +60,8 @@ public abstract class JsonIndexTransformerBase
     {
         Uri requestUri = this.GetRequestUri(path);
         HttpResponseMessage result = await this.ReadUpstreamAsync(
-            cancellationToken: cancellationToken,
-            requestUri: requestUri
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
         );
 
         if (result.StatusCode != HttpStatusCode.OK)
@@ -87,7 +78,7 @@ public abstract class JsonIndexTransformerBase
 
         string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
         json = this.ReplaceUrls(json);
-        this._logger.UpstreamOk(
+        this._logger.UpstreamJsonOk(
             upstream: requestUri,
             statusCode: result.StatusCode,
             length: json.Length
@@ -97,14 +88,15 @@ public abstract class JsonIndexTransformerBase
         await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
     }
 
-    protected Task<HttpResponseMessage> ReadUpstreamAsync(
+    protected ValueTask<HttpResponseMessage> ReadUpstreamAsync(
         Uri requestUri,
-        CancellationToken cancellationToken
+        in CancellationToken cancellationToken
     )
     {
-        HttpClient client = this.GetClient();
-
-        return client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken);
+        return this._jsonDownloader.ReadUpstreamAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
     }
 
     protected Uri GetRequestUri(string path)
@@ -146,8 +138,8 @@ public abstract class JsonIndexTransformerBase
         if (
             context.Request.Path.HasValue
             && context.Request.Path.StartsWithSegments(
-                "/v3/vulnerabilties",
-                StringComparison.OrdinalIgnoreCase
+                other: "/v3/vulnerabilties",
+                comparisonType: StringComparison.OrdinalIgnoreCase
             )
         )
         {

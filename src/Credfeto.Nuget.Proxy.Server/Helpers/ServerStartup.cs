@@ -12,10 +12,10 @@ using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Package.Storage.FileSystem;
 using Credfeto.Nuget.Proxy.Logic;
+using Credfeto.Nuget.Proxy.Logic.Services;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Server.Extensions;
-using Credfeto.Nuget.Proxy.Server.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -75,21 +75,11 @@ internal static class ServerStartup
         ProxyServerConfig appConfig = LoadConfig(config);
         LogAppConfig(appConfig);
 
-        if (appConfig.IsNugetPublicServer)
-        {
-            builder.Services.AddSingleton<IJsonTransformer, ApiNugetOrgJsonIndexTransformer>();
-        }
-        else
-        {
-            builder.Services.AddSingleton<IJsonTransformer, StandardJsonIndexTransformer>();
-        }
-
         builder
             .Services.AddSingleton(appConfig)
             .AddDate()
             .AddFileSystemStorage()
-            .AddJsonClient(appConfig)
-            .AddNupkgClient(appConfig);
+            .AddLogic(appConfig);
 
         builder.Host.UseWindowsService().UseSystemd();
         builder

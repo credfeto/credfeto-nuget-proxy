@@ -9,14 +9,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
-using Credfeto.Nuget.Proxy.Middleware.Extensions;
+using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using AppJsonContexts = Credfeto.Nuget.Proxy.Models.Models.AppJsonContexts;
 
-namespace Credfeto.Nuget.Proxy.Server.Services;
+namespace Credfeto.Nuget.Proxy.Logic.Services;
 
 public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, IJsonTransformer
 {
@@ -37,13 +37,13 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
     public ApiNugetOrgJsonIndexTransformer(
         ProxyServerConfig config,
-        IHttpClientFactory httpClientFactory,
+        IJsonDownloader jsonDownloader,
         ICurrentTimeSource currentTimeSource,
         ILogger<ApiNugetOrgJsonIndexTransformer> logger
     )
         : base(
             config: config,
-            httpClientFactory: httpClientFactory,
+            jsonDownloader: jsonDownloader,
             currentTimeSource: currentTimeSource,
             logger: logger
         ) { }
@@ -88,8 +88,8 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         Uri requestUri = this.GetRequestUri(path);
 
         HttpResponseMessage result = await this.ReadUpstreamAsync(
-            cancellationToken: cancellationToken,
-            requestUri: requestUri
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
         );
 
         if (result.StatusCode != HttpStatusCode.OK)
@@ -114,7 +114,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         if (data is null)
         {
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            context.Response.Headers.CacheControl = $"no-cache, no-store, must-revalidate";
+            context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
 
             return;
         }
@@ -170,7 +170,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     private Task SaveJsonResponseAsync(
         HttpContext context,
         NugetResources data,
-        CancellationToken cancellationToken
+        in CancellationToken cancellationToken
     )
     {
         string result = JsonSerializer.Serialize(

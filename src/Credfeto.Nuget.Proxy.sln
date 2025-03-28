@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Index.Transf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Proxy.Logic", "Credfeto.Nuget.Proxy.Logic\Credfeto.Nuget.Proxy.Logic.csproj", "{DEC13E22-B5D0-4F15-9931-535665EE526F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Nuget.Proxy.Extensions", "Credfeto.Nuget.Proxy.Extensions\Credfeto.Nuget.Proxy.Extensions.csproj", "{884026AB-2EF6-4A30-95EF-C1DB9B47F6C3}"
+EndProject
 Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{2E5D5941-7383-4D39-9BA6-915AE063C072}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{DEC13E22-B5D0-4F15-9931-535665EE526F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DEC13E22-B5D0-4F15-9931-535665EE526F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DEC13E22-B5D0-4F15-9931-535665EE526F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{884026AB-2EF6-4A30-95EF-C1DB9B47F6C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{884026AB-2EF6-4A30-95EF-C1DB9B47F6C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{884026AB-2EF6-4A30-95EF-C1DB9B47F6C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{884026AB-2EF6-4A30-95EF-C1DB9B47F6C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

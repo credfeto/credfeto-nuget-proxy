@@ -2,17 +2,17 @@ using System;
 using System.Net;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
+namespace Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 
-internal static partial class NuPkgMiddlewareLoggingExtensions
+internal static partial class NeedToRenameThisLoggingExtensions
 {
     [LoggerMessage(
         LogLevel.Error,
         EventId = 1,
         Message = "Failed to retrieve NUPKG from {upstream} Received Http {statusCode}"
     )]
-    public static partial void UpstreamFailed(
-        this ILogger<NuPkgMiddleware> logger,
+    public static partial void UpstreamPackageFailed(
+        this ILogger<NupkgSource> logger,
         Uri upstream,
         HttpStatusCode statusCode
     );
@@ -22,8 +22,8 @@ internal static partial class NuPkgMiddlewareLoggingExtensions
         EventId = 2,
         Message = "Retrieved NUPKG from {upstream} Received Http {statusCode} Length: {length}"
     )]
-    public static partial void UpstreamOk(
-        this ILogger<NuPkgMiddleware> logger,
+    public static partial void UpstreamPackageOk(
+        this ILogger<NupkgSource> logger,
         Uri upstream,
         HttpStatusCode statusCode,
         int length
@@ -34,8 +34,8 @@ internal static partial class NuPkgMiddlewareLoggingExtensions
         EventId = 2,
         Message = "Retrieved Cached NUPKG from {upstream} Length: {length}"
     )]
-    public static partial void Cached(
-        this ILogger<NuPkgMiddleware> logger,
+    public static partial void CachedPackage(
+        this ILogger<NupkgSource> logger,
         Uri upstream,
         long length
     );

@@ -73,6 +73,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Credfeto.Nuget.Index.Transformer.Interfaces\Credfeto.Nuget.Index.Transformer.Interfaces.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Package.Storage.Interfaces\Credfeto.Nuget.Package.Storage.Interfaces.csproj" />
+    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Extensions\Credfeto.Nuget.Proxy.Extensions.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
   </ItemGroup>
   <ItemGroup>

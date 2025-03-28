@@ -8,7 +8,7 @@ using Polly;
 
 namespace Credfeto.Nuget.Proxy.Logic;
 
-public static class HttpClientSetup
+internal static class HttpClientSetup
 {
     private const int CONCURRENT_ACTIONS = 30;
     private const int QUEUED_ACTIONS = 10;
