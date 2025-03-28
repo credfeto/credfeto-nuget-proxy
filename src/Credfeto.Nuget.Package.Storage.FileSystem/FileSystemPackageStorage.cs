@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,9 +23,21 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         this._config = config;
         this._logger = logger;
 
-        if (!Directory.Exists(config.Packages))
+        EnsureDirectoryExists(config.Packages);
+    }
+
+    private static void EnsureDirectoryExists(string folder)
+    {
+        try
         {
-            Directory.CreateDirectory(config.Packages);
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
         }
     }
 
@@ -71,7 +84,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
         try
         {
-            Directory.CreateDirectory(dir);
+            EnsureDirectoryExists(dir);
             await File.WriteAllBytesAsync(
                 path: packagePath,
                 bytes: buffer,
