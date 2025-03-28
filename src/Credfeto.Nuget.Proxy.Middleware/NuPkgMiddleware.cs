@@ -63,6 +63,7 @@ public sealed class NuPkgMiddleware
 
             if (result is null)
             {
+                await this._next(context);
                 return;
             }
 
@@ -91,10 +92,10 @@ public sealed class NuPkgMiddleware
         }
     }
 
-    private ValueTask<FlushResult> SuccessAsync(
+    private async ValueTask SuccessAsync(
         HttpContext context,
-        in PackageResult data,
-        in CancellationToken cancellationToken
+        PackageResult data,
+        CancellationToken cancellationToken
     )
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -108,7 +109,10 @@ public sealed class NuPkgMiddleware
                 formatProvider: CultureInfo.InvariantCulture
             );
 
-        return context.Response.BodyWriter.WriteAsync(data.Data, cancellationToken);
+        await using (MemoryStream stream = new(data.Data, false))
+        {
+            await stream.CopyToAsync(context.Response.Body, cancellationToken);
+        }
     }
 
     private static bool IsMatchingRequest(HttpContext context, [NotNullWhen(true)] out string? path)

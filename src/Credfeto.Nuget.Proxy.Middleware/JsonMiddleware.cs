@@ -52,6 +52,8 @@ public sealed class JsonMiddleware
 
             if (result is null)
             {
+                await this._next(context);
+
                 return;
             }
 
@@ -88,6 +90,7 @@ public sealed class JsonMiddleware
         if (
             StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET")
             && context.Request.Path.HasValue
+            && context.Request.Path.Value.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
         )
         {
             path = context.Request.Path.Value;
