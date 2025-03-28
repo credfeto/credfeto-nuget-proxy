@@ -2,14 +2,13 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 
-namespace Credfeto.Nuget.Proxy.Server.Extensions;
+namespace Credfeto.Nuget.Proxy.Logic;
 
-internal static class HttpClientSetup
+public static class HttpClientSetup
 {
     private const int CONCURRENT_ACTIONS = 30;
     private const int QUEUED_ACTIONS = 10;
@@ -23,7 +22,7 @@ internal static class HttpClientSetup
     {
         return services
             .AddHttpClient(
-                name: JsonMiddleware.ClientName,
+                name: HttpClientNames.Json,
                 configureClient: httpClient =>
                     InitializeJsonClient(
                         upstreamUrl: appConfig.UpstreamUrls[0],
@@ -53,7 +52,7 @@ internal static class HttpClientSetup
     {
         return services
             .AddHttpClient(
-                name: NuPkgMiddleware.ClientName,
+                name: HttpClientNames.NugetPackage,
                 configureClient: httpClient =>
                     InitializeNupkgClient(
                         upstreamUrl: appConfig.UpstreamUrls[0],
@@ -79,7 +78,7 @@ internal static class HttpClientSetup
     private static void InitializeJsonClient(
         Uri upstreamUrl,
         HttpClient httpClient,
-        TimeSpan httpTimeout
+        in TimeSpan httpTimeout
     )
     {
         httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
@@ -100,7 +99,7 @@ internal static class HttpClientSetup
     private static void InitializeNupkgClient(
         Uri upstreamUrl,
         HttpClient httpClient,
-        TimeSpan httpTimeout
+        in TimeSpan httpTimeout
     )
     {
         httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;

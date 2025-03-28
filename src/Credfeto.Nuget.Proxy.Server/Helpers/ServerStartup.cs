@@ -11,6 +11,7 @@ using Credfeto.Date;
 using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Package.Storage.FileSystem;
+using Credfeto.Nuget.Proxy.Logic;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Server.Extensions;

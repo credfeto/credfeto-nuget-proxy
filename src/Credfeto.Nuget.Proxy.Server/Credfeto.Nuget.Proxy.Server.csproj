@@ -77,7 +77,6 @@
     <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.80.786" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.3" />
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Enrichers.Demystifier" Version="1.0.3" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
@@ -110,6 +109,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Credfeto.Nuget.Package.Storage.FileSystem\Credfeto.Nuget.Package.Storage.FileSystem.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Package.Storage.Interfaces\Credfeto.Nuget.Package.Storage.Interfaces.csproj" />
+    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Logic\Credfeto.Nuget.Proxy.Logic.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Middleware\Credfeto.Nuget.Proxy.Middleware.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
   </ItemGroup>
