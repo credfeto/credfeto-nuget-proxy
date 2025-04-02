@@ -2,13 +2,11 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;

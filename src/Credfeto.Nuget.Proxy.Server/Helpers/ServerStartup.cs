@@ -64,22 +64,60 @@ internal static class ServerStartup
 
     public static WebApplication CreateApp(string[] args)
     {
-        WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
+        string configPath = GetServerConfig(out ProxyServerConfig appConfig);
 
+        return WebApplication
+            .CreateSlimBuilder(args)
+            .ConfigureServices(appConfig: appConfig)
+            .ConfigureAppHost()
+            .ConfigureWebHost(configPath: configPath)
+            .Build();
+    }
+
+    private static string GetServerConfig(out ProxyServerConfig appConfig)
+    {
         string configPath = ApplicationConfigLocator.ConfigurationFilesPath;
 
         IConfigurationRoot config = LoadConfiguration(configPath);
 
-        ProxyServerConfig appConfig = LoadConfig(config);
+        appConfig = LoadConfig(config);
         LogAppConfig(appConfig);
 
+        return configPath;
+    }
+
+    private static WebApplicationBuilder ConfigureAppHost(this WebApplicationBuilder builder)
+    {
+        builder.Host.UseWindowsService().UseSystemd();
+
+        return builder;
+    }
+
+    private static WebApplicationBuilder ConfigureServices(
+        this WebApplicationBuilder builder,
+        ProxyServerConfig appConfig
+    )
+    {
         builder
             .Services.AddSingleton(appConfig)
             .AddDate()
             .AddFileSystemStorage()
-            .AddLogic(appConfig);
+            .AddLogic(appConfig)
+            .ConfigureHttpJsonOptions(options =>
+                options.SerializerOptions.TypeInfoResolverChain.Insert(
+                    index: 0,
+                    item: AppJsonContexts.Default
+                )
+            );
 
-        builder.Host.UseWindowsService().UseSystemd();
+        return builder;
+    }
+
+    private static WebApplicationBuilder ConfigureWebHost(
+        this WebApplicationBuilder builder,
+        string configPath
+    )
+    {
         builder
             .WebHost.UseKestrel(options: options =>
                 SetKestrelOptions(
@@ -93,14 +131,7 @@ internal static class ServerStartup
             .UseSetting(key: WebHostDefaults.SuppressStatusMessagesKey, value: "True")
             .ConfigureLogging((_, logger) => ConfigureLogging(logger));
 
-        builder.Services.ConfigureHttpJsonOptions(options =>
-            options.SerializerOptions.TypeInfoResolverChain.Insert(
-                index: 0,
-                item: AppJsonContexts.Default
-            )
-        );
-
-        return builder.Build();
+        return builder;
     }
 
     private static void LogAppConfig(ProxyServerConfig appConfig)

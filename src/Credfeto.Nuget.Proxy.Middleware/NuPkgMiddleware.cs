@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
-using System.IO.Pipelines;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
