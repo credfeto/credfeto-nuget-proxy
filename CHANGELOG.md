@@ -9,18 +9,21 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- Dependencies - Updated xunit.analyzers to 1.21.0
-- Dependencies - Updated xunit.v3 to 2.0.1
-- Dependencies - Updated SonarAnalyzer.CSharp to 10.8.0.113526
-- Dependencies - Updated Microsoft.Extensions to 9.0.4
-- SDK - Updated DotNet SDK to 9.0.203
-- Dependencies - Updated Meziantou.Analyzer to 2.0.195
 ### Removed
 ### Deployment Changes
 
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
+## [0.0.8] - 2025-04-09
+### Changed
+- Dependencies - Updated xunit.analyzers to 1.21.0
+- Dependencies - Updated xunit.v3 to 2.0.1
+- Dependencies - Updated SonarAnalyzer.CSharp to 10.8.0.113526
+- Dependencies - Updated Microsoft.Extensions to 9.0.4
+- SDK - Updated DotNet SDK to 9.0.203
+- Dependencies - Updated Meziantou.Analyzer to 2.0.195
+
 ## [0.0.7] - 2025-03-25
 ### Changed
 - Dependencies - Updated Serilog.Extensions.Logging to 9.0.1
