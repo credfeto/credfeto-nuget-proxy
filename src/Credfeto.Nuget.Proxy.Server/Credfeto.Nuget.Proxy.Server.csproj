@@ -72,7 +72,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Credfeto.Date" Version="1.1.79.959" />
+    <PackageReference Include="Credfeto.Date" Version="1.1.80.963" />
     <PackageReference Include="Credfeto.Docker.HealthCheck.Http.Client" Version="0.0.3.44" />
     <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.82.838" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.4" />
@@ -90,7 +90,7 @@
     <PackageReference Include="CSharpier.MSBuild" Version="0.30.6" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="AsyncFixer" Version="1.6.0" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="codecracker.CSharp" Version="1.1.0" PrivateAssets="All" ExcludeAssets="runtime" />
-    <PackageReference Include="Credfeto.Enumeration.Source.Generation" Version="1.2.73.1040" PrivateAssets="All" ExcludeAssets="runtime" />
+    <PackageReference Include="Credfeto.Enumeration.Source.Generation" Version="1.2.74.1041" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="Credfeto.Version.Information.Generator" Version="1.0.59.468" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="CSharpIsNullAnalyzer" Version="0.1.593" PrivateAssets="all" ExcludeAssets="runtime" />
     <PackageReference Include="FunFair.CodeAnalysis" Version="7.0.78.1039" PrivateAssets="All" ExcludeAssets="runtime" />
