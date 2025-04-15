@@ -56,7 +56,7 @@
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Credfeto.Date.Interfaces" Version="1.1.79.959" />
+    <PackageReference Include="Credfeto.Date.Interfaces" Version="1.1.80.963" />
     <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.82.838" />
     <!--    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.2" />-->
     <!--    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.2" />-->
