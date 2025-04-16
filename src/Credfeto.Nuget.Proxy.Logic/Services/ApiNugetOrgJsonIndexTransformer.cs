@@ -29,7 +29,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         "RepositorySignatures/5.0.0",
         "SearchAutocompleteService/3.0.0-beta",
         "SearchQueryService/3.0.0-beta",
-        // "VulnerabilityInfo/6.7.0",
+        "VulnerabilityInfo/6.7.0",
     ];
 
     private static readonly IReadOnlyList<Uri> UpstreamUrl =
