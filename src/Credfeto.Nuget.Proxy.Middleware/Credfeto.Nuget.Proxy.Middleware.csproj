@@ -57,7 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Credfeto.Date.Interfaces" Version="1.1.82.971" />
-    <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.83.845" />
+    <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.84.848" />
     <!--    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.2" />-->
     <!--    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.2" />-->
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.4" />
