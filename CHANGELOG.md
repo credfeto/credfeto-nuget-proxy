@@ -9,12 +9,12 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.62.480
 - Dependencies - Updated Meziantou.Analyzer to 2.0.197
 - Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.5.53
 - Dependencies - Updated Credfeto.Enumeration to 1.2.77.1054
 - Dependencies - Updated Credfeto.Date to 1.1.84.982
 - Dependencies - Updated Credfeto.Extensions.Linq to 1.0.85.853
+- Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.64.491
 ### Removed
 ### Deployment Changes
 
