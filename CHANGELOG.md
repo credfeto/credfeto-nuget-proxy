@@ -9,6 +9,14 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.14] - 2025-04-24
+### Changed
 - Dependencies - Updated Meziantou.Analyzer to 2.0.197
 - Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.5.53
 - Dependencies - Updated Credfeto.Enumeration to 1.2.77.1054
@@ -16,12 +24,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.64.491
 - Dependencies - Updated CSharpier.MSBuild to 1.0.0
 - Dependencies - Updated Credfeto.Extensions.Linq to 1.0.86.859
-### Removed
-### Deployment Changes
 
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 ## [0.0.13] - 2025-04-19
 ### Changed
 - Dependencies - Updated Credfeto.Enumeration to 1.2.75.1045
