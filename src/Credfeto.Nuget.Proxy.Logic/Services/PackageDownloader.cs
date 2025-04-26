@@ -20,10 +20,7 @@ public sealed class PackageDownloader : IPackageDownloader
         this._httpClientFactory = httpClientFactory;
     }
 
-    public async ValueTask<byte[]> ReadUpstreamAsync(
-        Uri requestUri,
-        CancellationToken cancellationToken
-    )
+    public async ValueTask<byte[]> ReadUpstreamAsync(Uri requestUri, CancellationToken cancellationToken)
     {
         HttpClient client = this.GetClient();
 
