@@ -40,9 +40,7 @@ internal static class ServerStartup
 
         if (minWorker < minThreads && minIoc < minThreads)
         {
-            Console.WriteLine(
-                $"Setting min worker threads {minThreads}, Min IOC threads {minThreads}"
-            );
+            Console.WriteLine($"Setting min worker threads {minThreads}, Min IOC threads {minThreads}");
             ThreadPool.SetMinThreads(workerThreads: minThreads, completionPortThreads: minThreads);
         }
         else if (minWorker < minThreads)
@@ -52,9 +50,7 @@ internal static class ServerStartup
         }
         else if (minIoc < minThreads)
         {
-            Console.WriteLine(
-                $"Setting min worker threads {minWorker}, Min IOC threads {minThreads}"
-            );
+            Console.WriteLine($"Setting min worker threads {minWorker}, Min IOC threads {minThreads}");
             ThreadPool.SetMinThreads(workerThreads: minWorker, completionPortThreads: minThreads);
         }
 
@@ -104,19 +100,13 @@ internal static class ServerStartup
             .AddFileSystemStorage()
             .AddLogic(appConfig)
             .ConfigureHttpJsonOptions(options =>
-                options.SerializerOptions.TypeInfoResolverChain.Insert(
-                    index: 0,
-                    item: AppJsonContexts.Default
-                )
+                options.SerializerOptions.TypeInfoResolverChain.Insert(index: 0, item: AppJsonContexts.Default)
             );
 
         return builder;
     }
 
-    private static WebApplicationBuilder ConfigureWebHost(
-        this WebApplicationBuilder builder,
-        string configPath
-    )
+    private static WebApplicationBuilder ConfigureWebHost(this WebApplicationBuilder builder, string configPath)
     {
         builder
             .WebHost.UseKestrel(options: options =>
@@ -154,11 +144,7 @@ internal static class ServerStartup
             .. configuration
                 .GetSection("Proxy:UpstreamUrl")
                 .GetChildren()
-                .Select(x =>
-                    Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri)
-                        ? uri
-                        : null
-                )
+                .Select(x => Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri) ? uri : null)
                 .RemoveNulls(),
         ];
 
@@ -183,11 +169,9 @@ internal static class ServerStartup
         return new(
             UpstreamUrls: upstream,
             PublicUrl: new(
-                configuration["Proxy:PublicUrl"]
-                    ?? throw new UnreachableException("Proxy:PublicUrl not provided")
+                configuration["Proxy:PublicUrl"] ?? throw new UnreachableException("Proxy:PublicUrl not provided")
             ),
-            Packages: configuration["Proxy:Packages"]
-                ?? ApplicationConfigLocator.ConfigurationFilesPath,
+            Packages: configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath,
             JsonMaxAgeSeconds: jsonMaxAgeSeconds
         );
     }
@@ -221,9 +205,7 @@ internal static class ServerStartup
             .CreateLogger();
     }
 
-    private static LoggerConfiguration WriteToDebuggerAwareOutput(
-        this LoggerConfiguration configuration
-    )
+    private static LoggerConfiguration WriteToDebuggerAwareOutput(this LoggerConfiguration configuration)
     {
         LoggerSinkConfiguration writeTo = configuration.WriteTo;
 
