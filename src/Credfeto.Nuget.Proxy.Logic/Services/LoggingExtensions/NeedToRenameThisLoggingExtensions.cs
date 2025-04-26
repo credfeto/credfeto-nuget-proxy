@@ -34,9 +34,5 @@ internal static partial class NeedToRenameThisLoggingExtensions
         EventId = 2,
         Message = "Retrieved Cached NUPKG from {upstream} Length: {length}"
     )]
-    public static partial void CachedPackage(
-        this ILogger<NupkgSource> logger,
-        Uri upstream,
-        long length
-    );
+    public static partial void CachedPackage(this ILogger<NupkgSource> logger, Uri upstream, long length);
 }
