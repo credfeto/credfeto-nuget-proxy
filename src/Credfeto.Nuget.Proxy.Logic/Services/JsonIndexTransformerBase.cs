@@ -33,10 +33,7 @@ public abstract class JsonIndexTransformerBase
 
     protected ProxyServerConfig Config { get; }
 
-    public async ValueTask<JsonResult?> GetFromUpstreamAsync(
-        string path,
-        CancellationToken cancellationToken
-    )
+    public async ValueTask<JsonResult?> GetFromUpstreamAsync(string path, CancellationToken cancellationToken)
     {
         if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
@@ -45,10 +42,7 @@ public abstract class JsonIndexTransformerBase
 
         if (this._indexReplacement)
         {
-            (bool match, JsonResult? result) = await this.DoIndexReplacementAsync(
-                path,
-                cancellationToken
-            );
+            (bool match, JsonResult? result) = await this.DoIndexReplacementAsync(path, cancellationToken);
 
             if (match)
             {
@@ -76,8 +70,7 @@ public abstract class JsonIndexTransformerBase
         return ValueTask.FromResult(NoMatch);
     }
 
-    protected static (bool Match, JsonResult? Result) NoMatch { get; } =
-        (Match: false, Result: null);
+    protected static (bool Match, JsonResult? Result) NoMatch { get; } = (Match: false, Result: null);
 
     protected async ValueTask<JsonResult?> GetJsonFromUpstreamWithReplacementsAsync(
         string path,
@@ -94,11 +87,7 @@ public abstract class JsonIndexTransformerBase
 
         json = transformer(json);
 
-        this._logger.UpstreamJsonOk(
-            upstream: requestUri,
-            statusCode: HttpStatusCode.OK,
-            length: json.Length
-        );
+        this._logger.UpstreamJsonOk(upstream: requestUri, statusCode: HttpStatusCode.OK, length: json.Length);
 
         return new(Json: json, this.GetJsonCacheMaxAge(path));
     }
@@ -123,10 +112,7 @@ public abstract class JsonIndexTransformerBase
 
     private int GetJsonCacheMaxAge(string path)
     {
-        return path.StartsWith(
-            "/v3/vulnerabilties/",
-            comparisonType: StringComparison.OrdinalIgnoreCase
-        )
+        return path.StartsWith("/v3/vulnerabilties/", comparisonType: StringComparison.OrdinalIgnoreCase)
             ? this.Config.JsonMaxAgeSeconds * 10
             : this.Config.JsonMaxAgeSeconds;
     }
