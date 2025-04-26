@@ -20,10 +20,7 @@ public sealed class JsonDownloader : IJsonDownloader
         this._httpClientFactory = httpClientFactory;
     }
 
-    public async ValueTask<string> ReadUpstreamAsync(
-        Uri requestUri,
-        CancellationToken cancellationToken
-    )
+    public async ValueTask<string> ReadUpstreamAsync(Uri requestUri, CancellationToken cancellationToken)
     {
         HttpClient client = this.GetClient();
 
