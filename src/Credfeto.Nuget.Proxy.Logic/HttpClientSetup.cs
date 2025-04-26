@@ -15,10 +15,7 @@ internal static class HttpClientSetup
     private static readonly TimeSpan HttpTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan PollyTimeout = HttpTimeout.Add(TimeSpan.FromSeconds(1));
 
-    public static IServiceCollection AddJsonClient(
-        this IServiceCollection services,
-        ProxyServerConfig appConfig
-    )
+    public static IServiceCollection AddJsonClient(this IServiceCollection services, ProxyServerConfig appConfig)
     {
         return services
             .AddHttpClient(
@@ -45,10 +42,7 @@ internal static class HttpClientSetup
             .Services;
     }
 
-    public static IServiceCollection AddNupkgClient(
-        this IServiceCollection services,
-        ProxyServerConfig appConfig
-    )
+    public static IServiceCollection AddNupkgClient(this IServiceCollection services, ProxyServerConfig appConfig)
     {
         return services
             .AddHttpClient(
@@ -75,44 +69,26 @@ internal static class HttpClientSetup
             .Services;
     }
 
-    private static void InitializeJsonClient(
-        Uri upstreamUrl,
-        HttpClient httpClient,
-        in TimeSpan httpTimeout
-    )
+    private static void InitializeJsonClient(Uri upstreamUrl, HttpClient httpClient, in TimeSpan httpTimeout)
     {
         httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
         httpClient.DefaultRequestVersion = HttpVersion.Version11;
         httpClient.BaseAddress = upstreamUrl;
         httpClient.DefaultRequestHeaders.Accept.Add(new(mediaType: "application/json"));
         httpClient.DefaultRequestHeaders.UserAgent.Add(
-            new(
-                new ProductHeaderValue(
-                    name: VersionInformation.Product,
-                    version: VersionInformation.Version
-                )
-            )
+            new(new ProductHeaderValue(name: VersionInformation.Product, version: VersionInformation.Version))
         );
         httpClient.Timeout = httpTimeout;
     }
 
-    private static void InitializeNupkgClient(
-        Uri upstreamUrl,
-        HttpClient httpClient,
-        in TimeSpan httpTimeout
-    )
+    private static void InitializeNupkgClient(Uri upstreamUrl, HttpClient httpClient, in TimeSpan httpTimeout)
     {
         httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
         httpClient.DefaultRequestVersion = HttpVersion.Version11;
         httpClient.BaseAddress = upstreamUrl;
         httpClient.DefaultRequestHeaders.Accept.Add(new(mediaType: "application/octet-stream"));
         httpClient.DefaultRequestHeaders.UserAgent.Add(
-            new(
-                new ProductHeaderValue(
-                    name: VersionInformation.Product,
-                    version: VersionInformation.Version
-                )
-            )
+            new(new ProductHeaderValue(name: VersionInformation.Product, version: VersionInformation.Version))
         );
         httpClient.Timeout = httpTimeout;
     }
