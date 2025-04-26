@@ -42,12 +42,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         IJsonDownloader jsonDownloader,
         ILogger<ApiNugetOrgJsonIndexTransformer> logger
     )
-        : base(
-            config: config,
-            jsonDownloader: jsonDownloader,
-            indexReplacement: true,
-            logger: logger
-        ) { }
+        : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: true, logger: logger) { }
 
     protected override async ValueTask<(bool Match, JsonResult? Result)> DoIndexReplacementAsync(
         string path,
@@ -71,20 +66,15 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     private string ReplaceIndex(string json)
     {
         NugetResources data =
-            JsonSerializer.Deserialize<NugetResources>(
-                json: json,
-                jsonTypeInfo: AppJsonContexts.Default.NugetResources
-            ) ?? throw new JsonException("Invalid json");
+            JsonSerializer.Deserialize<NugetResources>(json: json, jsonTypeInfo: AppJsonContexts.Default.NugetResources)
+            ?? throw new JsonException("Invalid json");
 
         NugetResources resources = new(
             version: data.Version,
             [.. data.Resources.Where(IsNeeded).Select(this.RewriteResource)]
         );
 
-        return JsonSerializer.Serialize(
-            value: resources,
-            jsonTypeInfo: AppJsonContexts.Default.NugetResources
-        );
+        return JsonSerializer.Serialize(value: resources, jsonTypeInfo: AppJsonContexts.Default.NugetResources);
     }
 
     private static bool IsNeeded(NugetResource resource)
@@ -92,21 +82,12 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         return NeededResources.Any(n => StringComparer.Ordinal.Equals(x: n, y: resource.Type));
     }
 
-    [SuppressMessage(
-        category: "SonarAnalyzer.CSharp",
-        checkId: "S3267: Use Linq",
-        Justification = "Not Here"
-    )]
+    [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
     private NugetResource RewriteResource(NugetResource resource)
     {
         foreach (Uri uri in UpstreamUrl)
         {
-            if (
-                resource.Id.StartsWith(
-                    uri.CleanUri(),
-                    comparisonType: StringComparison.OrdinalIgnoreCase
-                )
-            )
+            if (resource.Id.StartsWith(uri.CleanUri(), comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 return new(
                     resource.Id.Replace(
