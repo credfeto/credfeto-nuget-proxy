@@ -21,10 +21,7 @@ public static class Program
     public static async Task<int> Main(string[] args)
     {
         return HealthCheckClient.IsHealthCheck(args: args, out string? checkUrl)
-            ? await HealthCheckClient.ExecuteAsync(
-                targetUrl: checkUrl,
-                cancellationToken: CancellationToken.None
-            )
+            ? await HealthCheckClient.ExecuteAsync(targetUrl: checkUrl, cancellationToken: CancellationToken.None)
             : await RunServerAsync(args);
     }
 
@@ -63,9 +60,6 @@ public static class Program
     private static WebApplication AddMiddleware(WebApplication application)
     {
         return (WebApplication)
-            application
-                .ConfigureEndpoints()
-                .UseMiddleware<JsonMiddleware>()
-                .UseMiddleware<NuPkgMiddleware>();
+            application.ConfigureEndpoints().UseMiddleware<JsonMiddleware>().UseMiddleware<NuPkgMiddleware>();
     }
 }
