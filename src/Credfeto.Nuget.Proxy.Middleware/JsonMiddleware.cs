@@ -21,11 +21,7 @@ public sealed class JsonMiddleware
 
     private readonly RequestDelegate _next;
 
-    public JsonMiddleware(
-        RequestDelegate next,
-        IJsonTransformer jsonTransformer,
-        ICurrentTimeSource currentTimeSource
-    )
+    public JsonMiddleware(RequestDelegate next, IJsonTransformer jsonTransformer, ICurrentTimeSource currentTimeSource)
     {
         this._next = next;
         this._jsonTransformer = jsonTransformer;
@@ -74,8 +70,7 @@ public sealed class JsonMiddleware
         {
             Failed(context: context, result: HttpStatusCode.InternalServerError);
         }
-        catch (Exception exception)
-            when (exception is TimeoutRejectedException or BulkheadRejectedException)
+        catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
         {
             TooManyRequests(context);
         }
@@ -115,10 +110,7 @@ public sealed class JsonMiddleware
         context.Response.Headers.Expires = this
             ._currentTimeSource.UtcNow()
             .AddSeconds(ageSeconds)
-            .ToString(
-                format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'",
-                formatProvider: CultureInfo.InvariantCulture
-            );
+            .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
         await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
     }
 
