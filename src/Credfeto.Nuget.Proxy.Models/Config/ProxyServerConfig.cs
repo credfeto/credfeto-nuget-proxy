@@ -15,9 +15,6 @@ public sealed record ProxyServerConfig(
 {
     public bool IsNugetPublicServer =>
         this.UpstreamUrls.Any(h =>
-            h.DnsSafeHost.EndsWith(
-                value: ".nuget.org",
-                comparisonType: StringComparison.OrdinalIgnoreCase
-            )
+            h.DnsSafeHost.EndsWith(value: ".nuget.org", comparisonType: StringComparison.OrdinalIgnoreCase)
         );
 }
