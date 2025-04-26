@@ -11,10 +11,5 @@ public sealed class StandardJsonIndexTransformer : JsonIndexTransformerBase, IJs
         IJsonDownloader jsonDownloader,
         ILogger<StandardJsonIndexTransformer> logger
     )
-        : base(
-            config: config,
-            jsonDownloader: jsonDownloader,
-            indexReplacement: false,
-            logger: logger
-        ) { }
+        : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: false, logger: logger) { }
 }
