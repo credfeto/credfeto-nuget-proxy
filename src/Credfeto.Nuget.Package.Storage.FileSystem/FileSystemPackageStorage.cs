@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,10 +14,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
     private readonly ProxyServerConfig _config;
     private readonly ILogger<FileSystemPackageStorage> _logger;
 
-    public FileSystemPackageStorage(
-        ProxyServerConfig config,
-        ILogger<FileSystemPackageStorage> logger
-    )
+    public FileSystemPackageStorage(ProxyServerConfig config, ILogger<FileSystemPackageStorage> logger)
     {
         this._config = config;
         this._logger = logger;
@@ -25,10 +22,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         this.EnsureDirectoryExists(config.Packages);
     }
 
-    public async ValueTask<byte[]?> ReadFileAsync(
-        string sourcePath,
-        CancellationToken cancellationToken
-    )
+    public async ValueTask<byte[]?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
     {
         string packagePath = this.BuildPackagePath(sourcePath);
 
@@ -36,10 +30,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         {
             if (File.Exists(packagePath))
             {
-                return await File.ReadAllBytesAsync(
-                    path: packagePath,
-                    cancellationToken: cancellationToken
-                );
+                return await File.ReadAllBytesAsync(path: packagePath, cancellationToken: cancellationToken);
             }
         }
         catch (Exception exception)
@@ -56,11 +47,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         return null;
     }
 
-    public async ValueTask SaveFileAsync(
-        string sourcePath,
-        byte[] buffer,
-        CancellationToken cancellationToken
-    )
+    public async ValueTask SaveFileAsync(string sourcePath, byte[] buffer, CancellationToken cancellationToken)
     {
         string packagePath = this.BuildPackagePath(sourcePath);
 
@@ -75,19 +62,11 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         try
         {
             this.EnsureDirectoryExists(dir);
-            await File.WriteAllBytesAsync(
-                path: packagePath,
-                bytes: buffer,
-                cancellationToken: cancellationToken
-            );
+            await File.WriteAllBytesAsync(path: packagePath, bytes: buffer, cancellationToken: cancellationToken);
         }
         catch (Exception exception)
         {
-            this._logger.SaveFailed(
-                filename: packagePath,
-                message: exception.Message,
-                exception: exception
-            );
+            this._logger.SaveFailed(filename: packagePath, message: exception.Message, exception: exception);
         }
     }
 
@@ -102,11 +81,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
         catch (Exception exception)
         {
-            this._logger.SaveFailed(
-                filename: folder,
-                message: exception.Message,
-                exception: exception
-            );
+            this._logger.SaveFailed(filename: folder, message: exception.Message, exception: exception);
         }
     }
 
