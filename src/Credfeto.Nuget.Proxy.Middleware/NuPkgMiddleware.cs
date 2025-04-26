@@ -31,11 +31,7 @@ public sealed class NuPkgMiddleware
     private readonly INupkgSource _nupkgSource;
     private readonly ICurrentTimeSource _currentTimeSource;
 
-    public NuPkgMiddleware(
-        RequestDelegate next,
-        INupkgSource nupkgSource,
-        ICurrentTimeSource currentTimeSource
-    )
+    public NuPkgMiddleware(RequestDelegate next, INupkgSource nupkgSource, ICurrentTimeSource currentTimeSource)
     {
         this._next = next;
         this._nupkgSource = nupkgSource;
@@ -66,11 +62,7 @@ public sealed class NuPkgMiddleware
                 return;
             }
 
-            await this.SuccessAsync(
-                context: context,
-                data: result.Value,
-                cancellationToken: cancellationToken
-            );
+            await this.SuccessAsync(context: context, data: result.Value, cancellationToken: cancellationToken);
         }
         catch (HttpRequestException exception)
         {
@@ -80,8 +72,7 @@ public sealed class NuPkgMiddleware
         {
             Failed(context: context, result: HttpStatusCode.InternalServerError);
         }
-        catch (Exception exception)
-            when (exception is TimeoutRejectedException or BulkheadRejectedException)
+        catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
         {
             TooManyRequests(context);
         }
@@ -91,11 +82,7 @@ public sealed class NuPkgMiddleware
         }
     }
 
-    private async ValueTask SuccessAsync(
-        HttpContext context,
-        PackageResult data,
-        CancellationToken cancellationToken
-    )
+    private async ValueTask SuccessAsync(HttpContext context, PackageResult data, CancellationToken cancellationToken)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
         context.Response.Headers.Append(key: "Content-Type", value: "application/octet-stream");
@@ -103,10 +90,7 @@ public sealed class NuPkgMiddleware
         context.Response.Headers.Expires = this
             ._currentTimeSource.UtcNow()
             .AddSeconds(63072000)
-            .ToString(
-                format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'",
-                formatProvider: CultureInfo.InvariantCulture
-            );
+            .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
 
         await using (MemoryStream stream = new(data.Data, false))
         {
@@ -119,10 +103,7 @@ public sealed class NuPkgMiddleware
         if (
             StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET")
             && context.Request.Path.HasValue
-            && !context.Request.Path.Value.Contains(
-                value: "../",
-                comparisonType: StringComparison.Ordinal
-            )
+            && !context.Request.Path.Value.Contains(value: "../", comparisonType: StringComparison.Ordinal)
         )
         {
             path = context.Request.Path.Value;
