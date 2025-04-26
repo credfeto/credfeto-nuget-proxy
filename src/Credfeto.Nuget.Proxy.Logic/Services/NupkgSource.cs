@@ -31,10 +31,7 @@ public sealed class NupkgSource : INupkgSource
         this._logger = logger;
     }
 
-    public async ValueTask<PackageResult?> GetFromUpstreamAsync(
-        string path,
-        CancellationToken cancellationToken
-    )
+    public async ValueTask<PackageResult?> GetFromUpstreamAsync(string path, CancellationToken cancellationToken)
     {
         if (!path.EndsWith(value: ".nupkg", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
@@ -48,10 +45,7 @@ public sealed class NupkgSource : INupkgSource
 
         if (cached is null)
         {
-            return await this.GetFromUpstream2Async(
-                sourcePath: path,
-                cancellationToken: cancellationToken
-            );
+            return await this.GetFromUpstream2Async(sourcePath: path, cancellationToken: cancellationToken);
         }
 
         return cached;
@@ -82,11 +76,7 @@ public sealed class NupkgSource : INupkgSource
             cancellationToken: cancellationToken
         );
 
-        this._logger.UpstreamPackageOk(
-            upstream: requestUri,
-            statusCode: HttpStatusCode.OK,
-            length: data.Length
-        );
+        this._logger.UpstreamPackageOk(upstream: requestUri, statusCode: HttpStatusCode.OK, length: data.Length);
 
         await this._packageStorage.SaveFileAsync(
             sourcePath: sourcePath,
