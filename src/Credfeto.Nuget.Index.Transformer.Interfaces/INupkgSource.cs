@@ -5,8 +5,5 @@ namespace Credfeto.Nuget.Index.Transformer.Interfaces;
 
 public interface INupkgSource
 {
-    ValueTask<PackageResult?> GetFromUpstreamAsync(
-        string path,
-        CancellationToken cancellationToken
-    );
+    ValueTask<PackageResult?> GetFromUpstreamAsync(string path, CancellationToken cancellationToken);
 }
