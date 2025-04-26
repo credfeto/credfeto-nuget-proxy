@@ -7,10 +7,7 @@ namespace Credfeto.Nuget.Proxy.Logic;
 
 public static class LogicSetup
 {
-    public static IServiceCollection AddLogic(
-        this IServiceCollection services,
-        ProxyServerConfig appConfig
-    )
+    public static IServiceCollection AddLogic(this IServiceCollection services, ProxyServerConfig appConfig)
     {
         return services
             .AddJsonClient(appConfig)
@@ -21,10 +18,7 @@ public static class LogicSetup
             .AddSingleton<IPackageDownloader, PackageDownloader>();
     }
 
-    private static IServiceCollection AddJsonTransformer(
-        this IServiceCollection services,
-        ProxyServerConfig appConfig
-    )
+    private static IServiceCollection AddJsonTransformer(this IServiceCollection services, ProxyServerConfig appConfig)
     {
         return appConfig.IsNugetPublicServer
             ? services.AddSingleton<IJsonTransformer, ApiNugetOrgJsonIndexTransformer>()
