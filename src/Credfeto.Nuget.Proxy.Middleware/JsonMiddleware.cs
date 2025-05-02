@@ -48,7 +48,7 @@ public sealed class JsonMiddleware
         {
             JsonResult? result = await this._jsonTransformer.GetFromUpstreamAsync(
                 path: path,
-                userAgent:userAgent,
+                userAgent: userAgent,
                 cancellationToken: cancellationToken
             );
 
