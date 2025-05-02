@@ -14,7 +14,7 @@ internal static class HttpContextExtensions
             return null;
         }
 
-        if(ProductInfoHeaderValue.TryParse(ua, out ProductInfoHeaderValue? userAgent))
+        if (ProductInfoHeaderValue.TryParse(ua, out ProductInfoHeaderValue? userAgent))
         {
             return userAgent;
         }
