@@ -34,7 +34,11 @@ public abstract class JsonIndexTransformerBase
 
     protected ProxyServerConfig Config { get; }
 
-    public async ValueTask<JsonResult?> GetFromUpstreamAsync(string path, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
+    public async ValueTask<JsonResult?> GetFromUpstreamAsync(
+        string path,
+        ProductInfoHeaderValue? userAgent,
+        CancellationToken cancellationToken
+    )
     {
         if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
@@ -43,7 +47,11 @@ public abstract class JsonIndexTransformerBase
 
         if (this._indexReplacement)
         {
-            (bool match, JsonResult? result) = await this.DoIndexReplacementAsync(path,  userAgent:userAgent,  cancellationToken);
+            (bool match, JsonResult? result) = await this.DoIndexReplacementAsync(
+                path,
+                userAgent: userAgent,
+                cancellationToken
+            );
 
             if (match)
             {
