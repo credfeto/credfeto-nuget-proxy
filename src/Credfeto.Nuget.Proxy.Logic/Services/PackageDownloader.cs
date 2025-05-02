@@ -21,7 +21,11 @@ public sealed class PackageDownloader : IPackageDownloader
         this._httpClientFactory = httpClientFactory;
     }
 
-    public async ValueTask<byte[]> ReadUpstreamAsync(Uri requestUri, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
+    public async ValueTask<byte[]> ReadUpstreamAsync(
+        Uri requestUri,
+        ProductInfoHeaderValue? userAgent,
+        CancellationToken cancellationToken
+    )
     {
         HttpClient client = this.GetClient(userAgent);
 
@@ -50,8 +54,9 @@ public sealed class PackageDownloader : IPackageDownloader
 
     private HttpClient GetClient(ProductInfoHeaderValue? userAgent)
     {
-        return this._httpClientFactory.CreateClient(HttpClientNames.NugetPackage)
-                   .WithBaseAddress(this._config.UpstreamUrls[0])
-                   .WithUserAgent(userAgent);
+        return this
+            ._httpClientFactory.CreateClient(HttpClientNames.NugetPackage)
+            .WithBaseAddress(this._config.UpstreamUrls[0])
+            .WithUserAgent(userAgent);
     }
 }
