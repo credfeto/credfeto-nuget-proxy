@@ -6,5 +6,9 @@ namespace Credfeto.Nuget.Index.Transformer.Interfaces;
 
 public interface IJsonTransformer
 {
-    ValueTask<JsonResult?> GetFromUpstreamAsync(string path, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken);
+    ValueTask<JsonResult?> GetFromUpstreamAsync(
+        string path,
+        ProductInfoHeaderValue? userAgent,
+        CancellationToken cancellationToken
+    );
 }
