@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
@@ -18,12 +19,7 @@ public sealed class NupkgSource : INupkgSource
     private readonly IPackageDownloader _packageDownloader;
     private readonly IPackageStorage _packageStorage;
 
-    public NupkgSource(
-        ProxyServerConfig config,
-        IPackageStorage packageStorage,
-        IPackageDownloader packageDownloader,
-        ILogger<NupkgSource> logger
-    )
+    public NupkgSource(ProxyServerConfig config, IPackageStorage packageStorage, IPackageDownloader packageDownloader, ILogger<NupkgSource> logger)
     {
         this._config = config;
         this._packageStorage = packageStorage;
@@ -31,64 +27,42 @@ public sealed class NupkgSource : INupkgSource
         this._logger = logger;
     }
 
-    public async ValueTask<PackageResult?> GetFromUpstreamAsync(string path, CancellationToken cancellationToken)
+    public async ValueTask<PackageResult?> GetFromUpstreamAsync(string path, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
     {
         if (!path.EndsWith(value: ".nupkg", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
             return null;
         }
 
-        PackageResult? cached = await this.TryToGetFromCacheAsync(
-            sourcePath: path,
-            cancellationToken: cancellationToken
-        );
-
-        if (cached is null)
-        {
-            return await this.GetFromUpstream2Async(sourcePath: path, cancellationToken: cancellationToken);
-        }
-
-        return cached;
+        return await this.TryToGetFromCacheAsync(sourcePath: path, cancellationToken: cancellationToken) ??
+               await this.GetFromUpstream2Async(sourcePath: path, userAgent: userAgent, cancellationToken: cancellationToken);
     }
 
-    private async ValueTask<PackageResult?> TryToGetFromCacheAsync(
-        string sourcePath,
-        CancellationToken cancellationToken
-    )
+    private async ValueTask<PackageResult?> TryToGetFromCacheAsync(string sourcePath, CancellationToken cancellationToken)
     {
-        byte[]? data = await this._packageStorage.ReadFileAsync(
-            sourcePath: sourcePath,
-            cancellationToken: cancellationToken
-        );
+        byte[]? data = await this._packageStorage.ReadFileAsync(sourcePath: sourcePath, cancellationToken: cancellationToken);
 
-        return data is null ? null : new(data);
+        return data is null
+            ? null
+            : new(data);
     }
 
-    private async ValueTask<PackageResult?> GetFromUpstream2Async(
-        string sourcePath,
-        CancellationToken cancellationToken
-    )
+    private async ValueTask<PackageResult?> GetFromUpstream2Async(string sourcePath, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
     {
         Uri requestUri = this.GetRequestUri(sourcePath);
 
-        byte[] data = await this._packageDownloader.ReadUpstreamAsync(
-            requestUri: requestUri,
-            cancellationToken: cancellationToken
-        );
+        byte[] data = await this._packageDownloader.ReadUpstreamAsync(requestUri: requestUri, userAgent: userAgent, cancellationToken: cancellationToken);
 
         this._logger.UpstreamPackageOk(upstream: requestUri, statusCode: HttpStatusCode.OK, length: data.Length);
 
-        await this._packageStorage.SaveFileAsync(
-            sourcePath: sourcePath,
-            buffer: data,
-            cancellationToken: cancellationToken
-        );
+        await this._packageStorage.SaveFileAsync(sourcePath: sourcePath, buffer: data, cancellationToken: cancellationToken);
 
         return new PackageResult(data);
     }
 
     private Uri GetRequestUri(string path)
     {
-        return new(this._config.UpstreamUrls[0].CleanUri() + path);
+        return new(this._config.UpstreamUrls[0]
+                       .CleanUri() + path);
     }
 }

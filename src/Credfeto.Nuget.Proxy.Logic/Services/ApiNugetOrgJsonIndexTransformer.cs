@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,8 +34,8 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
     private static readonly IReadOnlyList<Uri> UpstreamUrl =
     [
-        new Uri("https://api.nuget.org"),
-        new Uri("https://azuresearch-ussc.nuget.org"),
+        new("https://api.nuget.org"),
+        new("https://azuresearch-ussc.nuget.org"),
     ];
 
     public ApiNugetOrgJsonIndexTransformer(
@@ -46,6 +47,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
     protected override async ValueTask<(bool Match, JsonResult? Result)> DoIndexReplacementAsync(
         string path,
+        ProductInfoHeaderValue? userAgent,
         CancellationToken cancellationToken
     )
     {
@@ -53,6 +55,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         {
             JsonResult? result = await this.GetJsonFromUpstreamWithReplacementsAsync(
                 path: path,
+                userAgent:userAgent,
                 transformer: this.ReplaceIndex,
                 cancellationToken: cancellationToken
             );

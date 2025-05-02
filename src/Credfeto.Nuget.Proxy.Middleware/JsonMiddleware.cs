@@ -3,12 +3,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
+using Credfeto.Nuget.Proxy.Middleware.Extensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using Polly.Bulkhead;
 using Polly.Timeout;
 
@@ -39,10 +42,13 @@ public sealed class JsonMiddleware
 
         CancellationToken cancellationToken = context.RequestAborted;
 
+        ProductInfoHeaderValue? userAgent = context.GetUserAgent();
+
         try
         {
             JsonResult? result = await this._jsonTransformer.GetFromUpstreamAsync(
                 path: path,
+                userAgent:userAgent,
                 cancellationToken: cancellationToken
             );
 

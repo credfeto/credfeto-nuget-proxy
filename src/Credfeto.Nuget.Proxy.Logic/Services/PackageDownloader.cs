@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Logic.Extensions;
@@ -20,9 +21,9 @@ public sealed class PackageDownloader : IPackageDownloader
         this._httpClientFactory = httpClientFactory;
     }
 
-    public async ValueTask<byte[]> ReadUpstreamAsync(Uri requestUri, CancellationToken cancellationToken)
+    public async ValueTask<byte[]> ReadUpstreamAsync(Uri requestUri, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
     {
-        HttpClient client = this.GetClient();
+        HttpClient client = this.GetClient(userAgent);
 
         using (
             HttpResponseMessage result = await client.GetAsync(
@@ -47,11 +48,10 @@ public sealed class PackageDownloader : IPackageDownloader
         );
     }
 
-    private HttpClient GetClient()
+    private HttpClient GetClient(ProductInfoHeaderValue? userAgent)
     {
-        HttpClient client = this._httpClientFactory.CreateClient(HttpClientNames.NugetPackage);
-        client.BaseAddress = this._config.UpstreamUrls[0];
-
-        return client;
+        return this._httpClientFactory.CreateClient(HttpClientNames.NugetPackage)
+                   .WithBaseAddress(this._config.UpstreamUrls[0])
+                   .WithUserAgent(userAgent);
     }
 }

@@ -4,11 +4,13 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
+using Credfeto.Nuget.Proxy.Middleware.Extensions;
 using Microsoft.AspNetCore.Http;
 using Polly.Bulkhead;
 using Polly.Timeout;
@@ -48,11 +50,13 @@ public sealed class NuPkgMiddleware
         }
 
         CancellationToken cancellationToken = context.RequestAborted;
+        ProductInfoHeaderValue? userAgent = context.GetUserAgent();
 
         try
         {
             PackageResult? result = await this._nupkgSource.GetFromUpstreamAsync(
                 path: path,
+                userAgent: userAgent,
                 cancellationToken: cancellationToken
             );
 

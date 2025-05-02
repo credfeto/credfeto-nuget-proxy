@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
@@ -33,7 +34,7 @@ public abstract class JsonIndexTransformerBase
 
     protected ProxyServerConfig Config { get; }
 
-    public async ValueTask<JsonResult?> GetFromUpstreamAsync(string path, CancellationToken cancellationToken)
+    public async ValueTask<JsonResult?> GetFromUpstreamAsync(string path, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
     {
         if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
@@ -42,7 +43,7 @@ public abstract class JsonIndexTransformerBase
 
         if (this._indexReplacement)
         {
-            (bool match, JsonResult? result) = await this.DoIndexReplacementAsync(path, cancellationToken);
+            (bool match, JsonResult? result) = await this.DoIndexReplacementAsync(path,  userAgent:userAgent,  cancellationToken);
 
             if (match)
             {
@@ -52,6 +53,7 @@ public abstract class JsonIndexTransformerBase
 
         return await this.GetJsonFromUpstreamWithReplacementsAsync(
             path: path,
+            userAgent: userAgent,
             transformer: this.ReplaceUrls,
             cancellationToken: cancellationToken
         );
@@ -64,6 +66,7 @@ public abstract class JsonIndexTransformerBase
     )]
     protected virtual ValueTask<(bool Match, JsonResult? Result)> DoIndexReplacementAsync(
         string path,
+        ProductInfoHeaderValue? userAgent,
         CancellationToken cancellationToken
     )
     {
@@ -74,6 +77,7 @@ public abstract class JsonIndexTransformerBase
 
     protected async ValueTask<JsonResult?> GetJsonFromUpstreamWithReplacementsAsync(
         string path,
+        ProductInfoHeaderValue? userAgent,
         Func<string, string> transformer,
         CancellationToken cancellationToken
     )
@@ -82,6 +86,7 @@ public abstract class JsonIndexTransformerBase
 
         string json = await this._jsonDownloader.ReadUpstreamAsync(
             requestUri: requestUri,
+            userAgent: userAgent,
             cancellationToken: cancellationToken
         );
 
