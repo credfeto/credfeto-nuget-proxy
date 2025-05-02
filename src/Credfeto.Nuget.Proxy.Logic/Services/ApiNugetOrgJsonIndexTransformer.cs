@@ -55,7 +55,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         {
             JsonResult? result = await this.GetJsonFromUpstreamWithReplacementsAsync(
                 path: path,
-                userAgent:userAgent,
+                userAgent: userAgent,
                 transformer: this.ReplaceIndex,
                 cancellationToken: cancellationToken
             );
