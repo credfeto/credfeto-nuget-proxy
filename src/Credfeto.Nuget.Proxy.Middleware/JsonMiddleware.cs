@@ -11,31 +11,27 @@ using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Middleware.Extensions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 using Polly.Bulkhead;
 using Polly.Timeout;
 
 namespace Credfeto.Nuget.Proxy.Middleware;
 
-public sealed class JsonMiddleware
+public sealed class JsonMiddleware : IMiddleware
 {
     private readonly ICurrentTimeSource _currentTimeSource;
     private readonly IJsonTransformer _jsonTransformer;
 
-    private readonly RequestDelegate _next;
-
-    public JsonMiddleware(RequestDelegate next, IJsonTransformer jsonTransformer, ICurrentTimeSource currentTimeSource)
+    public JsonMiddleware(IJsonTransformer jsonTransformer, ICurrentTimeSource currentTimeSource)
     {
-        this._next = next;
         this._jsonTransformer = jsonTransformer;
         this._currentTimeSource = currentTimeSource;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        if (!IsMatchingRequest(context, out string? path))
+        if (!IsMatchingRequest(context: context, out string? path))
         {
-            await this._next(context);
+            await next(context);
 
             return;
         }
@@ -46,27 +42,18 @@ public sealed class JsonMiddleware
 
         try
         {
-            JsonResult? result = await this._jsonTransformer.GetFromUpstreamAsync(
-                path: path,
-                userAgent: userAgent,
-                cancellationToken: cancellationToken
-            );
+            JsonResult? result = await this._jsonTransformer.GetFromUpstreamAsync(path: path, userAgent: userAgent, cancellationToken: cancellationToken);
 
             if (result is null)
             {
-                await this._next(context);
+                await next(context);
 
                 return;
             }
 
             int ageSeconds = result.Value.CacheMaxAgeSeconds;
             string json = result.Value.Json;
-            await this.SuccessAsync(
-                context: context,
-                json: json,
-                ageSeconds: ageSeconds,
-                cancellationToken: cancellationToken
-            );
+            await this.SuccessAsync(context: context, json: json, ageSeconds: ageSeconds, cancellationToken: cancellationToken);
         }
         catch (HttpRequestException exception)
         {
@@ -82,17 +69,14 @@ public sealed class JsonMiddleware
         }
         catch (Exception)
         {
-            await this._next(context);
+            await next(context);
         }
     }
 
     private static bool IsMatchingRequest(HttpContext context, [NotNullWhen(true)] out string? path)
     {
-        if (
-            StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET")
-            && context.Request.Path.HasValue
-            && context.Request.Path.Value.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-        )
+        if (StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET") && context.Request.Path.HasValue &&
+            context.Request.Path.Value.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
         {
             path = context.Request.Path.Value;
 
@@ -100,23 +84,18 @@ public sealed class JsonMiddleware
         }
 
         path = null;
+
         return false;
     }
 
-    private async ValueTask SuccessAsync(
-        HttpContext context,
-        string json,
-        int ageSeconds,
-        CancellationToken cancellationToken
-    )
+    private async ValueTask SuccessAsync(HttpContext context, string json, int ageSeconds, CancellationToken cancellationToken)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
         context.Response.Headers.Append(key: "Content-Type", value: "application/json");
         context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
-        context.Response.Headers.Expires = this
-            ._currentTimeSource.UtcNow()
-            .AddSeconds(ageSeconds)
-            .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
+        context.Response.Headers.Expires = this._currentTimeSource.UtcNow()
+                                               .AddSeconds(ageSeconds)
+                                               .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
         await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
     }
 

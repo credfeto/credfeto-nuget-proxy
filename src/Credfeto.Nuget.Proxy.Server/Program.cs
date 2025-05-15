@@ -6,6 +6,7 @@ using Credfeto.Docker.HealthCheck.Http.Client;
 using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Server.Helpers;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Credfeto.Nuget.Proxy.Server;
 
@@ -60,6 +61,9 @@ public static class Program
     private static WebApplication AddMiddleware(WebApplication application)
     {
         return (WebApplication)
-            application.ConfigureEndpoints().UseMiddleware<JsonMiddleware>().UseMiddleware<NuPkgMiddleware>();
+            application.ConfigureEndpoints()
+                       .UseMiddleware<JsonMiddleware>().UseMiddleware<NuPkgMiddleware>();
     }
+
+
 }

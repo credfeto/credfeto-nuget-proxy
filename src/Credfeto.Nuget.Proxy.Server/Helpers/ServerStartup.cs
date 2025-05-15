@@ -11,6 +11,7 @@ using Credfeto.Date;
 using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Package.Storage.FileSystem;
 using Credfeto.Nuget.Proxy.Logic;
+using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Server.Extensions;
@@ -99,6 +100,7 @@ internal static class ServerStartup
             .AddDate()
             .AddFileSystemStorage()
             .AddLogic(appConfig)
+            .AddMiddleware()
             .ConfigureHttpJsonOptions(options =>
                 options.SerializerOptions.TypeInfoResolverChain.Insert(index: 0, item: AppJsonContexts.Default)
             );

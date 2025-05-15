@@ -27,24 +27,22 @@ namespace Credfeto.Nuget.Proxy.Middleware;
     checkId: "SCS0018: Potential Path injection",
     Justification = "Avoided by checking path above"
 )]
-public sealed class NuPkgMiddleware
+public sealed class NuPkgMiddleware : IMiddleware
 {
-    private readonly RequestDelegate _next;
     private readonly INupkgSource _nupkgSource;
     private readonly ICurrentTimeSource _currentTimeSource;
 
-    public NuPkgMiddleware(RequestDelegate next, INupkgSource nupkgSource, ICurrentTimeSource currentTimeSource)
+    public NuPkgMiddleware(INupkgSource nupkgSource, ICurrentTimeSource currentTimeSource)
     {
-        this._next = next;
         this._nupkgSource = nupkgSource;
         this._currentTimeSource = currentTimeSource;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         if (!IsMatchingRequest(context: context, out string? path))
         {
-            await this._next(context);
+            await next(context);
 
             return;
         }
@@ -62,7 +60,7 @@ public sealed class NuPkgMiddleware
 
             if (result is null)
             {
-                await this._next(context);
+                await next(context);
                 return;
             }
 
@@ -82,7 +80,7 @@ public sealed class NuPkgMiddleware
         }
         catch (Exception)
         {
-            await this._next(context);
+            await next(context);
         }
     }
 
