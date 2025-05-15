@@ -42,7 +42,11 @@ public sealed class JsonMiddleware : IMiddleware
 
         try
         {
-            JsonResult? result = await this._jsonTransformer.GetFromUpstreamAsync(path: path, userAgent: userAgent, cancellationToken: cancellationToken);
+            JsonResult? result = await this._jsonTransformer.GetFromUpstreamAsync(
+                path: path,
+                userAgent: userAgent,
+                cancellationToken: cancellationToken
+            );
 
             if (result is null)
             {
@@ -53,7 +57,12 @@ public sealed class JsonMiddleware : IMiddleware
 
             int ageSeconds = result.Value.CacheMaxAgeSeconds;
             string json = result.Value.Json;
-            await this.SuccessAsync(context: context, json: json, ageSeconds: ageSeconds, cancellationToken: cancellationToken);
+            await this.SuccessAsync(
+                context: context,
+                json: json,
+                ageSeconds: ageSeconds,
+                cancellationToken: cancellationToken
+            );
         }
         catch (HttpRequestException exception)
         {
@@ -75,8 +84,11 @@ public sealed class JsonMiddleware : IMiddleware
 
     private static bool IsMatchingRequest(HttpContext context, [NotNullWhen(true)] out string? path)
     {
-        if (StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET") && context.Request.Path.HasValue &&
-            context.Request.Path.Value.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
+        if (
+            StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET")
+            && context.Request.Path.HasValue
+            && context.Request.Path.Value.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase)
+        )
         {
             path = context.Request.Path.Value;
 
@@ -88,14 +100,20 @@ public sealed class JsonMiddleware : IMiddleware
         return false;
     }
 
-    private async ValueTask SuccessAsync(HttpContext context, string json, int ageSeconds, CancellationToken cancellationToken)
+    private async ValueTask SuccessAsync(
+        HttpContext context,
+        string json,
+        int ageSeconds,
+        CancellationToken cancellationToken
+    )
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
         context.Response.Headers.Append(key: "Content-Type", value: "application/json");
         context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
-        context.Response.Headers.Expires = this._currentTimeSource.UtcNow()
-                                               .AddSeconds(ageSeconds)
-                                               .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
+        context.Response.Headers.Expires = this
+            ._currentTimeSource.UtcNow()
+            .AddSeconds(ageSeconds)
+            .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
         await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
     }
 
