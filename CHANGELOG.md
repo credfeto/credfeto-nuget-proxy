@@ -10,6 +10,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Fixed
 ### Changed
 - Dependencies - Updated Credfeto.Extensions.Linq to 1.0.91.911
+- Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.11.120
 ### Removed
 ### Deployment Changes
 
