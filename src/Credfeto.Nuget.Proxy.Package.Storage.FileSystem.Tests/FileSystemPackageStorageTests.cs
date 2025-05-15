@@ -7,7 +7,7 @@ using Credfeto.Nuget.Proxy.Models.Config;
 using FunFair.Test.Common;
 using Xunit;
 
-namespace Credfeto.Nuget.Package.Storage.FileSystem.Tests;
+namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests;
 
 public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
 {

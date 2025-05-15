@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Credfeto.Nuget.Index.Transformer.Interfaces;
+namespace Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 
 [DebuggerDisplay("{Json}")]
 public readonly record struct JsonResult(string Json, int CacheMaxAgeSeconds);

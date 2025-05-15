@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using Credfeto.Nuget.Index.Transformer.Interfaces;
+using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;

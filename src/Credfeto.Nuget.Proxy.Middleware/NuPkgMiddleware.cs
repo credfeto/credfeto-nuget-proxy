@@ -9,7 +9,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
-using Credfeto.Nuget.Index.Transformer.Interfaces;
+using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Middleware.Extensions;
 using Microsoft.AspNetCore.Http;
 using Polly.Bulkhead;

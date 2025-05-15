@@ -1,4 +1,4 @@
-using Credfeto.Nuget.Index.Transformer.Interfaces;
+using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Logic.Services;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.Extensions.DependencyInjection;

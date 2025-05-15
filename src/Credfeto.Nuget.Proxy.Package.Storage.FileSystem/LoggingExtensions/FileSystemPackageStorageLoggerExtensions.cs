@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Nuget.Package.Storage.FileSystem.LoggingExtensions;
+namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem.LoggingExtensions;
 
 internal static partial class FileSystemPackageStorageLoggerExtensions
 {

@@ -1,7 +1,7 @@
 using Credfeto.Nuget.Package.Storage.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Credfeto.Nuget.Package.Storage.FileSystem;
+namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 
 public static class FileSystemSetup
 {

@@ -6,7 +6,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Credfeto.Nuget.Index.Transformer.Interfaces;
+using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;

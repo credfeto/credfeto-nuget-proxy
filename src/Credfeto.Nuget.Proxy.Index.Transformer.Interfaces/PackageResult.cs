@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Credfeto.Nuget.Index.Transformer.Interfaces;
+namespace Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 
 [SuppressMessage(
     category: "Meziantou.Analyzer",

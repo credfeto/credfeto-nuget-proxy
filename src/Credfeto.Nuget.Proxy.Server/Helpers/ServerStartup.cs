@@ -9,7 +9,7 @@ using System.Net;
 using System.Threading;
 using Credfeto.Date;
 using Credfeto.Extensions.Linq;
-using Credfeto.Nuget.Package.Storage.FileSystem;
+using Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 using Credfeto.Nuget.Proxy.Logic;
 using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Models.Config;

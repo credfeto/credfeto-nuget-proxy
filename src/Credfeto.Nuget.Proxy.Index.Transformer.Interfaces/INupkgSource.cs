@@ -2,11 +2,11 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Credfeto.Nuget.Index.Transformer.Interfaces;
+namespace Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 
-public interface IJsonTransformer
+public interface INupkgSource
 {
-    ValueTask<JsonResult?> GetFromUpstreamAsync(
+    ValueTask<PackageResult?> GetFromUpstreamAsync(
         string path,
         ProductInfoHeaderValue? userAgent,
         CancellationToken cancellationToken
