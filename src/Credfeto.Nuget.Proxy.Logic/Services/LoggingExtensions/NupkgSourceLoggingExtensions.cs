@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 
-internal static partial class NupkgSourceThisLoggingExtensions
+internal static partial class NupkgSourceLoggingExtensions
 {
     [LoggerMessage(
         LogLevel.Error,
