@@ -1,4 +1,4 @@
-using Credfeto.Nuget.Package.Storage.Interfaces;
+using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;

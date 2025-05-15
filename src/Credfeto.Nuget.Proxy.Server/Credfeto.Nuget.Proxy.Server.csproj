@@ -107,7 +107,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Package.Storage.FileSystem\Credfeto.Nuget.Proxy.Package.Storage.FileSystem.csproj" />
-    <ProjectReference Include="..\Credfeto.Nuget.Package.Storage.Interfaces\Credfeto.Nuget.Package.Storage.Interfaces.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Logic\Credfeto.Nuget.Proxy.Logic.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Middleware\Credfeto.Nuget.Proxy.Middleware.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />

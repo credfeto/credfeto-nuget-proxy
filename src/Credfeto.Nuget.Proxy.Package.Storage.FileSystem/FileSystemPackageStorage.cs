@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Package.Storage.FileSystem.LoggingExtensions;
-using Credfeto.Nuget.Package.Storage.Interfaces;
+using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.Extensions.Logging;
 

@@ -57,9 +57,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Index.Transformer.Interfaces\Credfeto.Nuget.Proxy.Index.Transformer.Interfaces.csproj" />
-    <ProjectReference Include="..\Credfeto.Nuget.Package.Storage.Interfaces\Credfeto.Nuget.Package.Storage.Interfaces.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Extensions\Credfeto.Nuget.Proxy.Extensions.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
+    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Package.Storage.Interfaces\Credfeto.Nuget.Proxy.Package.Storage.Interfaces.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Credfeto.Date.Interfaces" Version="1.1.92.1039" />
