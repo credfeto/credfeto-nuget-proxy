@@ -6,7 +6,6 @@ public static class MiddlewareSetup
 {
     public static IServiceCollection AddMiddleware(this IServiceCollection services)
     {
-        return services.AddSingleton<JsonMiddleware>()
-                       .AddSingleton<NuPkgMiddleware>();
+        return services.AddSingleton<JsonMiddleware>().AddSingleton<NuPkgMiddleware>();
     }
 }
