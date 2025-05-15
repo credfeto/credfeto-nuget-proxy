@@ -10,22 +10,22 @@
  - any: [ 'CHANGELOG.md' ]
 "Config Change":
  - any: [ 'src/**/*.json', '!src/global.json' ]
-"credfeto-nuget-index-transformer-interfaces":
- - any: [ 'src/$Credfeto.Nuget.Index.Transformer.Interfaces/**/*' ]
-"credfeto-nuget-package-storage-filesystem":
- - any: [ 'src/$Credfeto.Nuget.Package.Storage.FileSystem/**/*' ]
-"credfeto-nuget-package-storage-filesystem-tests":
- - any: [ 'src/$Credfeto.Nuget.Package.Storage.FileSystem.Tests/**/*' ]
-"credfeto-nuget-package-storage-interfaces":
- - any: [ 'src/$Credfeto.Nuget.Package.Storage.Interfaces/**/*' ]
 "credfeto-nuget-proxy-extensions":
  - any: [ 'src/$Credfeto.Nuget.Proxy.Extensions/**/*' ]
+"credfeto-nuget-proxy-index-transformer-interfaces":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Index.Transformer.Interfaces/**/*' ]
 "credfeto-nuget-proxy-logic":
  - any: [ 'src/$Credfeto.Nuget.Proxy.Logic/**/*' ]
 "credfeto-nuget-proxy-middleware":
  - any: [ 'src/$Credfeto.Nuget.Proxy.Middleware/**/*' ]
 "credfeto-nuget-proxy-models":
  - any: [ 'src/$Credfeto.Nuget.Proxy.Models/**/*' ]
+"credfeto-nuget-proxy-package-storage-filesystem":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Package.Storage.FileSystem/**/*' ]
+"credfeto-nuget-proxy-package-storage-filesystem-tests":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests/**/*' ]
+"credfeto-nuget-proxy-package-storage-interfaces":
+ - any: [ 'src/$Credfeto.Nuget.Proxy.Package.Storage.Interfaces/**/*' ]
 "credfeto-nuget-proxy-server":
  - any: [ 'src/$Credfeto.Nuget.Proxy.Server/**/*' ]
 "github-actions":
