@@ -61,9 +61,6 @@ public static class Program
     private static WebApplication AddMiddleware(WebApplication application)
     {
         return (WebApplication)
-            application.ConfigureEndpoints()
-                       .UseMiddleware<JsonMiddleware>().UseMiddleware<NuPkgMiddleware>();
+            application.ConfigureEndpoints().UseMiddleware<JsonMiddleware>().UseMiddleware<NuPkgMiddleware>();
     }
-
-
 }
