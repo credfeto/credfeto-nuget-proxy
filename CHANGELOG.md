@@ -10,6 +10,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Fixed
 ### Changed
 - Dependencies - Updated Serilog to 4.3.0
+- Dependencies - Updated Credfeto.Enumeration to 1.2.87.1134
 ### Removed
 ### Deployment Changes
 
