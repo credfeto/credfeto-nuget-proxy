@@ -10,6 +10,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Fixed
 ### Changed
 - Dependencies - Updated SonarAnalyzer.CSharp to 10.10.0.116381
+- Dependencies - Updated Credfeto.Date to 1.1.96.1053
 ### Removed
 ### Deployment Changes
 
