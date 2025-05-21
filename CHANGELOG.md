@@ -9,17 +9,20 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- Dependencies - Updated SonarAnalyzer.CSharp to 10.10.0.116381
-- Dependencies - Updated Credfeto.Date to 1.1.97.1054
-- Dependencies - Updated Credfeto.Extensions.Linq to 1.0.96.931
-- Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.75.564
-- Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.16.137
 ### Removed
 ### Deployment Changes
 
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
+## [0.0.30] - 2025-05-21
+### Changed
+- Dependencies - Updated SonarAnalyzer.CSharp to 10.10.0.116381
+- Dependencies - Updated Credfeto.Date to 1.1.97.1054
+- Dependencies - Updated Credfeto.Extensions.Linq to 1.0.96.931
+- Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.75.564
+- Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.16.137
+
 ## [0.0.29] - 2025-05-19
 ### Changed
 - Dependencies - Updated Serilog to 4.3.0
