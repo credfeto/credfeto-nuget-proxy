@@ -59,7 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Credfeto.Date.Interfaces" Version="1.1.103.1075" />
-    <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.101.951" />
+    <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.102.953" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.5" />
   </ItemGroup>
   <ItemGroup>
