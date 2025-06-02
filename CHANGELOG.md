@@ -9,6 +9,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+- Dependencies - Updated Serilog.Extensions.Logging to 9.0.2
 ### Removed
 ### Deployment Changes
 
