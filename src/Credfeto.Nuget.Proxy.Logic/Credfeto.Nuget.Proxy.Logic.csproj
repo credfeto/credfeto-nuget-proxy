@@ -59,7 +59,7 @@
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Package.Storage.Interfaces\Credfeto.Nuget.Proxy.Package.Storage.Interfaces.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Credfeto.Date.Interfaces" Version="1.1.112.1102" />
+    <PackageReference Include="Credfeto.Date.Interfaces" Version="1.1.113.1105" />
     <PackageReference Include="Credfeto.Enumeration.Source.Generation.Attributes" Version="1.2.103.1193" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.5" />
   </ItemGroup>
