@@ -9,6 +9,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+- Dependencies - Updated Credfeto.Extensions.Linq to 1.0.117.1001
 ### Removed
 ### Deployment Changes
 
