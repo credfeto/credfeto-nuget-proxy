@@ -73,7 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Credfeto.Date" Version="1.1.119.1124" />
-    <PackageReference Include="Credfeto.Docker.HealthCheck.Http.Client" Version="0.0.37.203" />
+    <PackageReference Include="Credfeto.Docker.HealthCheck.Http.Client" Version="0.0.38.205" />
     <PackageReference Include="Credfeto.Extensions.Linq" Version="1.0.118.1003" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.5" />
