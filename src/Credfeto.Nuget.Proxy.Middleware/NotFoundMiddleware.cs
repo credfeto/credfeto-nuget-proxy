@@ -11,9 +11,16 @@ public sealed class NotFoundMiddleware : IMiddleware
     {
         if (StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET"))
         {
-            NotFound(context);
+            if (context.Request.Path.StartsWithSegments("/ping", StringComparison.OrdinalIgnoreCase))
+            {
+                return next(context);
 
+            }
+
+            NotFound(context);
             return Task.CompletedTask;
+
+
         }
 
         MethodNotAllowed(context);
