@@ -53,11 +53,11 @@ echo "Clear $OUTFOLDER" \
       --name nuget-proxy \
       -it \
       --rm \
-      -p 8080:8080/tcp \
-      -p 8081:8081/tcp \
-      -p 8081:8081/udp \
+      -p 9080:8080/tcp \
+      -p 9081:8081/tcp \
+      -p 9081:8081/udp \
       -e Proxy__UpstreamUrl__0=https://api.nuget.org \
-      -e Proxy__PublicUrl=https://localhost:8081 \
+      -e Proxy__PublicUrl=https://localhost:9081 \
       -e Proxy__Packages=/cache \
       -v /cache/nuget-proxy-test:/cache \
       -v $BASEDIR/Credfeto.Nuget.Proxy/server.pfx:/usr/src/app/server.pfx \
