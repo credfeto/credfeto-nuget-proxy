@@ -114,13 +114,27 @@ public abstract class JsonIndexTransformerBase
     {
         return this.Config.UpstreamUrls.Aggregate(
             seed: json,
-            func: (current, uri) =>
-                current.Replace(
-                    uri.CleanUri(),
-                    this.Config.PublicUrl.CleanUri(),
-                    comparisonType: StringComparison.Ordinal
-                )
+            func: this.ReplaceOneUrl
         );
+    }
+
+    private string ReplaceOneUrl(string current, Uri uri)
+    {
+        string from = uri.CleanUri();
+        string to = this.Config.PublicUrl.CleanUri();
+
+        string result = current.Replace(
+            from,
+            to,
+            comparisonType: StringComparison.Ordinal
+        );
+
+        if (result != current)
+        {
+            this._logger.LogUriReplace(from, to);
+        }
+
+        return result;
     }
 
     private int GetJsonCacheMaxAge(string path)

@@ -19,4 +19,11 @@ internal static partial class JsonIndexTransformerBaseLoggingExtensions
         Message = "Retrieved JSON from {upstream} Received Http {statusCode} Length: {length}"
     )]
     public static partial void UpstreamJsonOk(this ILogger logger, Uri upstream, HttpStatusCode statusCode, int length);
+
+    [LoggerMessage(
+        LogLevel.Information,
+        EventId = 3,
+        Message = "Url Replacement: Replaced {from} with {to}"
+    )]
+    public static partial void LogUriReplace(this ILogger logger, string from, string to);
 }
