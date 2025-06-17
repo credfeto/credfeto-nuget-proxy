@@ -30,10 +30,15 @@ namespace Credfeto.Nuget.Proxy.Server.Helpers;
 
 internal static class ServerStartup
 {
+#if DEBUG
+    private const int HTTP_PORT = 9080;
+    private const int HTTPS_PORT = 9081;
+    private const int H2_PORT = 0;
+#else
     private const int HTTP_PORT = 8080;
     private const int HTTPS_PORT = 8081;
     private const int H2_PORT = 0;
-
+#endif
     public static void SetThreads(int minThreads)
     {
         ThreadPool.GetMinThreads(out int minWorker, out int minIoc);
