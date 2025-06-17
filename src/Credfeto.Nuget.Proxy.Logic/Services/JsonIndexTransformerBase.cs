@@ -129,7 +129,7 @@ public abstract class JsonIndexTransformerBase
             comparisonType: StringComparison.Ordinal
         );
 
-        if (result != current)
+        if (!StringComparer.Ordinal.Equals(result,current))
         {
             this._logger.LogUriReplace(from, to);
         }
