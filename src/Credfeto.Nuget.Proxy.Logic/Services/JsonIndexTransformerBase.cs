@@ -40,11 +40,6 @@ public abstract class JsonIndexTransformerBase
         CancellationToken cancellationToken
     )
     {
-        if (!path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
         if (this._indexReplacement)
         {
             (bool match, JsonResult? result) = await this.DoIndexReplacementAsync(
