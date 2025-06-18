@@ -20,7 +20,9 @@ namespace Credfeto.Nuget.Proxy.Middleware;
 
 public sealed class JsonMiddleware : IMiddleware
 {
-    private static readonly IReadOnlyList<string> WhiteListedPaths = ["/search/query"];
+    private static readonly IReadOnlyList<string> WhiteListedPaths = [
+        "/autocomplete/query",
+        "/search/query"];
     private readonly ICurrentTimeSource _currentTimeSource;
     private readonly IJsonTransformer _jsonTransformer;
 
