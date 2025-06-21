@@ -9,6 +9,14 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.85] - 2025-06-21
+### Changed
 - Dependencies - Updated Credfeto.Enumeration to 1.2.117.1255
 - Dependencies - Updated FunFair.CodeAnalysis to 7.1.4.1237
 - Dependencies - Updated Credfeto.Date to 1.1.128.1167
@@ -16,12 +24,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.105.676
 - Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.46.245
 - Dependencies - Updated Credfeto.Extensions.Linq to 1.0.127.1046
-### Removed
-### Deployment Changes
 
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 ## [0.0.84] - 2025-06-21
 ### Changed
 - Dependencies - Updated Credfeto.Enumeration to 1.2.116.1247
