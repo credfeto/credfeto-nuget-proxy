@@ -13,6 +13,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated FunFair.CodeAnalysis to 7.1.4.1237
 - Dependencies - Updated Credfeto.Date to 1.1.128.1167
 - Dependencies - Updated FunFair.Test.Common to 6.1.272.1478
+- Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.105.676
 ### Removed
 ### Deployment Changes
 
