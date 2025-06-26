@@ -42,7 +42,7 @@ runs:
 
         [ -d "$NUGET_CONF_DIR" ] || mkdir -p "$NUGET_CONF_DIR"
         echo "NuGet.Config: $NUGET_CONF_FILE"
-        ls -la NUGET_CONF_DIR"
+        ls -la "$NUGET_CONF_DIR"
 
         NAMES=()
         URLS=()
