@@ -20,4 +20,7 @@ internal static partial class JsonMiddlewareLoggingExtensions
 
     [LoggerMessage(LogLevel.Warning, EventId = 5, Message = "Too many requests {path} from upstream: {message}.")]
     public static partial void TooManyRequests(this ILogger<JsonMiddleware> logger, string path, string message, Exception exception);
+
+    [LoggerMessage(LogLevel.Warning, EventId = 6, Message = "Internal server error {path} from upstream: {message}.")]
+    public static partial void InternalServerError(this ILogger<JsonMiddleware> logger, string path, string message, Exception exception);
 }

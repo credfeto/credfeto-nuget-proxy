@@ -11,7 +11,9 @@ using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Middleware.Extensions;
+using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Polly.Bulkhead;
 using Polly.Timeout;
 
@@ -31,11 +33,13 @@ public sealed class NuPkgMiddleware : IMiddleware
 {
     private readonly INupkgSource _nupkgSource;
     private readonly ICurrentTimeSource _currentTimeSource;
+    private readonly ILogger<NuPkgMiddleware> _logger;
 
-    public NuPkgMiddleware(INupkgSource nupkgSource, ICurrentTimeSource currentTimeSource)
+    public NuPkgMiddleware(INupkgSource nupkgSource, ICurrentTimeSource currentTimeSource, ILogger<NuPkgMiddleware> logger)
     {
         this._nupkgSource = nupkgSource;
         this._currentTimeSource = currentTimeSource;
+        this._logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -60,15 +64,19 @@ public sealed class NuPkgMiddleware : IMiddleware
 
             if (result is null)
             {
+                this._logger.NoContent(path);
                 await next(context);
                 return;
             }
 
+            this._logger.FoundContent(path: path, length: result.Value.Data.Length);
             await this.SuccessAsync(context: context, data: result.Value, cancellationToken: cancellationToken);
         }
         catch (HttpRequestException exception)
         {
-            Failed(context: context, exception.StatusCode ?? HttpStatusCode.InternalServerError);
+            HttpStatusCode errorCode = exception.StatusCode ?? HttpStatusCode.InternalServerError;
+            this._logger.HttpError(path: path, statusCode: errorCode, message: exception.Message, exception: exception);
+            Failed(context: context, result: errorCode);
         }
         catch (JsonException)
         {
@@ -76,11 +84,13 @@ public sealed class NuPkgMiddleware : IMiddleware
         }
         catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
         {
+            this._logger.TooManyRequests(path: path, message: exception.Message, exception: exception);
             TooManyRequests(context);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            await next(context);
+            this._logger.InternalServerError(path: path, message: exception.Message, exception: exception);
+            Failed(context: context, result: HttpStatusCode.InternalServerError);
         }
     }
 

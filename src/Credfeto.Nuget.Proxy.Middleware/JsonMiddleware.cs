@@ -83,9 +83,10 @@ public sealed class JsonMiddleware : IMiddleware
             this._logger.TooManyRequests(path: path, message: exception.Message, exception: exception);
             TooManyRequests(context);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            await next(context);
+            this._logger.InternalServerError(path: path, message: exception.Message, exception: exception);
+            Failed(context: context, result: HttpStatusCode.InternalServerError);
         }
     }
 
