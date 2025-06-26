@@ -61,7 +61,7 @@ public sealed class JsonMiddleware : IMiddleware
                 return;
             }
 
-            this._logger.FoundUpstreamJson(path: path, cacheSeconds: result.Value.CacheMaxAgeSeconds, json: result.Value.Json);
+            this._logger.FoundUpstreamJson(path: path, cacheSeconds: result.Value.CacheMaxAgeSeconds);
             int ageSeconds = result.Value.CacheMaxAgeSeconds;
             string json = result.Value.Json;
             await this.SuccessAsync(context: context, json: json, ageSeconds: ageSeconds, cancellationToken: cancellationToken);
