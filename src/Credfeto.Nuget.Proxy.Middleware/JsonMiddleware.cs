@@ -12,7 +12,9 @@ using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Middleware.Extensions;
+using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Polly.Bulkhead;
 using Polly.Timeout;
 
@@ -24,12 +26,14 @@ public sealed class JsonMiddleware : IMiddleware
         "/autocomplete/query",
         "/search/query"];
     private readonly ICurrentTimeSource _currentTimeSource;
+    private readonly ILogger<JsonMiddleware> _logger;
     private readonly IJsonTransformer _jsonTransformer;
 
-    public JsonMiddleware(IJsonTransformer jsonTransformer, ICurrentTimeSource currentTimeSource)
+    public JsonMiddleware(IJsonTransformer jsonTransformer, ICurrentTimeSource currentTimeSource, ILogger<JsonMiddleware> logger)
     {
         this._jsonTransformer = jsonTransformer;
         this._currentTimeSource = currentTimeSource;
+        this._logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -51,25 +55,32 @@ public sealed class JsonMiddleware : IMiddleware
 
             if (result is null)
             {
+                this._logger.NoUpstreamJson(path);
                 await next(context);
 
                 return;
             }
 
+            this._logger.FoundUpstreamJson(path: path, cacheSeconds: result.Value.CacheMaxAgeSeconds, json: result.Value.Json);
             int ageSeconds = result.Value.CacheMaxAgeSeconds;
             string json = result.Value.Json;
             await this.SuccessAsync(context: context, json: json, ageSeconds: ageSeconds, cancellationToken: cancellationToken);
         }
         catch (HttpRequestException exception)
         {
-            Failed(context: context, exception.StatusCode ?? HttpStatusCode.InternalServerError);
+            HttpStatusCode errorCode = exception.StatusCode ?? HttpStatusCode.InternalServerError;
+            this._logger.HttpError(path: path, statusCode: errorCode, message: exception.Message, exception: exception);
+
+            Failed(context: context, result: errorCode);
         }
-        catch (JsonException)
+        catch (JsonException exception)
         {
+            this._logger.InvalidJson(path: path, message: exception.Message, exception: exception);
             Failed(context: context, result: HttpStatusCode.InternalServerError);
         }
         catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
         {
+            this._logger.TooManyRequests(path: path, message: exception.Message, exception: exception);
             TooManyRequests(context);
         }
         catch (Exception)
