@@ -69,9 +69,18 @@ public sealed class JsonMiddleware : IMiddleware
         catch (HttpRequestException exception)
         {
             HttpStatusCode errorCode = exception.StatusCode ?? HttpStatusCode.InternalServerError;
-            this._logger.HttpError(path: path, statusCode: errorCode, message: exception.Message, exception: exception);
 
-            Failed(context: context, result: errorCode);
+            if (errorCode == HttpStatusCode.NotFound)
+            {
+                this._logger.HttpNotFound(path: path);
+                this.NotFound(context: context, result: errorCode);
+            }
+            else
+            {
+                this._logger.HttpError(path: path, statusCode: errorCode, message: exception.Message, exception: exception);
+
+                Failed(context: context, result: errorCode);
+            }
         }
         catch (JsonException exception)
         {
@@ -124,6 +133,16 @@ public sealed class JsonMiddleware : IMiddleware
     {
         context.Response.StatusCode = (int)result;
         context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+    }
+
+    private void NotFound(HttpContext context, HttpStatusCode result)
+    {
+        const int ageSeconds = 60;
+        context.Response.StatusCode = (int)result;
+        context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
+        context.Response.Headers.Expires = this._currentTimeSource.UtcNow()
+                                               .AddSeconds(ageSeconds)
+                                               .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
     }
 
     private static void TooManyRequests(HttpContext context)

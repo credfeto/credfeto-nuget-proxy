@@ -75,6 +75,7 @@ public sealed class NuPkgMiddleware : IMiddleware
         catch (HttpRequestException exception)
         {
             HttpStatusCode errorCode = exception.StatusCode ?? HttpStatusCode.InternalServerError;
+
             this._logger.HttpError(path: path, statusCode: errorCode, message: exception.Message, exception: exception);
             Failed(context: context, result: errorCode);
         }

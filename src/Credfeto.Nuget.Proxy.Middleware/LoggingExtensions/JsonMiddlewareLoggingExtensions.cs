@@ -23,4 +23,7 @@ internal static partial class JsonMiddlewareLoggingExtensions
 
     [LoggerMessage(LogLevel.Warning, EventId = 6, Message = "Internal server error {path} from upstream: {message}.")]
     public static partial void InternalServerError(this ILogger<JsonMiddleware> logger, string path, string message, Exception exception);
+
+    [LoggerMessage(LogLevel.Warning, EventId = 7, Message = "Could not read {path} from upstream (404 not found).")]
+    public static partial void HttpNotFound(this ILogger<JsonMiddleware> logger, string path);
 }
