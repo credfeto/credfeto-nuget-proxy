@@ -10,9 +10,9 @@ namespace Credfeto.Nuget.Proxy.Logic;
 
 internal static class HttpClientSetup
 {
-    private const int CONCURRENT_ACTIONS = 30;
-    private const int QUEUED_ACTIONS = 10;
-    private static readonly TimeSpan HttpTimeout = TimeSpan.FromSeconds(30);
+    private const int CONCURRENT_ACTIONS = 60;
+    private const int QUEUED_ACTIONS = 20;
+    private static readonly TimeSpan HttpTimeout = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan PollyTimeout = HttpTimeout.Add(TimeSpan.FromSeconds(1));
 
     public static IServiceCollection AddJsonClient(this IServiceCollection services, ProxyServerConfig appConfig)
