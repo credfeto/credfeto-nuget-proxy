@@ -1,23 +1,3 @@
- - name: "!!! WAITING FOR CLIENT PR"
-   color: "ffff00"
-   description: "Pull request needs a client pull request to be merged at the same time"
-
- - name: "!!! WAITING FOR ETHEREUM PR"
-   color: "ffff00"
-   description: "Pull request needs a server ethereum pull request to be merged at the same time"
-
- - name: "!!! WAITING FOR QA SIGNOFF"
-   color: "ffff00"
-   description: "Pull request needs a QA Signoff before it can be merged"
-
- - name: "!!! WAITING FOR SERVER PR"
-   color: "ffff00"
-   description: "Pull request needs a server pull request to be merged at the same time"
-
- - name: "!!! WAITING FOR WALLET PR"
-   color: "ffff00"
-   description: "Pull request needs a wallet pull request to be merged at the same time"
-
  - name: ".NET update"
    color: "a870c9"
    description: "Update to .net global.json"
@@ -48,39 +28,39 @@
 
  - name: "credfeto-nuget-proxy-extensions"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy.Extensions project"
+   description: "Changes in Credfeto.Nuget.Proxy.Extensions project"
 
  - name: "credfeto-nuget-proxy-index-transformer-interfaces"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy.Index.Transformer.Interfaces project"
+   description: "Changes in Credfeto.Nuget.Proxy.Index.Transformer.Interfaces project"
 
  - name: "credfeto-nuget-proxy-logic"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy.Logic project"
+   description: "Changes in Credfeto.Nuget.Proxy.Logic project"
 
  - name: "credfeto-nuget-proxy-middleware"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy.Middleware project"
+   description: "Changes in Credfeto.Nuget.Proxy.Middleware project"
 
  - name: "credfeto-nuget-proxy-models"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy.Models project"
+   description: "Changes in Credfeto.Nuget.Proxy.Models project"
 
  - name: "credfeto-nuget-proxy-package-storage-filesystem"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy.Package.Storage.FileSystem project"
+   description: "Changes in Credfeto.Nuget.Proxy.Package.Storage.FileSystem project"
 
  - name: "credfeto-nuget-proxy-package-storage-filesystem-tests"
    color: "0e8a16"
-   description: "Changes in $Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests project"
+   description: "Changes in Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests project"
 
  - name: "credfeto-nuget-proxy-package-storage-interfaces"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy.Package.Storage.Interfaces project"
+   description: "Changes in Credfeto.Nuget.Proxy.Package.Storage.Interfaces project"
 
  - name: "credfeto-nuget-proxy-server"
    color: "96f7d2"
-   description: "Changes in $Credfeto.Nuget.Proxy.Server project"
+   description: "Changes in Credfeto.Nuget.Proxy.Server project"
 
  - name: "dependencies"
    color: "0366d6"
@@ -97,10 +77,6 @@
  - name: "github-actions"
    color: "e09cf4"
    description: "Github actions workflow files"
-
- - name: "Legal Text"
-   color: "facef0"
-   description: "Legal text files"
 
  - name: "Markdown"
    color: "5319e7"
@@ -146,7 +122,7 @@
    color: "30027a"
    description: "Technical debt"
 
- - name: "unit-tests"
+ - name: "Unit Tests"
    color: "0e8a16"
    description: "Unit test and integration test projects"
 
