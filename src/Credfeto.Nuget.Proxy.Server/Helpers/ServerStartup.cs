@@ -39,6 +39,7 @@ internal static class ServerStartup
     private const int HTTPS_PORT = 8081;
     private const int H2_PORT = 0;
 #endif
+
     public static void SetThreads(int minThreads)
     {
         ThreadPool.GetMinThreads(out int minWorker, out int minIoc);
