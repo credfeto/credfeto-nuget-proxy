@@ -107,10 +107,7 @@ public abstract class JsonIndexTransformerBase
 
     protected string ReplaceUrls(string json)
     {
-        return this.Config.UpstreamUrls.Aggregate(
-            seed: json,
-            func: this.ReplaceOneUrl
-        );
+        return this.Config.UpstreamUrls.Aggregate(seed: json, func: this.ReplaceOneUrl);
     }
 
     private string ReplaceOneUrl(string current, Uri uri)
@@ -118,13 +115,9 @@ public abstract class JsonIndexTransformerBase
         string from = uri.CleanUri();
         string to = this.Config.PublicUrl.CleanUri();
 
-        string result = current.Replace(
-            from,
-            to,
-            comparisonType: StringComparison.Ordinal
-        );
+        string result = current.Replace(from, to, comparisonType: StringComparison.Ordinal);
 
-        if (!StringComparer.Ordinal.Equals(result,current))
+        if (!StringComparer.Ordinal.Equals(result, current))
         {
             this._logger.LogUriReplace(from, to);
         }
