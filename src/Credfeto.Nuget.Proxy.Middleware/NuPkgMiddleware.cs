@@ -35,7 +35,11 @@ public sealed class NuPkgMiddleware : IMiddleware
     private readonly ICurrentTimeSource _currentTimeSource;
     private readonly ILogger<NuPkgMiddleware> _logger;
 
-    public NuPkgMiddleware(INupkgSource nupkgSource, ICurrentTimeSource currentTimeSource, ILogger<NuPkgMiddleware> logger)
+    public NuPkgMiddleware(
+        INupkgSource nupkgSource,
+        ICurrentTimeSource currentTimeSource,
+        ILogger<NuPkgMiddleware> logger
+    )
     {
         this._nupkgSource = nupkgSource;
         this._currentTimeSource = currentTimeSource;
