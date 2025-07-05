@@ -14,19 +14,15 @@ public sealed class NotFoundMiddleware : IMiddleware
             if (context.Request.Path.StartsWithSegments("/ping", StringComparison.OrdinalIgnoreCase))
             {
                 return next(context);
-
             }
 
             NotFound(context);
             return Task.CompletedTask;
-
-
         }
 
         MethodNotAllowed(context);
 
         return Task.CompletedTask;
-
     }
 
     private static void NotFound(HttpContext context)
