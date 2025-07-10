@@ -7,6 +7,7 @@ public static class FileSystemSetup
 {
     public static IServiceCollection AddFileSystemStorage(this IServiceCollection services)
     {
-        return services.AddSingleton<IPackageStorage, FileSystemPackageStorage>();
+        return services.AddSingleton<IJsonStorage, FileSystemJsonStorage>()
+                       .AddSingleton<IPackageStorage, FileSystemPackageStorage>();
     }
 }
