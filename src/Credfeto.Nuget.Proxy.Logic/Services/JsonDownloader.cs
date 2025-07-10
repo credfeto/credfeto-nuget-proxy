@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -22,8 +24,7 @@ public sealed class JsonDownloader : IJsonDownloader
     private readonly IJsonStorage _jsonStorage;
     private readonly ILogger<JsonDownloader> _logger;
 
-    public JsonDownloader(ProxyServerConfig config, IHttpClientFactory httpClientFactory, IJsonStorage jsonStorage, ILogger<JsonDownloader> logger
-    )
+    public JsonDownloader(ProxyServerConfig config, IHttpClientFactory httpClientFactory, IJsonStorage jsonStorage, ILogger<JsonDownloader> logger)
     {
         this._config = config;
         this._httpClientFactory = httpClientFactory;
@@ -31,11 +32,7 @@ public sealed class JsonDownloader : IJsonDownloader
         this._logger = logger;
     }
 
-    public async ValueTask<string> ReadUpstreamAsync(
-        Uri requestUri,
-        ProductInfoHeaderValue? userAgent,
-        CancellationToken cancellationToken
-    )
+    public async ValueTask<string> ReadUpstreamAsync(Uri requestUri, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
     {
         HttpClient client = this.GetClient(userAgent);
 
@@ -47,12 +44,7 @@ public sealed class JsonDownloader : IJsonDownloader
             client.DefaultRequestHeaders.Add(name: "If-None-Match", value: cached.Etag);
         }
 
-        using (
-            HttpResponseMessage result = await client.GetAsync(
-                requestUri: requestUri,
-                cancellationToken: cancellationToken
-            )
-        )
+        using (HttpResponseMessage result = await client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken))
         {
             // if (result.StatusCode == HttpStatusCode.NotModified)
             // {
@@ -64,11 +56,11 @@ public sealed class JsonDownloader : IJsonDownloader
                 return Failed(requestUri: requestUri, resultStatusCode: result.StatusCode);
             }
 
+            string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
+
             JsonMetadata jsonMetadata = LoadMetadata(result);
 
             this._logger.Metadata(upstream: requestUri, metadata: jsonMetadata, httpStatus: result.StatusCode);
-
-            string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
 
             await this.SaveToCacheAsync(requestUri: requestUri, jsonMetadata: jsonMetadata, json: json, cancellationToken: cancellationToken);
 
@@ -95,7 +87,7 @@ public sealed class JsonDownloader : IJsonDownloader
 
     private static JsonMetadata LoadMetadata(HttpResponseMessage result)
     {
-        string? eTag = result.Headers.ETag?.Tag;
+        string? eTag = result.Headers.ETag?.Tag ?? ExtractHeaderValue(headers: result.Headers, name: "ETag");
 
         long contentLength = result.Content.Headers.ContentLength ?? 0;
 
@@ -107,18 +99,28 @@ public sealed class JsonDownloader : IJsonDownloader
     [DoesNotReturn]
     private static string Failed(Uri requestUri, HttpStatusCode resultStatusCode)
     {
-        throw new HttpRequestException(
-            $"Failed to download {requestUri}: {resultStatusCode.GetName()}",
-            inner: null,
-            statusCode: resultStatusCode
-        );
+        throw new HttpRequestException($"Failed to download {requestUri}: {resultStatusCode.GetName()}", inner: null, statusCode: resultStatusCode);
     }
 
     private HttpClient GetClient(ProductInfoHeaderValue? userAgent)
     {
-        return this
-            ._httpClientFactory.CreateClient(HttpClientNames.Json)
-            .WithBaseAddress(this._config.UpstreamUrls[0])
-            .WithUserAgent(userAgent);
+        return this._httpClientFactory.CreateClient(HttpClientNames.Json)
+                   .WithBaseAddress(this._config.UpstreamUrls[0])
+                   .WithUserAgent(userAgent);
+    }
+
+    private static string? ExtractHeaderValue(HttpResponseHeaders headers, string name)
+    {
+        if (headers.TryGetValues(name: name, out IEnumerable<string>? values))
+        {
+            string? value = values.FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 }
