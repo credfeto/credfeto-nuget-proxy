@@ -46,10 +46,10 @@ public sealed class JsonDownloader : IJsonDownloader
 
         using (HttpResponseMessage result = await client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken))
         {
-            // if (result.StatusCode == HttpStatusCode.NotModified)
-            // {
-            //     // TODO: return cached;
-            // }
+            if (cached is not null && result.StatusCode == HttpStatusCode.NotModified)
+            {
+                return cached.Content;
+            }
 
             if (!result.IsSuccessStatusCode)
             {
