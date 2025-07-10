@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -33,8 +34,16 @@ public sealed class JsonDownloader : IJsonDownloader
     {
         HttpClient client = this.GetClient(userAgent);
 
+        // TODO: Load from cache...
+        // TODO: If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+
         using (HttpResponseMessage result = await client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken))
         {
+            // if (result.StatusCode == HttpStatusCode.NotModified)
+            // {
+            //     // TODO: return cached;
+            // }
+
             if (!result.IsSuccessStatusCode)
             {
                 return Failed(requestUri: requestUri, resultStatusCode: result.StatusCode);
@@ -44,8 +53,24 @@ public sealed class JsonDownloader : IJsonDownloader
 
             this._logger.Metadata(upstream: requestUri, metadata: jsonMetadata, httpStatus: result.StatusCode);
 
-            return await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
+            string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
+
+            SaveToCache(requestUri, jsonMetadata, json);
+
+            return json;
         }
+    }
+
+    [Conditional("DEBUG")]
+    private static void SaveToCache(Uri requestUri, in JsonMetadata jsonMetadata, string json)
+    {
+        if (string.IsNullOrWhiteSpace(jsonMetadata.Etag))
+        {
+            return;
+        }
+
+        // TODO: Save to cache
+        Debug.WriteLine($"Saving to cache: {requestUri} : {json}");
     }
 
     private static JsonMetadata LoadMetadata(HttpResponseHeaders headers)
