@@ -48,6 +48,7 @@ public sealed class JsonDownloader : IJsonDownloader
         {
             if (cached is not null && result.StatusCode == HttpStatusCode.NotModified)
             {
+                this._logger.ReturningCached(upstream: requestUri, metadata: cached, httpStatus: result.StatusCode);
                 return cached.Content;
             }
 
