@@ -41,7 +41,11 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
         catch (Exception exception)
         {
-            this._logger.FailedToReadFileFromCache(filename: sourcePath, message: exception.Message, exception: exception);
+            this._logger.FailedToReadFileFromCache(
+                filename: sourcePath,
+                message: exception.Message,
+                exception: exception
+            );
 
             return null;
         }
@@ -80,7 +84,11 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    private bool BuildPackagePath(string path, [NotNullWhen(true)] out string? filename, [NotNullWhen(true)] out string? dir)
+    private bool BuildPackagePath(
+        string path,
+        [NotNullWhen(true)] out string? filename,
+        [NotNullWhen(true)] out string? dir
+    )
     {
         string f = Path.Combine(path1: this._config.Packages, path.TrimStart('/'));
 
