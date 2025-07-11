@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +25,10 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
     public async ValueTask<byte[]?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
     {
-        string packagePath = this.BuildPackagePath(sourcePath);
+        if (!this.BuildPackagePath(path: sourcePath, out string? packagePath, dir: out _))
+        {
+            return null;
+        }
 
         try
         {
@@ -37,11 +41,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
         catch (Exception exception)
         {
-            this._logger.FailedToReadFileFromCache(
-                filename: sourcePath,
-                message: exception.Message,
-                exception: exception
-            );
+            this._logger.FailedToReadFileFromCache(filename: sourcePath, message: exception.Message, exception: exception);
 
             return null;
         }
@@ -49,11 +49,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
     public async ValueTask SaveFileAsync(string sourcePath, byte[] buffer, CancellationToken cancellationToken)
     {
-        string packagePath = this.BuildPackagePath(sourcePath);
-
-        string? dir = Path.GetDirectoryName(packagePath);
-
-        if (string.IsNullOrEmpty(dir))
+        if (!this.BuildPackagePath(path: sourcePath, out string? packagePath, out string? dir))
         {
             return;
         }
@@ -84,8 +80,23 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    private string BuildPackagePath(string path)
+    private bool BuildPackagePath(string path, [NotNullWhen(true)] out string? filename, [NotNullWhen(true)] out string? dir)
     {
-        return Path.Combine(path1: this._config.Packages, path.TrimStart('/'));
+        string f = Path.Combine(path1: this._config.Packages, path.TrimStart('/'));
+
+        string? d = Path.GetDirectoryName(f);
+
+        if (string.IsNullOrEmpty(d))
+        {
+            filename = null;
+            dir = null;
+
+            return false;
+        }
+
+        filename = f;
+        dir = d;
+
+        return true;
     }
 }

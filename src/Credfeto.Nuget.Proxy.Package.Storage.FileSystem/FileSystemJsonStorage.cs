@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Pipelines;
 using System.Text.Json;
@@ -31,7 +32,10 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
     public async ValueTask<JsonItem?> LoadAsync(Uri requestUri, CancellationToken cancellationToken)
     {
-        string jsonPath = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
+        if (!this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath, out string? jsonPath, dir: out _))
+        {
+            return null;
+        }
 
         try
         {
@@ -55,11 +59,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
     public async ValueTask SaveAsync(Uri requestUri, JsonItem item, CancellationToken cancellationToken)
     {
-        string jsonPath = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
-
-        string? dir = Path.GetDirectoryName(jsonPath);
-
-        if (string.IsNullOrEmpty(dir))
+        if (!this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath, out string? jsonPath, out string? dir))
         {
             return;
         }
@@ -82,9 +82,24 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    private string BuildJsonPath(string sourceHost, string path)
+    private bool BuildJsonPath(string sourceHost, string path, [NotNullWhen(true)] out string? filename, [NotNullWhen(true)] out string? dir)
     {
-        return Path.Combine(path1: this._basePath, path2: sourceHost, path.TrimStart('/'));
+        string f = Path.Combine(path1: this._basePath, path2: sourceHost, path.TrimStart('/'));
+
+        string? d = Path.GetDirectoryName(f);
+
+        if (string.IsNullOrEmpty(d))
+        {
+            filename = null;
+            dir = null;
+
+            return false;
+        }
+
+        filename = f;
+        dir = d;
+
+        return true;
     }
 
     private void EnsureDirectoryExists(string folder)
