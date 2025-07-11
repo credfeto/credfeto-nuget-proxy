@@ -28,10 +28,12 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
         try
         {
-            if (File.Exists(packagePath))
+            if (!File.Exists(packagePath))
             {
-                return await File.ReadAllBytesAsync(path: packagePath, cancellationToken: cancellationToken);
+                return null;
             }
+
+            return await File.ReadAllBytesAsync(path: packagePath, cancellationToken: cancellationToken);
         }
         catch (Exception exception)
         {
@@ -43,15 +45,12 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
             return null;
         }
-
-        return null;
     }
 
     public async ValueTask SaveFileAsync(string sourcePath, byte[] buffer, CancellationToken cancellationToken)
     {
         string packagePath = this.BuildPackagePath(sourcePath);
 
-        // ! Doesn't
         string? dir = Path.GetDirectoryName(packagePath);
 
         if (string.IsNullOrEmpty(dir))

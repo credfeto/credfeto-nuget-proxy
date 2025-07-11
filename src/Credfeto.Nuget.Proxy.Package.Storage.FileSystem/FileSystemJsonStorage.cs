@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.Pipelines;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,11 +10,13 @@ using Credfeto.Nuget.Proxy.Package.Storage.FileSystem.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 
 namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 
 public sealed class FileSystemJsonStorage : IJsonStorage
 {
+    private static readonly RecyclableMemoryStreamManager MemoryStreamManager = new();
     private readonly string _basePath;
     private readonly ILogger<FileSystemJsonStorage> _logger;
 
@@ -32,22 +35,19 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
         try
         {
-            if (File.Exists(jsonPath))
+            if (!File.Exists(jsonPath))
             {
-                string content = await File.ReadAllTextAsync(path: jsonPath, cancellationToken: cancellationToken);
-
-                return JsonSerializer.Deserialize(json: content, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem);
+                return null;
             }
 
-            return null;
+            await using (Stream content = File.OpenRead(path: jsonPath))
+            {
+                return await JsonSerializer.DeserializeAsync(utf8Json: content, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
+            }
         }
         catch (Exception exception)
         {
-            this._logger.FailedToReadFileFromCache(
-                filename: jsonPath,
-                message: exception.Message,
-                exception: exception
-            );
+            this._logger.FailedToReadFileFromCache(filename: jsonPath, message: exception.Message, exception: exception);
 
             return null;
         }
@@ -57,7 +57,6 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     {
         string jsonPath = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
 
-        // ! Doesn't
         string? dir = Path.GetDirectoryName(jsonPath);
 
         if (string.IsNullOrEmpty(dir))
@@ -69,9 +68,13 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         {
             this.EnsureDirectoryExists(dir);
 
-            string json = JsonSerializer.Serialize(value: item, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem);
+            await using (RecyclableMemoryStream recyclableMemoryStream = MemoryStreamManager.GetStream())
+            {
+                PipeWriter pw = PipeWriter.Create(recyclableMemoryStream);
+                await JsonSerializer.SerializeAsync(utf8Json: pw, value: item, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
 
-            await File.WriteAllTextAsync(path: jsonPath, contents: json, cancellationToken: cancellationToken);
+                await File.WriteAllBytesAsync(path: jsonPath, recyclableMemoryStream.GetBuffer(), cancellationToken: cancellationToken);
+            }
         }
         catch (Exception exception)
         {
@@ -88,10 +91,12 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     {
         try
         {
-            if (!Directory.Exists(folder))
+            if (Directory.Exists(folder))
             {
-                Directory.CreateDirectory(folder);
+                return;
             }
+
+            Directory.CreateDirectory(folder);
         }
         catch (Exception exception)
         {
