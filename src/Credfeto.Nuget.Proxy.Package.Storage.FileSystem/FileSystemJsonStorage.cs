@@ -32,7 +32,14 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
     public async ValueTask<JsonItem?> LoadAsync(Uri requestUri, CancellationToken cancellationToken)
     {
-        if (!this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath, out string? jsonPath, dir: out _))
+        if (
+            !this.BuildJsonPath(
+                sourceHost: requestUri.Host,
+                path: requestUri.AbsolutePath,
+                out string? jsonPath,
+                dir: out _
+            )
+        )
         {
             return null;
         }
@@ -46,12 +53,20 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
             await using (Stream content = File.OpenRead(path: jsonPath))
             {
-                return await JsonSerializer.DeserializeAsync(utf8Json: content, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
+                return await JsonSerializer.DeserializeAsync(
+                    utf8Json: content,
+                    jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
+                    cancellationToken: cancellationToken
+                );
             }
         }
         catch (Exception exception)
         {
-            this._logger.FailedToReadFileFromCache(filename: jsonPath, message: exception.Message, exception: exception);
+            this._logger.FailedToReadFileFromCache(
+                filename: jsonPath,
+                message: exception.Message,
+                exception: exception
+            );
 
             return null;
         }
@@ -59,7 +74,14 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
     public async ValueTask SaveAsync(Uri requestUri, JsonItem item, CancellationToken cancellationToken)
     {
-        if (!this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath, out string? jsonPath, out string? dir))
+        if (
+            !this.BuildJsonPath(
+                sourceHost: requestUri.Host,
+                path: requestUri.AbsolutePath,
+                out string? jsonPath,
+                out string? dir
+            )
+        )
         {
             return;
         }
@@ -71,9 +93,18 @@ public sealed class FileSystemJsonStorage : IJsonStorage
             await using (RecyclableMemoryStream recyclableMemoryStream = MemoryStreamManager.GetStream())
             {
                 PipeWriter pw = PipeWriter.Create(recyclableMemoryStream);
-                await JsonSerializer.SerializeAsync(utf8Json: pw, value: item, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
+                await JsonSerializer.SerializeAsync(
+                    utf8Json: pw,
+                    value: item,
+                    jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
+                    cancellationToken: cancellationToken
+                );
 
-                await File.WriteAllBytesAsync(path: jsonPath, recyclableMemoryStream.GetBuffer(), cancellationToken: cancellationToken);
+                await File.WriteAllBytesAsync(
+                    path: jsonPath,
+                    recyclableMemoryStream.GetBuffer(),
+                    cancellationToken: cancellationToken
+                );
             }
         }
         catch (Exception exception)
@@ -82,7 +113,12 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    private bool BuildJsonPath(string sourceHost, string path, [NotNullWhen(true)] out string? filename, [NotNullWhen(true)] out string? dir)
+    private bool BuildJsonPath(
+        string sourceHost,
+        string path,
+        [NotNullWhen(true)] out string? filename,
+        [NotNullWhen(true)] out string? dir
+    )
     {
         string f = Path.Combine(path1: this._basePath, path2: sourceHost, path.TrimStart('/'));
 
