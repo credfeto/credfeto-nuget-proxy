@@ -40,6 +40,7 @@ public sealed class JsonDownloader : IJsonDownloader
 
         if (cached is not null && !string.IsNullOrWhiteSpace(cached.Etag))
         {
+            this._logger.PreviouslyCached(upstream: requestUri, etag: cached.Etag);
             AddEtag(client: client, cached: cached);
         }
 
@@ -48,6 +49,7 @@ public sealed class JsonDownloader : IJsonDownloader
             if (cached is not null && result.StatusCode == HttpStatusCode.NotModified)
             {
                 this._logger.ReturningCached(upstream: requestUri, metadata: cached, httpStatus: result.StatusCode);
+
                 return cached.Content;
             }
 
@@ -56,9 +58,18 @@ public sealed class JsonDownloader : IJsonDownloader
                 return Failed(requestUri: requestUri, resultStatusCode: result.StatusCode);
             }
 
+            string? eTag = ExtractHeaderValue(headers: result.Headers, name: "ETag");
+
+            if (cached is not null && !string.IsNullOrEmpty(cached.Etag) && !string.IsNullOrWhiteSpace(eTag) && StringComparer.Ordinal.Equals(x: eTag, y: cached.Etag))
+            {
+                this._logger.ReturningCached(upstream: requestUri, metadata: cached, httpStatus: result.StatusCode);
+
+                return cached.Content;
+            }
+
             string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
 
-            JsonMetadata jsonMetadata = LoadMetadata(result);
+            JsonMetadata jsonMetadata = LoadMetadata(result: result, eTag: eTag);
 
             this._logger.Metadata(upstream: requestUri, metadata: jsonMetadata, httpStatus: result.StatusCode);
 
@@ -78,7 +89,9 @@ public sealed class JsonDownloader : IJsonDownloader
 
     private static string EnsureQuoted(string source)
     {
-        return source.StartsWith('"') && source.EndsWith('"') ? source : "\"" + source + "\"";
+        return source.StartsWith('"') && source.EndsWith('"')
+            ? source
+            : "\"" + source + "\"";
     }
 
     private async ValueTask SaveToCacheAsync(Uri requestUri, JsonMetadata jsonMetadata, string json, CancellationToken cancellationToken)
@@ -98,10 +111,8 @@ public sealed class JsonDownloader : IJsonDownloader
                                           cancellationToken: cancellationToken);
     }
 
-    private static JsonMetadata LoadMetadata(HttpResponseMessage result)
+    private static JsonMetadata LoadMetadata(HttpResponseMessage result, string? eTag)
     {
-        string? eTag = result.Headers.ETag?.Tag ?? ExtractHeaderValue(headers: result.Headers, name: "ETag");
-
         long contentLength = result.Content.Headers.ContentLength ?? 0;
 
         string? contentType = result.Content.Headers.ContentType?.MediaType;
