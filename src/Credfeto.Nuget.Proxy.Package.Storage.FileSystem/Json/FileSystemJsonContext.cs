@@ -1,8 +1,7 @@
 using System.Text.Json.Serialization;
-using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces.Models;
 
-namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
+namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Json;
 
 [JsonSourceGenerationOptions(
     GenerationMode = JsonSourceGenerationMode.Serialization | JsonSourceGenerationMode.Metadata,
