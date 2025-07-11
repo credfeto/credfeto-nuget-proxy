@@ -42,7 +42,11 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
         catch (Exception exception)
         {
-            this._logger.FailedToReadFileFromCache(filename: jsonPath, message: exception.Message, exception: exception);
+            this._logger.FailedToReadFileFromCache(
+                filename: jsonPath,
+                message: exception.Message,
+                exception: exception
+            );
 
             return null;
         }
