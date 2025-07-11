@@ -38,10 +38,12 @@ public sealed class JsonDownloader : IJsonDownloader
 
         JsonItem? cached = await this._jsonStorage.LoadAsync(requestUri: requestUri, cancellationToken: cancellationToken);
 
-        if (cached is not null)
+        if (cached is not null && !string.IsNullOrWhiteSpace(cached.Etag))
         {
             // TODO: If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
-            client.DefaultRequestHeaders.Add(name: "If-None-Match", value: cached.Etag);
+            string etag = EnsureQuoted(cached.Etag);
+
+            client.DefaultRequestHeaders.Add(name: "If-None-Match", value: etag);
         }
 
         using (HttpResponseMessage result = await client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken))
@@ -67,6 +69,11 @@ public sealed class JsonDownloader : IJsonDownloader
 
             return json;
         }
+    }
+
+    private static string EnsureQuoted(string source)
+    {
+        return source.StartsWith('"') && source.EndsWith('"') ? source : "\"" + source + "\"";
     }
 
     private async ValueTask SaveToCacheAsync(Uri requestUri, JsonMetadata jsonMetadata, string json, CancellationToken cancellationToken)
