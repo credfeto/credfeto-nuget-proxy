@@ -40,10 +40,7 @@ public sealed class JsonDownloader : IJsonDownloader
 
         if (cached is not null && !string.IsNullOrWhiteSpace(cached.Etag))
         {
-            // TODO: If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
-            string etag = EnsureQuoted(cached.Etag);
-
-            client.DefaultRequestHeaders.Add(name: "If-None-Match", value: etag);
+            AddEtag(client: client, cached: cached);
         }
 
         using (HttpResponseMessage result = await client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken))
@@ -69,6 +66,14 @@ public sealed class JsonDownloader : IJsonDownloader
 
             return json;
         }
+    }
+
+    private static void AddEtag(HttpClient client, JsonItem cached)
+    {
+        // TODO: If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+        string etag = EnsureQuoted(cached.Etag);
+
+        client.DefaultRequestHeaders.Add(name: "If-None-Match", value: etag);
     }
 
     private static string EnsureQuoted(string source)
