@@ -69,7 +69,7 @@ public sealed class JsonDownloader : IJsonDownloader
 
             string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
 
-            JsonMetadata jsonMetadata = LoadMetadata(result: result, eTag: eTag);
+            JsonMetadata jsonMetadata = LoadMetadata(result: result, eTag: eTag, contentLength: json.Length);
 
             this._logger.Metadata(upstream: requestUri, metadata: jsonMetadata, httpStatus: result.StatusCode);
 
@@ -111,10 +111,8 @@ public sealed class JsonDownloader : IJsonDownloader
                                           cancellationToken: cancellationToken);
     }
 
-    private static JsonMetadata LoadMetadata(HttpResponseMessage result, string? eTag)
+    private static JsonMetadata LoadMetadata(HttpResponseMessage result, string? eTag, long contentLength)
     {
-        long contentLength = result.Content.Headers.ContentLength ?? 0;
-
         string? contentType = result.Content.Headers.ContentType?.MediaType;
 
         return new(Etag: eTag, ContentLength: contentLength, ContentType: contentType);
