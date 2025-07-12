@@ -67,27 +67,20 @@ internal static class ServerStartup
 
     public static WebApplication CreateApp(string[] args)
     {
-        string configPath = GetServerConfig(out ProxyServerConfig appConfig);
+        string configPath = ApplicationConfigLocator.ConfigurationFilesPath;
+
+
 
         return WebApplication
             .CreateSlimBuilder(args)
-            .ConfigureServices(appConfig: appConfig)
+            .ConfigureSettings(configPath)
+            .ConfigureServices()
             .ConfigureAppHost()
             .ConfigureWebHost(configPath: configPath)
             .Build();
     }
 
-    private static string GetServerConfig(out ProxyServerConfig appConfig)
-    {
-        string configPath = ApplicationConfigLocator.ConfigurationFilesPath;
 
-        IConfigurationRoot config = LoadConfiguration(configPath);
-
-        appConfig = LoadConfig(config);
-        LogAppConfig(appConfig);
-
-        return configPath;
-    }
 
     private static WebApplicationBuilder ConfigureAppHost(this WebApplicationBuilder builder)
     {
@@ -97,15 +90,14 @@ internal static class ServerStartup
     }
 
     private static WebApplicationBuilder ConfigureServices(
-        this WebApplicationBuilder builder,
-        ProxyServerConfig appConfig
+        this WebApplicationBuilder builder
     )
     {
         builder
-            .Services.AddSingleton(appConfig)
+            .Services
             .AddDate()
             .AddFileSystemStorage()
-            .AddLogic(appConfig)
+            .AddLogic()
             .AddMiddleware()
             .ConfigureHttpJsonOptions(options =>
                 options.SerializerOptions.TypeInfoResolverChain.Insert(index: 0, item: AppJsonContexts.Default)
@@ -132,57 +124,46 @@ internal static class ServerStartup
         return builder;
     }
 
-    private static void LogAppConfig(ProxyServerConfig appConfig)
-    {
-        Console.WriteLine("Upstream Servers:");
 
-        foreach (Uri upstream in appConfig.UpstreamUrls)
-        {
-            Console.WriteLine($"* {upstream.CleanUri()}");
-        }
 
-        Console.WriteLine($"Public Uri: {appConfig.PublicUrl.CleanUri()}");
-        Console.WriteLine($"Data: {appConfig.Packages}");
-    }
-
-    private static ProxyServerConfig LoadConfig(IConfigurationRoot configuration)
-    {
-        IReadOnlyList<Uri> upstream =
-        [
-            .. configuration
-                .GetSection("Proxy:UpstreamUrl")
-                .GetChildren()
-                .Select(x => Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri) ? uri : null)
-                .RemoveNulls(),
-        ];
-
-        if (upstream.Count == 0)
-        {
-            throw new UnreachableException("Proxy:UpstreamUrl not provided");
-        }
-
-        if (
-            !int.TryParse(
-                configuration["Proxy:JsonMaxAgeSeconds"],
-                NumberStyles.Integer,
-                CultureInfo.InvariantCulture,
-                out int jsonMaxAgeSeconds
-            )
-            || jsonMaxAgeSeconds <= 5
-        )
-        {
-            jsonMaxAgeSeconds = 5;
-        }
-
-        return new(
-            UpstreamUrls: upstream,
-            PublicUrl: new(
-                configuration["Proxy:PublicUrl"] ?? throw new UnreachableException("Proxy:PublicUrl not provided")
-            ),
-            Packages: configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath,
-            JsonMaxAgeSeconds: jsonMaxAgeSeconds
-        );
-    }
+    // private static ProxyServerConfig LoadConfig(IConfigurationRoot configuration)
+    // {
+    //     IReadOnlyList<Uri> upstream =
+    //     [
+    //         .. configuration
+    //             .GetSection("Proxy:UpstreamUrl")
+    //             .GetChildren()
+    //             .Select(x => Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri) ? uri : null)
+    //             .RemoveNulls(),
+    //     ];
+    //
+    //     if (upstream.Count == 0)
+    //     {
+    //         throw new UnreachableException("Proxy:UpstreamUrl not provided");
+    //     }
+    //
+    //     if (
+    //         !int.TryParse(
+    //             configuration["Proxy:JsonMaxAgeSeconds"],
+    //             NumberStyles.Integer,
+    //             CultureInfo.InvariantCulture,
+    //             out int jsonMaxAgeSeconds
+    //         )
+    //         || jsonMaxAgeSeconds <= 5
+    //     )
+    //     {
+    //         jsonMaxAgeSeconds = 5;
+    //     }
+    //
+    //     return new(
+    //         UpstreamUrls: upstream,
+    //         PublicUrl: new(
+    //             configuration["Proxy:PublicUrl"] ?? throw new UnreachableException("Proxy:PublicUrl not provided")
+    //         ),
+    //         Packages: configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath,
+    //         JsonMaxAgeSeconds: jsonMaxAgeSeconds
+    //     );
+    // }
 
     [SuppressMessage(
         category: "Microsoft.Reliability",
@@ -220,15 +201,18 @@ internal static class ServerStartup
         return Debugger.IsAttached ? writeTo.Debug() : writeTo.Console();
     }
 
-    private static IConfigurationRoot LoadConfiguration(string configPath)
+    private static WebApplicationBuilder ConfigureSettings(this WebApplicationBuilder builder, string configPath)
     {
-        return new ConfigurationBuilder()
-            .SetBasePath(configPath)
-            .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: false)
-            .AddJsonFile(path: "appsettings-local.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .Build();
+        builder.Configuration.Sources.Clear();
+        builder.Configuration.SetBasePath(configPath)
+               .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: false)
+               .AddJsonFile(path: "appsettings-local.json", optional: true, reloadOnChange: false)
+               .AddEnvironmentVariables();
+
+        return builder;
     }
+
+
 
     private static void SetH1ListenOptions(ListenOptions listenOptions)
     {
