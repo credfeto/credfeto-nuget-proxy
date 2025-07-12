@@ -20,10 +20,11 @@ public sealed class NupkgSource : INupkgSource
     private readonly IPackageDownloader _packageDownloader;
     private readonly IPackageStorage _packageStorage;
 
-    public NupkgSource(IOptions<ProxyServerConfig> config,
-                       IPackageStorage packageStorage,
-                       IPackageDownloader packageDownloader,
-                       ILogger<NupkgSource> logger
+    public NupkgSource(
+        IOptions<ProxyServerConfig> config,
+        IPackageStorage packageStorage,
+        IPackageDownloader packageDownloader,
+        ILogger<NupkgSource> logger
     )
     {
         this._config = config.Value;
