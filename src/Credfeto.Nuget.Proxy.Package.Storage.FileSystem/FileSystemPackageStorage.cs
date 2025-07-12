@@ -13,15 +13,16 @@ namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 
 public sealed class FileSystemPackageStorage : IPackageStorage
 {
-    private readonly ProxyServerConfig _config;
     private readonly ILogger<FileSystemPackageStorage> _logger;
+    private readonly string _basePath;
 
     public FileSystemPackageStorage(IOptions<ProxyServerConfig> config, ILogger<FileSystemPackageStorage> logger)
     {
-        this._config = config.Value;
         this._logger = logger;
 
-        this.EnsureDirectoryExists(this._config.Packages);
+        this._basePath = config.Value.Packages;
+
+        this.EnsureDirectoryExists(this._basePath);
     }
 
     public async ValueTask<byte[]?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
@@ -91,7 +92,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         [NotNullWhen(true)] out string? dir
     )
     {
-        string f = Path.Combine(path1: this._config.Packages, path.TrimStart('/'));
+        string f = Path.Combine(path1: this._basePath, path.TrimStart('/'));
 
         string? d = Path.GetDirectoryName(f);
 
