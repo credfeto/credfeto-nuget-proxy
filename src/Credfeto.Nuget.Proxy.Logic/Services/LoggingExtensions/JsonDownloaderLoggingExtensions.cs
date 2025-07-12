@@ -1,7 +1,6 @@
 using System;
 using System.Net;
-using Credfeto.Nuget.Proxy.Logic.Models;
-using Credfeto.Nuget.Proxy.Package.Storage.Interfaces.Models;
+using Credfeto.Nuget.Proxy.Models.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
@@ -58,14 +57,14 @@ internal static partial class JsonDownloaderLoggingExtensions
     public static void ReturningCached(
         this ILogger<JsonDownloader> logger,
         Uri upstream,
-        in JsonItem metadata,
+        in JsonMetadata metadata,
         HttpStatusCode httpStatus
     )
     {
         logger.ReturningCached(
             upstream: upstream,
             etag: metadata.Etag,
-            contentLength: metadata.Size,
+            contentLength: metadata.ContentLength,
             contentType: metadata.ContentType,
             httpStatus: httpStatus
         );

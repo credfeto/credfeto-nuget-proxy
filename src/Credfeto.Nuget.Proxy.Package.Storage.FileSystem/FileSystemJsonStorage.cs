@@ -2,23 +2,24 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.IO.Compression;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Models.Config;
+using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Json;
 using Credfeto.Nuget.Proxy.Package.Storage.FileSystem.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IO;
 
 namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 
 public sealed class FileSystemJsonStorage : IJsonStorage
 {
-    private static readonly RecyclableMemoryStreamManager MemoryStreamManager = new();
     private readonly string _basePath;
     private readonly ILogger<FileSystemJsonStorage> _logger;
 
@@ -31,16 +32,35 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         this.EnsureDirectoryExists(this._basePath);
     }
 
-    public async ValueTask<JsonItem?> LoadAsync(Uri requestUri, CancellationToken cancellationToken)
+    public async ValueTask SaveAsync(Uri requestUri, JsonMetadata metadata, string jsonContent, CancellationToken cancellationToken)
     {
-        if (
-            !this.BuildJsonPath(
-                sourceHost: requestUri.Host,
-                path: requestUri.AbsolutePath,
-                out string? jsonPath,
-                dir: out _
-            )
-        )
+        if (!this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath, out string? jsonPath, out string? dir))
+        {
+            return;
+        }
+
+        try
+        {
+            this.EnsureDirectoryExists(dir);
+
+            string compressed = await CompressAsync(source: jsonContent, cancellationToken: cancellationToken);
+
+            JsonItem item = new(metadata.Etag ?? "", size: jsonContent.Length, metadata.ContentType ?? "", content: compressed);
+
+            await using (Stream stream = File.OpenWrite(jsonPath))
+            {
+                await JsonSerializer.SerializeAsync(utf8Json: stream, value: item, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
+            }
+        }
+        catch (Exception exception)
+        {
+            this._logger.SaveFailed(filename: jsonPath, message: exception.Message, exception: exception);
+        }
+    }
+
+    public async ValueTask<(JsonMetadata metadata, string content)?> LoadAsync(Uri requestUri, CancellationToken cancellationToken)
+    {
+        if (!this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath, out string? jsonPath, dir: out _))
         {
             return null;
         }
@@ -52,9 +72,22 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                 return null;
             }
 
-            await using (Stream content = File.OpenRead(path: jsonPath))
+            await using (Stream stream = File.OpenRead(path: jsonPath))
             {
-                return await JsonSerializer.DeserializeAsync(utf8Json: content, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
+                JsonItem? item = await JsonSerializer.DeserializeAsync(utf8Json: stream, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
+
+                if (item is null)
+                {
+                    return null;
+                }
+
+                JsonMetadata metadata = new(Etag: item.Etag, ContentLength: item.Size, ContentType: item.ContentType);
+
+                string content = await DecompressAsync(source: item.Content, cancellationToken: cancellationToken);
+
+                return string.IsNullOrWhiteSpace(content)
+                    ? null
+                    : (metadata, content);
             }
         }
         catch (UnauthorizedAccessException exception)
@@ -66,11 +99,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         catch (Exception exception)
         {
             DeleteCorrupt(jsonPath);
-            this._logger.FailedToReadFileFromCache(
-                filename: jsonPath,
-                message: exception.Message,
-                exception: exception
-            );
+            this._logger.FailedToReadFileFromCache(filename: jsonPath, message: exception.Message, exception: exception);
 
             return null;
         }
@@ -88,45 +117,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    public async ValueTask SaveAsync(Uri requestUri, JsonItem item, CancellationToken cancellationToken)
-    {
-        if (
-            !this.BuildJsonPath(
-                sourceHost: requestUri.Host,
-                path: requestUri.AbsolutePath,
-                out string? jsonPath,
-                out string? dir
-            )
-        )
-        {
-            return;
-        }
-
-        try
-        {
-            this.EnsureDirectoryExists(dir);
-
-            await using (Stream stream = File.OpenWrite(jsonPath))
-            {
-                await JsonSerializer.SerializeAsync(utf8Json: stream,
-                                                    value: item,
-                                                    jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
-                                                    cancellationToken: cancellationToken
-                );
-            }
-        }
-        catch (Exception exception)
-        {
-            this._logger.SaveFailed(filename: jsonPath, message: exception.Message, exception: exception);
-        }
-    }
-
-    private bool BuildJsonPath(
-        string sourceHost,
-        string path,
-        [NotNullWhen(true)] out string? filename,
-        [NotNullWhen(true)] out string? dir
-    )
+    private bool BuildJsonPath(string sourceHost, string path, [NotNullWhen(true)] out string? filename, [NotNullWhen(true)] out string? dir)
     {
         string f = Path.Combine(path1: this._basePath, path2: sourceHost, path.TrimStart('/'));
 
@@ -160,6 +151,45 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         catch (Exception exception)
         {
             this._logger.SaveFailed(filename: folder, message: exception.Message, exception: exception);
+        }
+    }
+
+    private static async ValueTask<string> CompressAsync(string source, CancellationToken cancellationToken)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(source);
+
+        await using (MemoryStream output = new())
+        {
+            await using (MemoryStream input = new(buffer: bytes, writable: false))
+            {
+                await using (BrotliStream stream = new(stream: output, compressionLevel: CompressionLevel.SmallestSize))
+                {
+                    await input.CopyToAsync(destination: stream, cancellationToken: cancellationToken);
+                    await stream.FlushAsync(cancellationToken);
+                }
+            }
+
+            byte[] result = output.ToArray();
+
+            return Convert.ToBase64String(result);
+        }
+    }
+
+    private static async ValueTask<string> DecompressAsync(string source, CancellationToken cancellationToken)
+    {
+        byte[] bytes = Convert.FromBase64String(source);
+
+        await using (MemoryStream output = new())
+        {
+            await using (MemoryStream input = new(buffer: bytes, writable: true))
+            {
+                await using (BrotliStream stream = new(stream: input, mode: CompressionMode.Decompress))
+                {
+                    await stream.CopyToAsync(destination: output, cancellationToken: cancellationToken);
+                }
+
+                return Encoding.UTF8.GetString(output.ToArray());
+            }
         }
     }
 }

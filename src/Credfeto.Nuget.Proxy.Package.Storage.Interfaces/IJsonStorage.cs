@@ -1,13 +1,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Credfeto.Nuget.Proxy.Package.Storage.Interfaces.Models;
+using Credfeto.Nuget.Proxy.Models.Models;
 
 namespace Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 
 public interface IJsonStorage
 {
-    ValueTask<JsonItem?> LoadAsync(Uri requestUri, CancellationToken cancellationToken);
+    ValueTask<(JsonMetadata metadata, string content)?> LoadAsync(Uri requestUri, CancellationToken cancellationToken);
 
-    ValueTask SaveAsync(Uri requestUri, JsonItem item, CancellationToken cancellationToken);
+    ValueTask SaveAsync(Uri requestUri, JsonMetadata metadata, string jsonContent, CancellationToken cancellationToken);
 }

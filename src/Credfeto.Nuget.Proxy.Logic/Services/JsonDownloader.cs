@@ -8,11 +8,10 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Logic.Extensions;
-using Credfeto.Nuget.Proxy.Logic.Models;
 using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
+using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
-using Credfeto.Nuget.Proxy.Package.Storage.Interfaces.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -37,21 +36,21 @@ public sealed class JsonDownloader : IJsonDownloader
     {
         HttpClient client = this.GetClient(userAgent);
 
-        JsonItem? cached = await this._jsonStorage.LoadAsync(requestUri: requestUri, cancellationToken: cancellationToken);
+        (JsonMetadata metadata, string content)? cached = await this._jsonStorage.LoadAsync(requestUri: requestUri, cancellationToken: cancellationToken);
 
-        if (cached is not null && !string.IsNullOrWhiteSpace(cached.Etag))
+        if (cached is not null && !string.IsNullOrWhiteSpace(cached.Value.metadata.Etag))
         {
-            this._logger.PreviouslyCached(upstream: requestUri, etag: cached.Etag);
-            AddEtag(client: client, cached: cached);
+            this._logger.PreviouslyCached(upstream: requestUri, etag: cached.Value.metadata.Etag);
+            AddEtag(client: client, cached: cached.Value.metadata);
         }
 
         using (HttpResponseMessage result = await client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken))
         {
             if (cached is not null && result.StatusCode == HttpStatusCode.NotModified)
             {
-                this._logger.ReturningCached(upstream: requestUri, metadata: cached, httpStatus: result.StatusCode);
+                this._logger.ReturningCached(upstream: requestUri, metadata: cached.Value.metadata, httpStatus: result.StatusCode);
 
-                return cached.Content;
+                return cached.Value.content;
             }
 
             if (!result.IsSuccessStatusCode)
@@ -61,11 +60,11 @@ public sealed class JsonDownloader : IJsonDownloader
 
             string? eTag = ExtractHeaderValue(headers: result.Headers, name: "ETag");
 
-            if (cached is not null && !string.IsNullOrEmpty(cached.Etag) && !string.IsNullOrWhiteSpace(eTag) && StringComparer.Ordinal.Equals(x: eTag, y: cached.Etag))
+            if (cached is not null && !string.IsNullOrEmpty(cached.Value.metadata.Etag) && !string.IsNullOrWhiteSpace(eTag) && StringComparer.Ordinal.Equals(x: eTag, y: cached.Value.metadata.Etag))
             {
-                this._logger.ReturningCached(upstream: requestUri, metadata: cached, httpStatus: result.StatusCode);
+                this._logger.ReturningCached(upstream: requestUri, metadata: cached.Value.metadata, httpStatus: result.StatusCode);
 
-                return cached.Content;
+                return cached.Value.content;
             }
 
             string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
@@ -80,9 +79,13 @@ public sealed class JsonDownloader : IJsonDownloader
         }
     }
 
-    private static void AddEtag(HttpClient client, JsonItem cached)
+    private static void AddEtag(HttpClient client, in JsonMetadata cached)
     {
-        // TODO: If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+        if (string.IsNullOrWhiteSpace(cached.Etag))
+        {
+            return;
+        }
+
         string etag = EnsureQuoted(cached.Etag);
 
         client.DefaultRequestHeaders.Add(name: "If-None-Match", value: etag);
@@ -107,9 +110,7 @@ public sealed class JsonDownloader : IJsonDownloader
             return;
         }
 
-        await this._jsonStorage.SaveAsync(requestUri: requestUri,
-                                          new(etag: jsonMetadata.Etag, size: jsonMetadata.ContentLength, contentType: jsonMetadata.ContentType, content: json),
-                                          cancellationToken: cancellationToken);
+        await this._jsonStorage.SaveAsync(requestUri: requestUri, metadata: jsonMetadata, jsonContent: json, cancellationToken: cancellationToken);
     }
 
     private static JsonMetadata LoadMetadata(HttpResponseMessage result, string? eTag, long contentLength)
