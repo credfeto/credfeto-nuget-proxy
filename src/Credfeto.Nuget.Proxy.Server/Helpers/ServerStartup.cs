@@ -1,20 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using Credfeto.Date;
-using Credfeto.Extensions.Linq;
 using Credfeto.Nuget.Proxy.Logic;
 using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
-using Credfeto.Nuget.Proxy.Server.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -67,167 +62,125 @@ internal static class ServerStartup
 
     public static WebApplication CreateApp(string[] args)
     {
-        string configPath = GetServerConfig(out ProxyServerConfig appConfig);
-
-        return WebApplication
-            .CreateSlimBuilder(args)
-            .ConfigureServices(appConfig: appConfig)
-            .ConfigureAppHost()
-            .ConfigureWebHost(configPath: configPath)
-            .Build();
-    }
-
-    private static string GetServerConfig(out ProxyServerConfig appConfig)
-    {
         string configPath = ApplicationConfigLocator.ConfigurationFilesPath;
 
-        IConfigurationRoot config = LoadConfiguration(configPath);
-
-        appConfig = LoadConfig(config);
-        LogAppConfig(appConfig);
-
-        return configPath;
+        return WebApplication.CreateSlimBuilder(args)
+                             .ConfigureSettings(configPath)
+                             .ConfigureServices()
+                             .ConfigureAppHost()
+                             .ConfigureWebHost(configPath: configPath)
+                             .Build();
     }
 
     private static WebApplicationBuilder ConfigureAppHost(this WebApplicationBuilder builder)
     {
-        builder.Host.UseWindowsService().UseSystemd();
+        builder.Host.UseWindowsService()
+               .UseSystemd();
 
         return builder;
     }
 
-    private static WebApplicationBuilder ConfigureServices(
-        this WebApplicationBuilder builder,
-        ProxyServerConfig appConfig
-    )
+    private static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder)
     {
-        builder
-            .Services.AddSingleton(appConfig)
-            .AddDate()
-            .AddFileSystemStorage()
-            .AddLogic(appConfig)
-            .AddMiddleware()
-            .ConfigureHttpJsonOptions(options =>
-                options.SerializerOptions.TypeInfoResolverChain.Insert(index: 0, item: AppJsonContexts.Default)
-            );
+        IConfigurationSection section = builder.Configuration.GetSection("Proxy");
+
+        builder.Services.Configure<ProxyServerConfig>(section)
+               .AddDate()
+               .AddFileSystemStorage()
+               .AddLogic()
+               .AddMiddleware()
+               .ConfigureHttpJsonOptions(options => options.SerializerOptions.TypeInfoResolverChain.Insert(index: 0, item: AppJsonContexts.Default));
 
         return builder;
     }
 
     private static WebApplicationBuilder ConfigureWebHost(this WebApplicationBuilder builder, string configPath)
     {
-        builder
-            .WebHost.UseKestrel(options: options =>
-                SetKestrelOptions(
-                    options: options,
-                    httpPort: HTTP_PORT,
-                    httpsPort: HTTPS_PORT,
-                    h2Port: H2_PORT,
-                    configurationFiledPath: configPath
-                )
-            )
-            .UseSetting(key: WebHostDefaults.SuppressStatusMessagesKey, value: "True")
-            .ConfigureLogging((_, logger) => ConfigureLogging(logger));
+        builder.WebHost.UseKestrel(options: options => SetKestrelOptions(options: options, httpPort: HTTP_PORT, httpsPort: HTTPS_PORT, h2Port: H2_PORT, configurationFiledPath: configPath))
+               .UseSetting(key: WebHostDefaults.SuppressStatusMessagesKey, value: "True")
+               .ConfigureLogging((_, logger) => ConfigureLogging(logger));
 
         return builder;
     }
 
-    private static void LogAppConfig(ProxyServerConfig appConfig)
-    {
-        Console.WriteLine("Upstream Servers:");
+    // private static ProxyServerConfig LoadConfig(IConfigurationRoot configuration)
+    // {
+    //     IReadOnlyList<Uri> upstream =
+    //     [
+    //         .. configuration
+    //             .GetSection("Proxy:UpstreamUrl")
+    //             .GetChildren()
+    //             .Select(x => Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri) ? uri : null)
+    //             .RemoveNulls(),
+    //     ];
+    //
+    //     if (upstream.Count == 0)
+    //     {
+    //         throw new UnreachableException("Proxy:UpstreamUrl not provided");
+    //     }
+    //
+    //     if (
+    //         !int.TryParse(
+    //             configuration["Proxy:JsonMaxAgeSeconds"],
+    //             NumberStyles.Integer,
+    //             CultureInfo.InvariantCulture,
+    //             out int jsonMaxAgeSeconds
+    //         )
+    //         || jsonMaxAgeSeconds <= 5
+    //     )
+    //     {
+    //         jsonMaxAgeSeconds = 5;
+    //     }
+    //
+    //     return new(
+    //         UpstreamUrls: upstream,
+    //         PublicUrl: new(
+    //             configuration["Proxy:PublicUrl"] ?? throw new UnreachableException("Proxy:PublicUrl not provided")
+    //         ),
+    //         Packages: configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath,
+    //         JsonMaxAgeSeconds: jsonMaxAgeSeconds
+    //     );
+    // }
 
-        foreach (Uri upstream in appConfig.UpstreamUrls)
-        {
-            Console.WriteLine($"* {upstream.CleanUri()}");
-        }
-
-        Console.WriteLine($"Public Uri: {appConfig.PublicUrl.CleanUri()}");
-        Console.WriteLine($"Data: {appConfig.Packages}");
-    }
-
-    private static ProxyServerConfig LoadConfig(IConfigurationRoot configuration)
-    {
-        IReadOnlyList<Uri> upstream =
-        [
-            .. configuration
-                .GetSection("Proxy:UpstreamUrl")
-                .GetChildren()
-                .Select(x => Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri) ? uri : null)
-                .RemoveNulls(),
-        ];
-
-        if (upstream.Count == 0)
-        {
-            throw new UnreachableException("Proxy:UpstreamUrl not provided");
-        }
-
-        if (
-            !int.TryParse(
-                configuration["Proxy:JsonMaxAgeSeconds"],
-                NumberStyles.Integer,
-                CultureInfo.InvariantCulture,
-                out int jsonMaxAgeSeconds
-            )
-            || jsonMaxAgeSeconds <= 5
-        )
-        {
-            jsonMaxAgeSeconds = 5;
-        }
-
-        return new(
-            UpstreamUrls: upstream,
-            PublicUrl: new(
-                configuration["Proxy:PublicUrl"] ?? throw new UnreachableException("Proxy:PublicUrl not provided")
-            ),
-            Packages: configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath,
-            JsonMaxAgeSeconds: jsonMaxAgeSeconds
-        );
-    }
-
-    [SuppressMessage(
-        category: "Microsoft.Reliability",
-        checkId: "CA2000:DisposeObjectsBeforeLosingScope",
-        Justification = "Lives for program lifetime"
-    )]
-    [SuppressMessage(
-        category: "SmartAnalyzers.CSharpExtensions.Annotations",
-        checkId: "CSE007:DisposeObjectsBeforeLosingScope",
-        Justification = "Lives for program lifetime"
-    )]
+    [SuppressMessage(category: "Microsoft.Reliability", checkId: "CA2000:DisposeObjectsBeforeLosingScope", Justification = "Lives for program lifetime")]
+    [SuppressMessage(category: "SmartAnalyzers.CSharpExtensions.Annotations", checkId: "CSE007:DisposeObjectsBeforeLosingScope", Justification = "Lives for program lifetime")]
     private static void ConfigureLogging(ILoggingBuilder logger)
     {
-        logger.ClearProviders().AddSerilog(CreateLogger(), dispose: true);
+        logger.ClearProviders()
+              .AddSerilog(CreateLogger(), dispose: true);
     }
 
     private static Logger CreateLogger()
     {
-        return new LoggerConfiguration()
-            .Enrich.WithDemystifiedStackTraces()
-            .Enrich.FromLogContext()
-            .Enrich.WithMachineName()
-            .Enrich.WithProcessId()
-            .Enrich.WithThreadId()
-            .Enrich.WithProperty(name: "ServerVersion", value: VersionInformation.Version)
-            .Enrich.WithProperty(name: "ProcessName", value: VersionInformation.Product)
-            .WriteToDebuggerAwareOutput()
-            .CreateLogger();
+        return new LoggerConfiguration().Enrich.WithDemystifiedStackTraces()
+                                        .Enrich.FromLogContext()
+                                        .Enrich.WithMachineName()
+                                        .Enrich.WithProcessId()
+                                        .Enrich.WithThreadId()
+                                        .Enrich.WithProperty(name: "ServerVersion", value: VersionInformation.Version)
+                                        .Enrich.WithProperty(name: "ProcessName", value: VersionInformation.Product)
+                                        .WriteToDebuggerAwareOutput()
+                                        .CreateLogger();
     }
 
     private static LoggerConfiguration WriteToDebuggerAwareOutput(this LoggerConfiguration configuration)
     {
         LoggerSinkConfiguration writeTo = configuration.WriteTo;
 
-        return Debugger.IsAttached ? writeTo.Debug() : writeTo.Console();
+        return Debugger.IsAttached
+            ? writeTo.Debug()
+            : writeTo.Console();
     }
 
-    private static IConfigurationRoot LoadConfiguration(string configPath)
+    private static WebApplicationBuilder ConfigureSettings(this WebApplicationBuilder builder, string configPath)
     {
-        return new ConfigurationBuilder()
-            .SetBasePath(configPath)
-            .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: false)
-            .AddJsonFile(path: "appsettings-local.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .Build();
+        builder.Configuration.Sources.Clear();
+        builder.Configuration.SetBasePath(configPath)
+               .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: false)
+               .AddJsonFile(path: "appsettings-local.json", optional: true, reloadOnChange: false)
+               .AddEnvironmentVariables();
+
+        return builder;
     }
 
     private static void SetH1ListenOptions(ListenOptions listenOptions)
@@ -246,13 +199,7 @@ internal static class ServerStartup
         listenOptions.UseHttps(fileName: certFile);
     }
 
-    private static void SetKestrelOptions(
-        KestrelServerOptions options,
-        int httpPort,
-        int httpsPort,
-        int h2Port,
-        string configurationFiledPath
-    )
+    private static void SetKestrelOptions(KestrelServerOptions options, int httpPort, int httpsPort, int h2Port, string configurationFiledPath)
     {
         options.DisableStringReuse = false;
         options.AllowSynchronousIO = false;
@@ -266,11 +213,7 @@ internal static class ServerStartup
         if (httpsPort != 0 && File.Exists(certFile))
         {
             Console.WriteLine($"Listening on HTTPS port: {httpsPort}");
-            options.Listen(
-                address: IPAddress.Any,
-                port: httpsPort,
-                configure: o => SetHttpsListenOptions(listenOptions: o, certFile: certFile)
-            );
+            options.Listen(address: IPAddress.Any, port: httpsPort, configure: o => SetHttpsListenOptions(listenOptions: o, certFile: certFile));
         }
 
         if (h2Port != 0)

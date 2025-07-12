@@ -14,6 +14,7 @@ using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
 
@@ -24,9 +25,9 @@ public sealed class JsonDownloader : IJsonDownloader
     private readonly IJsonStorage _jsonStorage;
     private readonly ILogger<JsonDownloader> _logger;
 
-    public JsonDownloader(ProxyServerConfig config, IHttpClientFactory httpClientFactory, IJsonStorage jsonStorage, ILogger<JsonDownloader> logger)
+    public JsonDownloader(IOptions<ProxyServerConfig> config, IHttpClientFactory httpClientFactory, IJsonStorage jsonStorage, ILogger<JsonDownloader> logger)
     {
-        this._config = config;
+        this._config = config.Value;
         this._httpClientFactory = httpClientFactory;
         this._jsonStorage = jsonStorage;
         this._logger = logger;
@@ -127,7 +128,7 @@ public sealed class JsonDownloader : IJsonDownloader
     private HttpClient GetClient(ProductInfoHeaderValue? userAgent)
     {
         return this._httpClientFactory.CreateClient(HttpClientNames.Json)
-                   .WithBaseAddress(this._config.UpstreamUrls[0])
+                   .WithBaseAddress(new(this._config.UpstreamUrls[0]))
                    .WithUserAgent(userAgent);
     }
 

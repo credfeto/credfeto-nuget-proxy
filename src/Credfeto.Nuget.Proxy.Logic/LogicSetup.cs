@@ -1,27 +1,24 @@
 using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Logic.Services;
-using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Credfeto.Nuget.Proxy.Logic;
 
 public static class LogicSetup
 {
-    public static IServiceCollection AddLogic(this IServiceCollection services, ProxyServerConfig appConfig)
+    public static IServiceCollection AddLogic(this IServiceCollection services)
     {
-        return services
-            .AddJsonClient(appConfig)
-            .AddJsonTransformer(appConfig)
-            .AddSingleton<IJsonDownloader, JsonDownloader>()
-            .AddNupkgClient(appConfig)
-            .AddSingleton<INupkgSource, NupkgSource>()
-            .AddSingleton<IPackageDownloader, PackageDownloader>();
+        return services.AddJsonClient()
+                       .AddJsonTransformer()
+                       .AddSingleton<IJsonDownloader, JsonDownloader>()
+                       .AddNupkgClient()
+                       .AddSingleton<INupkgSource, NupkgSource>()
+                       .AddSingleton<IPackageDownloader, PackageDownloader>();
     }
 
-    private static IServiceCollection AddJsonTransformer(this IServiceCollection services, ProxyServerConfig appConfig)
+    private static IServiceCollection AddJsonTransformer(this IServiceCollection services)
     {
-        return appConfig.IsNugetPublicServer
-            ? services.AddSingleton<IJsonTransformer, ApiNugetOrgJsonIndexTransformer>()
-            : services.AddSingleton<IJsonTransformer, StandardJsonIndexTransformer>();
+        return services.AddSingleton<IJsonTransformer, ApiNugetOrgJsonIndexTransformer>()
+                       .AddSingleton<IJsonTransformer, StandardJsonIndexTransformer>();
     }
 }

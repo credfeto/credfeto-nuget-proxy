@@ -12,6 +12,7 @@ using Credfeto.Nuget.Proxy.Package.Storage.FileSystem.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IO;
 
 namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
@@ -22,11 +23,11 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     private readonly string _basePath;
     private readonly ILogger<FileSystemJsonStorage> _logger;
 
-    public FileSystemJsonStorage(ProxyServerConfig config, ILogger<FileSystemJsonStorage> logger)
+    public FileSystemJsonStorage(IOptions<ProxyServerConfig> config, ILogger<FileSystemJsonStorage> logger)
     {
         this._logger = logger;
 
-        this._basePath = Path.Combine(path1: config.Packages, path2: ".json");
+        this._basePath = config.Value.Metadata;
 
         this.EnsureDirectoryExists(this._basePath);
     }

@@ -7,6 +7,7 @@ using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Package.Storage.FileSystem.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 
@@ -15,12 +16,12 @@ public sealed class FileSystemPackageStorage : IPackageStorage
     private readonly ProxyServerConfig _config;
     private readonly ILogger<FileSystemPackageStorage> _logger;
 
-    public FileSystemPackageStorage(ProxyServerConfig config, ILogger<FileSystemPackageStorage> logger)
+    public FileSystemPackageStorage(IOptions<ProxyServerConfig> config, ILogger<FileSystemPackageStorage> logger)
     {
-        this._config = config;
+        this._config = config.Value;
         this._logger = logger;
 
-        this.EnsureDirectoryExists(config.Packages);
+        this.EnsureDirectoryExists(this._config.Packages);
     }
 
     public async ValueTask<byte[]?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
@@ -41,11 +42,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
         catch (Exception exception)
         {
-            this._logger.FailedToReadFileFromCache(
-                filename: sourcePath,
-                message: exception.Message,
-                exception: exception
-            );
+            this._logger.FailedToReadFileFromCache(filename: sourcePath, message: exception.Message, exception: exception);
 
             return null;
         }
@@ -84,11 +81,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    private bool BuildPackagePath(
-        string path,
-        [NotNullWhen(true)] out string? filename,
-        [NotNullWhen(true)] out string? dir
-    )
+    private bool BuildPackagePath(string path, [NotNullWhen(true)] out string? filename, [NotNullWhen(true)] out string? dir)
     {
         string f = Path.Combine(path1: this._config.Packages, path.TrimStart('/'));
 
