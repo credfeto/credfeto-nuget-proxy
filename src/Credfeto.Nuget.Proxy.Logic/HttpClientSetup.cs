@@ -19,11 +19,7 @@ internal static class HttpClientSetup
         return services
             .AddHttpClient(
                 name: HttpClientNames.Json,
-                configureClient: httpClient =>
-                    InitializeJsonClient(
-                        httpClient: httpClient,
-                        httpTimeout: HttpTimeout
-                    )
+                configureClient: httpClient => InitializeJsonClient(httpClient: httpClient, httpTimeout: HttpTimeout)
             )
             .SetHandlerLifetime(TimeSpan.FromMinutes(5))
             .ConfigurePrimaryHttpMessageHandler(configureHandler: _ => new HttpClientHandler
@@ -45,11 +41,7 @@ internal static class HttpClientSetup
         return services
             .AddHttpClient(
                 name: HttpClientNames.NugetPackage,
-                configureClient: httpClient =>
-                    InitializeNupkgClient(
-                        httpClient: httpClient,
-                        httpTimeout: HttpTimeout
-                    )
+                configureClient: httpClient => InitializeNupkgClient(httpClient: httpClient, httpTimeout: HttpTimeout)
             )
             .SetHandlerLifetime(TimeSpan.FromMinutes(5))
             .ConfigurePrimaryHttpMessageHandler(configureHandler: _ => new HttpClientHandler
