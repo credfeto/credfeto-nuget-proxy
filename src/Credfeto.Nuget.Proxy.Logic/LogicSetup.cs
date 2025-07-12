@@ -8,17 +8,19 @@ public static class LogicSetup
 {
     public static IServiceCollection AddLogic(this IServiceCollection services)
     {
-        return services.AddJsonClient()
-                       .AddJsonTransformer()
-                       .AddSingleton<IJsonDownloader, JsonDownloader>()
-                       .AddNupkgClient()
-                       .AddSingleton<INupkgSource, NupkgSource>()
-                       .AddSingleton<IPackageDownloader, PackageDownloader>();
+        return services
+            .AddJsonClient()
+            .AddJsonTransformer()
+            .AddSingleton<IJsonDownloader, JsonDownloader>()
+            .AddNupkgClient()
+            .AddSingleton<INupkgSource, NupkgSource>()
+            .AddSingleton<IPackageDownloader, PackageDownloader>();
     }
 
     private static IServiceCollection AddJsonTransformer(this IServiceCollection services)
     {
-        return services.AddSingleton<IJsonTransformer, ApiNugetOrgJsonIndexTransformer>()
-                       .AddSingleton<IJsonTransformer, StandardJsonIndexTransformer>();
+        return services
+            .AddSingleton<IJsonTransformer, ApiNugetOrgJsonIndexTransformer>()
+            .AddSingleton<IJsonTransformer, StandardJsonIndexTransformer>();
     }
 }
