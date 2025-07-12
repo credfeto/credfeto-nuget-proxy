@@ -54,12 +54,14 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
             await using (Stream content = File.OpenRead(path: jsonPath))
             {
-                return await JsonSerializer.DeserializeAsync(
-                    utf8Json: content,
-                    jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
-                    cancellationToken: cancellationToken
-                );
+                return await JsonSerializer.DeserializeAsync(utf8Json: content, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
             }
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            this._logger.FailedToReadFileFromCache(filename: jsonPath, message: exception.Message, exception: exception);
+
+            return null;
         }
         catch (Exception exception)
         {
