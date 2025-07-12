@@ -105,6 +105,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
+    [Conditional("DEBUG")]
     private static void DeleteCorrupt(string jsonPath)
     {
         try
