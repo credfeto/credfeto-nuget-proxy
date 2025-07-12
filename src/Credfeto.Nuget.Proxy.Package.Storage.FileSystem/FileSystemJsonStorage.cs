@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Pipelines;
@@ -62,6 +63,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
         catch (Exception exception)
         {
+            DeleteCorrupt(jsonPath);
             this._logger.FailedToReadFileFromCache(
                 filename: jsonPath,
                 message: exception.Message,
@@ -69,6 +71,18 @@ public sealed class FileSystemJsonStorage : IJsonStorage
             );
 
             return null;
+        }
+    }
+
+    private static void DeleteCorrupt(string jsonPath)
+    {
+        try
+        {
+            File.Delete(jsonPath);
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"Corrupt {exception.Message}");
         }
     }
 
