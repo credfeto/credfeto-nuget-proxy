@@ -7,9 +7,10 @@ namespace Credfeto.Nuget.Proxy.Logic.Services;
 
 public sealed class StandardJsonIndexTransformer : JsonIndexTransformerBase, IJsonTransformer
 {
-    public StandardJsonIndexTransformer(IOptions<ProxyServerConfig> config,
-                                        IJsonDownloader jsonDownloader,
-                                        ILogger<StandardJsonIndexTransformer> logger
+    public StandardJsonIndexTransformer(
+        IOptions<ProxyServerConfig> config,
+        IJsonDownloader jsonDownloader,
+        ILogger<StandardJsonIndexTransformer> logger
     )
         : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: false, logger: logger) { }
 
