@@ -100,6 +100,8 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                     cancellationToken: cancellationToken
                 );
 
+                await pw.FlushAsync(cancellationToken: cancellationToken);
+
                 await File.WriteAllBytesAsync(
                     path: jsonPath,
                     recyclableMemoryStream.GetBuffer(),
