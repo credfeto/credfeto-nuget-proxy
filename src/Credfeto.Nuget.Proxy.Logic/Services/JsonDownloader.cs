@@ -128,7 +128,7 @@ public sealed class JsonDownloader : IJsonDownloader
     private HttpClient GetClient(ProductInfoHeaderValue? userAgent)
     {
         return this._httpClientFactory.CreateClient(HttpClientNames.Json)
-                   .WithBaseAddress(this._config.UpstreamUrls[0])
+                   .WithBaseAddress(new(this._config.UpstreamUrls[0]))
                    .WithUserAgent(userAgent);
     }
 

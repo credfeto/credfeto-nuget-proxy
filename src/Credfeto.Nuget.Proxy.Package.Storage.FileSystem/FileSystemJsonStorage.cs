@@ -27,7 +27,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     {
         this._logger = logger;
 
-        this._basePath = Path.Combine(path1: config.Value.Packages, path2: ".json");
+        this._basePath = config.Value.Metadata;
 
         this.EnsureDirectoryExists(this._basePath);
     }

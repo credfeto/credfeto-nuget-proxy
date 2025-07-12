@@ -96,7 +96,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
                 return new(
                     resource.Id.Replace(
                         uri.CleanUri(),
-                        this.Config.PublicUrl.CleanUri(),
+                        new Uri(this.Config.PublicUrl).CleanUri(),
                         comparisonType: StringComparison.Ordinal
                     ),
                     type: resource.Type,

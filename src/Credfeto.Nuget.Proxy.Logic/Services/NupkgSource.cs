@@ -91,6 +91,6 @@ public sealed class NupkgSource : INupkgSource
 
     private Uri GetRequestUri(string path)
     {
-        return new(this._config.UpstreamUrls[0].CleanUri() + path);
+        return new(new Uri(this._config.UpstreamUrls[0]).CleanUri() + path);
     }
 }

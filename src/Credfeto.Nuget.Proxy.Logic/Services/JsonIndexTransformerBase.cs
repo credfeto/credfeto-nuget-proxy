@@ -102,7 +102,7 @@ public abstract class JsonIndexTransformerBase
 
     protected Uri GetRequestUri(string path)
     {
-        return new(this.Config.UpstreamUrls[0].CleanUri() + path);
+        return new(new Uri(this.Config.UpstreamUrls[0]).CleanUri() + path);
     }
 
     protected string ReplaceUrls(string json)
@@ -110,10 +110,10 @@ public abstract class JsonIndexTransformerBase
         return this.Config.UpstreamUrls.Aggregate(seed: json, func: this.ReplaceOneUrl);
     }
 
-    private string ReplaceOneUrl(string current, Uri uri)
+    private string ReplaceOneUrl(string current, string uri)
     {
-        string from = uri.CleanUri();
-        string to = this.Config.PublicUrl.CleanUri();
+        string from = new Uri(uri).CleanUri();
+        string to = new Uri(this.Config.PublicUrl).CleanUri();
 
         string result = current.Replace(from, to, comparisonType: StringComparison.Ordinal);
 

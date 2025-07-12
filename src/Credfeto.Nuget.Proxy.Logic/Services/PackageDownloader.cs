@@ -57,7 +57,7 @@ public sealed class PackageDownloader : IPackageDownloader
     {
         return this
             ._httpClientFactory.CreateClient(HttpClientNames.NugetPackage)
-            .WithBaseAddress(this._config.UpstreamUrls[0])
+            .WithBaseAddress(new(this._config.UpstreamUrls[0], uriKind: UriKind.Absolute))
             .WithUserAgent(userAgent);
     }
 }
