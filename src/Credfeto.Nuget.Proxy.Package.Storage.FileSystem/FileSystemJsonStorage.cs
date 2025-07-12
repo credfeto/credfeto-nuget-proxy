@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Text;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -166,19 +167,19 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                 await using (BrotliStream stream = new(stream: output, compressionLevel: CompressionLevel.SmallestSize))
                 {
                     await input.CopyToAsync(destination: stream, cancellationToken: cancellationToken);
-                    await stream.FlushAsync(cancellationToken);
+
                 }
             }
 
-            byte[] result = output.ToArray();
+            await output.FlushAsync(cancellationToken);
 
-            return Convert.ToBase64String(result);
+            return Base64Url.EncodeToString(output.ToArray());
         }
     }
 
     private static async ValueTask<string> DecompressAsync(string source, CancellationToken cancellationToken)
     {
-        byte[] bytes = Convert.FromBase64String(source);
+        byte[] bytes = Base64Url.DecodeFromChars(source);
 
         await using (MemoryStream output = new())
         {
@@ -189,6 +190,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                     await stream.CopyToAsync(destination: output, cancellationToken: cancellationToken);
                 }
 
+                await output.FlushAsync(cancellationToken);
                 return Encoding.UTF8.GetString(output.ToArray());
             }
         }
