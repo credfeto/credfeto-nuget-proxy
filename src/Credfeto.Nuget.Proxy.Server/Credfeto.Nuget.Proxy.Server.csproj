@@ -7,6 +7,7 @@
     <DebuggerSupport>true</DebuggerSupport>
     <Description>Nuget Caching Proxy</Description>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <EnableMicrosoftExtensionsConfigurationBinderSourceGenerator>true</EnableMicrosoftExtensionsConfigurationBinderSourceGenerator>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
