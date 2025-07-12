@@ -139,9 +139,9 @@ public sealed class JsonMiddleware : IMiddleware
 
     private void NotFound(HttpContext context, HttpStatusCode result)
     {
-        const int ageSeconds = 60;
+        const int ageSeconds = 300;
         context.Response.StatusCode = (int)result;
-        context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
+        context.Response.Headers.CacheControl = $"public, max-age={ageSeconds}";
         context.Response.Headers.Expires = this._currentTimeSource.UtcNow()
                                                .AddSeconds(ageSeconds)
                                                .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
