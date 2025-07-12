@@ -9,6 +9,7 @@ using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
 
@@ -19,14 +20,13 @@ public sealed class NupkgSource : INupkgSource
     private readonly IPackageDownloader _packageDownloader;
     private readonly IPackageStorage _packageStorage;
 
-    public NupkgSource(
-        ProxyServerConfig config,
-        IPackageStorage packageStorage,
-        IPackageDownloader packageDownloader,
-        ILogger<NupkgSource> logger
+    public NupkgSource(IOptions<ProxyServerConfig> config,
+                       IPackageStorage packageStorage,
+                       IPackageDownloader packageDownloader,
+                       ILogger<NupkgSource> logger
     )
     {
-        this._config = config;
+        this._config = config.Value;
         this._packageStorage = packageStorage;
         this._packageDownloader = packageDownloader;
         this._logger = logger;

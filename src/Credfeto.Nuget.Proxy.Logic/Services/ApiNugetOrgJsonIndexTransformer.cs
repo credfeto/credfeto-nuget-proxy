@@ -11,6 +11,7 @@ using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using AppJsonContexts = Credfeto.Nuget.Proxy.Models.Models.AppJsonContexts;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
@@ -39,10 +40,9 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         new("https://azuresearch-ussc.nuget.org"),
     ];
 
-    public ApiNugetOrgJsonIndexTransformer(
-        ProxyServerConfig config,
-        IJsonDownloader jsonDownloader,
-        ILogger<ApiNugetOrgJsonIndexTransformer> logger
+    public ApiNugetOrgJsonIndexTransformer(IOptions<ProxyServerConfig> config,
+                                           IJsonDownloader jsonDownloader,
+                                           ILogger<ApiNugetOrgJsonIndexTransformer> logger
     )
         : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: true, logger: logger) { }
 
@@ -107,4 +107,6 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
         return resource;
     }
+
+    public bool IsNuget => true;
 }

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Logic.Extensions;
 using Credfeto.Nuget.Proxy.Models.Config;
+using Microsoft.Extensions.Options;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
 
@@ -15,9 +16,9 @@ public sealed class PackageDownloader : IPackageDownloader
     private readonly ProxyServerConfig _config;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public PackageDownloader(ProxyServerConfig config, IHttpClientFactory httpClientFactory)
+    public PackageDownloader(IOptions<ProxyServerConfig> config, IHttpClientFactory httpClientFactory)
     {
-        this._config = config;
+        this._config = config.Value;
         this._httpClientFactory = httpClientFactory;
     }
 

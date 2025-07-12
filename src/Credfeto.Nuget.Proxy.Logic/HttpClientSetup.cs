@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 
@@ -15,14 +14,13 @@ internal static class HttpClientSetup
     private static readonly TimeSpan HttpTimeout = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan PollyTimeout = HttpTimeout.Add(TimeSpan.FromSeconds(1));
 
-    public static IServiceCollection AddJsonClient(this IServiceCollection services, ProxyServerConfig appConfig)
+    public static IServiceCollection AddJsonClient(this IServiceCollection services)
     {
         return services
             .AddHttpClient(
                 name: HttpClientNames.Json,
                 configureClient: httpClient =>
                     InitializeJsonClient(
-                        upstreamUrl: appConfig.UpstreamUrls[0],
                         httpClient: httpClient,
                         httpTimeout: HttpTimeout
                     )
@@ -42,14 +40,13 @@ internal static class HttpClientSetup
             .Services;
     }
 
-    public static IServiceCollection AddNupkgClient(this IServiceCollection services, ProxyServerConfig appConfig)
+    public static IServiceCollection AddNupkgClient(this IServiceCollection services)
     {
         return services
             .AddHttpClient(
                 name: HttpClientNames.NugetPackage,
                 configureClient: httpClient =>
                     InitializeNupkgClient(
-                        upstreamUrl: appConfig.UpstreamUrls[0],
                         httpClient: httpClient,
                         httpTimeout: HttpTimeout
                     )
@@ -69,11 +66,10 @@ internal static class HttpClientSetup
             .Services;
     }
 
-    private static void InitializeJsonClient(Uri upstreamUrl, HttpClient httpClient, in TimeSpan httpTimeout)
+    private static void InitializeJsonClient(HttpClient httpClient, in TimeSpan httpTimeout)
     {
         httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
         httpClient.DefaultRequestVersion = HttpVersion.Version11;
-        httpClient.BaseAddress = upstreamUrl;
         httpClient.DefaultRequestHeaders.Accept.Add(new(mediaType: "application/json"));
         httpClient.DefaultRequestHeaders.UserAgent.Add(
             new(new ProductHeaderValue(name: VersionInformation.Product, version: VersionInformation.Version))
@@ -81,11 +77,10 @@ internal static class HttpClientSetup
         httpClient.Timeout = httpTimeout;
     }
 
-    private static void InitializeNupkgClient(Uri upstreamUrl, HttpClient httpClient, in TimeSpan httpTimeout)
+    private static void InitializeNupkgClient(HttpClient httpClient, in TimeSpan httpTimeout)
     {
         httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
         httpClient.DefaultRequestVersion = HttpVersion.Version11;
-        httpClient.BaseAddress = upstreamUrl;
         httpClient.DefaultRequestHeaders.Accept.Add(new(mediaType: "application/octet-stream"));
         httpClient.DefaultRequestHeaders.UserAgent.Add(
             new(new ProductHeaderValue(name: VersionInformation.Product, version: VersionInformation.Version))

@@ -10,6 +10,7 @@ using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
 
@@ -19,14 +20,13 @@ public abstract class JsonIndexTransformerBase
     private readonly bool _indexReplacement;
     private readonly ILogger _logger;
 
-    protected JsonIndexTransformerBase(
-        ProxyServerConfig config,
-        IJsonDownloader jsonDownloader,
-        bool indexReplacement,
-        ILogger logger
+    protected JsonIndexTransformerBase(IOptions<ProxyServerConfig> config,
+                                       IJsonDownloader jsonDownloader,
+                                       bool indexReplacement,
+                                       ILogger logger
     )
     {
-        this.Config = config;
+        this.Config = config.Value;
         this._jsonDownloader = jsonDownloader;
         this._indexReplacement = indexReplacement;
         this._logger = logger;

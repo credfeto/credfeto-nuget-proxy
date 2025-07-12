@@ -13,8 +13,10 @@ using Credfeto.Date.Interfaces;
 using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Middleware.Extensions;
 using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
+using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Polly.Bulkhead;
 using Polly.Timeout;
 
@@ -29,9 +31,9 @@ public sealed class JsonMiddleware : IMiddleware
     private readonly ILogger<JsonMiddleware> _logger;
     private readonly IJsonTransformer _jsonTransformer;
 
-    public JsonMiddleware(IJsonTransformer jsonTransformer, ICurrentTimeSource currentTimeSource, ILogger<JsonMiddleware> logger)
+    public JsonMiddleware(IOptions<ProxyServerConfig> config, IEnumerable<IJsonTransformer> jsonTransformer, ICurrentTimeSource currentTimeSource, ILogger<JsonMiddleware> logger)
     {
-        this._jsonTransformer = jsonTransformer;
+        this._jsonTransformer = jsonTransformer.First(t => t.IsNuget == config.Value.IsNugetPublicServer);
         this._currentTimeSource = currentTimeSource;
         this._logger = logger;
     }

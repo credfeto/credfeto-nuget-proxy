@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using FunFair.Test.Common;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests;
@@ -25,9 +26,8 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
             JsonMaxAgeSeconds: 60
         );
 
-        this._packageStorage = new FileSystemPackageStorage(
-            config: config,
-            this.GetTypedLogger<FileSystemPackageStorage>()
+        this._packageStorage = new FileSystemPackageStorage(Options.Create(config),
+                                                            this.GetTypedLogger<FileSystemPackageStorage>()
         );
     }
 
