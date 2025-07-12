@@ -19,7 +19,11 @@ public sealed class ProxyServerConfig
 
     public List<string> UpstreamUrls { get; set; }
 
-    [SuppressMessage(category: "Microsoft.Design", checkId: "CA1056: Should ne a uri", Justification = "Not for config")]
+    [SuppressMessage(
+        category: "Microsoft.Design",
+        checkId: "CA1056: Should ne a uri",
+        Justification = "Not for config"
+    )]
     public string PublicUrl { get; set; }
 
     public string Metadata { get; set; }
@@ -32,6 +36,7 @@ public sealed class ProxyServerConfig
 
     private static bool IsNuget(string h)
     {
-        return Uri.TryCreate(uriString: h, uriKind: UriKind.Absolute, out Uri? uri) && uri.DnsSafeHost.EndsWith(value: ".nuget.org", comparisonType: StringComparison.OrdinalIgnoreCase);
+        return Uri.TryCreate(uriString: h, uriKind: UriKind.Absolute, out Uri? uri)
+            && uri.DnsSafeHost.EndsWith(value: ".nuget.org", comparisonType: StringComparison.OrdinalIgnoreCase);
     }
 }
