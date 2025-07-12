@@ -16,9 +16,18 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     public FileSystemPackageStorageTests(ITestOutputHelper output)
         : base(output)
     {
-        ProxyServerConfig config = new() { UpstreamUrls = ["https://upstream.example.org"], PublicUrl = "https://nuget.example.org", Packages = this.TempFolder, JsonMaxAgeSeconds = 60 };
+        ProxyServerConfig config = new()
+        {
+            UpstreamUrls = ["https://upstream.example.org"],
+            PublicUrl = "https://nuget.example.org",
+            Packages = this.TempFolder,
+            JsonMaxAgeSeconds = 60,
+        };
 
-        this._packageStorage = new FileSystemPackageStorage(Options.Create(config), this.GetTypedLogger<FileSystemPackageStorage>());
+        this._packageStorage = new FileSystemPackageStorage(
+            Options.Create(config),
+            this.GetTypedLogger<FileSystemPackageStorage>()
+        );
     }
 
     [Fact]
@@ -26,7 +35,10 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
-        byte[]? result = await this._packageStorage.ReadFileAsync(sourcePath: "doesnotexist", cancellationToken: cancellationToken);
+        byte[]? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "doesnotexist",
+            cancellationToken: cancellationToken
+        );
 
         Assert.Null(result);
     }
@@ -36,9 +48,16 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
-        await File.WriteAllTextAsync(Path.Combine(path1: this.TempFolder, path2: "file.txt"), contents: "test", cancellationToken: cancellationToken);
+        await File.WriteAllTextAsync(
+            Path.Combine(path1: this.TempFolder, path2: "file.txt"),
+            contents: "test",
+            cancellationToken: cancellationToken
+        );
 
-        byte[]? result = await this._packageStorage.ReadFileAsync(sourcePath: "file.txt", cancellationToken: cancellationToken);
+        byte[]? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "file.txt",
+            cancellationToken: cancellationToken
+        );
 
         Assert.NotNull(result);
         Assert.Equal(expected: 4, actual: result.Length);
