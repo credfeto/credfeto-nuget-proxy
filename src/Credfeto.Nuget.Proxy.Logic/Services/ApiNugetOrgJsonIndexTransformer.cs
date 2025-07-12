@@ -40,9 +40,10 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         new("https://azuresearch-ussc.nuget.org"),
     ];
 
-    public ApiNugetOrgJsonIndexTransformer(IOptions<ProxyServerConfig> config,
-                                           IJsonDownloader jsonDownloader,
-                                           ILogger<ApiNugetOrgJsonIndexTransformer> logger
+    public ApiNugetOrgJsonIndexTransformer(
+        IOptions<ProxyServerConfig> config,
+        IJsonDownloader jsonDownloader,
+        ILogger<ApiNugetOrgJsonIndexTransformer> logger
     )
         : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: true, logger: logger) { }
 
