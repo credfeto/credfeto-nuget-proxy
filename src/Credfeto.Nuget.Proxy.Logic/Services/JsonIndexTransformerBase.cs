@@ -20,10 +20,11 @@ public abstract class JsonIndexTransformerBase
     private readonly bool _indexReplacement;
     private readonly ILogger _logger;
 
-    protected JsonIndexTransformerBase(IOptions<ProxyServerConfig> config,
-                                       IJsonDownloader jsonDownloader,
-                                       bool indexReplacement,
-                                       ILogger logger
+    protected JsonIndexTransformerBase(
+        IOptions<ProxyServerConfig> config,
+        IJsonDownloader jsonDownloader,
+        bool indexReplacement,
+        ILogger logger
     )
     {
         this.Config = config.Value;
