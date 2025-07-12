@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.IO.Pipelines;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -105,22 +104,12 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         {
             this.EnsureDirectoryExists(dir);
 
-            await using (RecyclableMemoryStream recyclableMemoryStream = MemoryStreamManager.GetStream())
+            await using (Stream stream = File.OpenWrite(jsonPath))
             {
-                PipeWriter pw = PipeWriter.Create(recyclableMemoryStream);
-                await JsonSerializer.SerializeAsync(
-                    utf8Json: pw,
-                    value: item,
-                    jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
-                    cancellationToken: cancellationToken
-                );
-
-                await pw.FlushAsync(cancellationToken: cancellationToken);
-
-                await File.WriteAllBytesAsync(
-                    path: jsonPath,
-                    recyclableMemoryStream.GetBuffer(),
-                    cancellationToken: cancellationToken
+                await JsonSerializer.SerializeAsync(utf8Json: stream,
+                                                    value: item,
+                                                    jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
+                                                    cancellationToken: cancellationToken
                 );
             }
         }
