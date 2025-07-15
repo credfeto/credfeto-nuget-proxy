@@ -66,7 +66,7 @@ public sealed class JsonMiddleware : IMiddleware
             this._logger.FoundUpstreamJson(path: path, cacheSeconds: result.Value.CacheMaxAgeSeconds);
             int ageSeconds = result.Value.CacheMaxAgeSeconds;
             string json = result.Value.Json;
-            await this.SuccessAsync(context: context, json: json, ageSeconds: ageSeconds, cancellationToken: cancellationToken);
+            await this.SuccessAsync(context: context, json: json, ageSeconds: ageSeconds, eTag: result.Value.ETag, cancellationToken: cancellationToken);
         }
         catch (HttpRequestException exception)
         {
@@ -120,16 +120,25 @@ public sealed class JsonMiddleware : IMiddleware
         return path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase) || WhiteListedPaths.Contains(value: path, comparer: StringComparer.OrdinalIgnoreCase);
     }
 
-    private async ValueTask SuccessAsync(HttpContext context, string json, int ageSeconds, CancellationToken cancellationToken)
+    private async ValueTask SuccessAsync(HttpContext context, string json, int ageSeconds, string eTag, CancellationToken cancellationToken)
     {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
-        context.Response.Headers.Append(key: "Content-Type", value: "application/json");
+        context.Response.Headers.Append(key: "Content-Type", value: "application/json; charset=utf-8");
         context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
         context.Response.Headers.Expires = this._currentTimeSource.UtcNow()
                                                .AddSeconds(ageSeconds)
                                                .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
+        context.Response.Headers.Append(key:"ETag", value: EnsureQuoted(eTag));
+
         await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
     }
+
+        private static string EnsureQuoted(string source)
+        {
+            return source.StartsWith('"') && source.EndsWith('"')
+                ? source
+                : "\"" + source + "\"";
+        }
 
     private static void Failed(HttpContext context, HttpStatusCode result)
     {

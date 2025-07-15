@@ -7,7 +7,7 @@ namespace Credfeto.Nuget.Proxy.Logic;
 
 public interface IJsonDownloader
 {
-    ValueTask<string> ReadUpstreamAsync(
+    ValueTask<JsonResponse> ReadUpstreamAsync(
         Uri requestUri,
         ProductInfoHeaderValue? userAgent,
         CancellationToken cancellationToken

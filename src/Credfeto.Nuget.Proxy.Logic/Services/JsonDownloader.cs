@@ -1,10 +1,13 @@
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Logic.Extensions;
@@ -32,7 +35,7 @@ public sealed class JsonDownloader : IJsonDownloader
         this._logger = logger;
     }
 
-    public async ValueTask<string> ReadUpstreamAsync(Uri requestUri, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
+    public async ValueTask<JsonResponse> ReadUpstreamAsync(Uri requestUri, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
     {
         HttpClient client = this.GetClient(userAgent);
 
@@ -50,7 +53,8 @@ public sealed class JsonDownloader : IJsonDownloader
             {
                 this._logger.ReturningCached(upstream: requestUri, metadata: cached.Value.metadata, httpStatus: result.StatusCode);
 
-                return cached.Value.content;
+                // ! Should always have ETag at this point
+                return new JsonResponse(Json: cached.Value.content, ETag: cached.Value.metadata.Etag!);
             }
 
             if (!result.IsSuccessStatusCode)
@@ -64,7 +68,7 @@ public sealed class JsonDownloader : IJsonDownloader
             {
                 this._logger.ReturningCached(upstream: requestUri, metadata: cached.Value.metadata, httpStatus: result.StatusCode);
 
-                return cached.Value.content;
+                return new JsonResponse(Json: cached.Value.content, ETag: cached.Value.metadata.Etag);
             }
 
             string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
@@ -75,8 +79,17 @@ public sealed class JsonDownloader : IJsonDownloader
 
             await this.SaveToCacheAsync(requestUri: requestUri, jsonMetadata: jsonMetadata, json: json, cancellationToken: cancellationToken);
 
-            return json;
+            return new (Json: json, ETag:
+                        string.IsNullOrEmpty(jsonMetadata.Etag)
+                        ? HashJson(json)
+                        : jsonMetadata.Etag);
         }
+    }
+
+    private static  string HashJson(string json)
+    {
+        return Base64Url.EncodeToString(
+        SHA512.HashData(Encoding.UTF8.GetBytes(json)));
     }
 
     private static void AddEtag(HttpClient client, in JsonMetadata cached)
@@ -121,7 +134,7 @@ public sealed class JsonDownloader : IJsonDownloader
     }
 
     [DoesNotReturn]
-    private static string Failed(Uri requestUri, HttpStatusCode resultStatusCode)
+    private static JsonResponse Failed(Uri requestUri, HttpStatusCode resultStatusCode)
     {
         throw new HttpRequestException($"Failed to download {requestUri}: {resultStatusCode.GetName()}", inner: null, statusCode: resultStatusCode);
     }

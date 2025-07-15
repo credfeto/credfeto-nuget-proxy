@@ -88,17 +88,17 @@ public abstract class JsonIndexTransformerBase
     {
         Uri requestUri = this.GetRequestUri(path);
 
-        string json = await this._jsonDownloader.ReadUpstreamAsync(
+        JsonResponse response = await this._jsonDownloader.ReadUpstreamAsync(
             requestUri: requestUri,
             userAgent: userAgent,
             cancellationToken: cancellationToken
         );
 
-        json = transformer(json);
+        string json = transformer(response.Json);
 
         this._logger.UpstreamJsonOk(upstream: requestUri, statusCode: HttpStatusCode.OK, length: json.Length);
 
-        return new(Json: json, this.GetJsonCacheMaxAge(path));
+        return new(Json: json, this.GetJsonCacheMaxAge(path), ETag: response.ETag);
     }
 
     protected Uri GetRequestUri(string path)
