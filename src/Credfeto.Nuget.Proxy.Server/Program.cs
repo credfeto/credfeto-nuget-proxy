@@ -13,11 +13,7 @@ public static class Program
 {
     private const int MIN_THREADS = 32;
 
-    [SuppressMessage(
-        category: "Meziantou.Analyzer",
-        checkId: "MA0109: Add an overload with a Span or Memory parameter",
-        Justification = "Won't work here"
-    )]
+    [SuppressMessage(category: "Meziantou.Analyzer", checkId: "MA0109: Add an overload with a Span or Memory parameter", Justification = "Won't work here")]
     public static async Task<int> Main(string[] args)
     {
         return HealthCheckClient.IsHealthCheck(args: args, out string? checkUrl)
@@ -54,16 +50,17 @@ public static class Program
     {
         Console.WriteLine("App Created");
 
-        return AddMiddleware(application).RunAsync();
+        return AddMiddleware(application)
+            .RunAsync();
     }
 
     private static WebApplication AddMiddleware(WebApplication application)
     {
-        return (WebApplication)
-            application
-                .ConfigureEndpoints()
-                .UseMiddleware<JsonMiddleware>()
-                .UseMiddleware<NuPkgMiddleware>()
-                .UseMiddleware<NotFoundMiddleware>();
+        WebApplication app = (WebApplication)application.UseForwardedHeaders();
+
+        return (WebApplication)app.ConfigureEndpoints()
+                                  .UseMiddleware<JsonMiddleware>()
+                                  .UseMiddleware<NuPkgMiddleware>()
+                                  .UseMiddleware<NotFoundMiddleware>();
     }
 }
