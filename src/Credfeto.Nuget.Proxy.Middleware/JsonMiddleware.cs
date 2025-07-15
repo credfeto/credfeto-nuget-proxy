@@ -40,7 +40,7 @@ public sealed class JsonMiddleware : IMiddleware
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        if (!IsMatchingRequest(context: context, out string? path))
+        if (context.GetEndpoint() is not null || !IsMatchingRequest(context: context, out string? path))
         {
             await next(context);
 
