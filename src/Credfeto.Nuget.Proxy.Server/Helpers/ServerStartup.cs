@@ -115,45 +115,6 @@ internal static class ServerStartup
         return builder;
     }
 
-    // private static ProxyServerConfig LoadConfig(IConfigurationRoot configuration)
-    // {
-    //     IReadOnlyList<Uri> upstream =
-    //     [
-    //         .. configuration
-    //             .GetSection("Proxy:UpstreamUrl")
-    //             .GetChildren()
-    //             .Select(x => Uri.TryCreate(uriString: x.Value, uriKind: UriKind.Absolute, out Uri? uri) ? uri : null)
-    //             .RemoveNulls(),
-    //     ];
-    //
-    //     if (upstream.Count == 0)
-    //     {
-    //         throw new UnreachableException("Proxy:UpstreamUrl not provided");
-    //     }
-    //
-    //     if (
-    //         !int.TryParse(
-    //             configuration["Proxy:JsonMaxAgeSeconds"],
-    //             NumberStyles.Integer,
-    //             CultureInfo.InvariantCulture,
-    //             out int jsonMaxAgeSeconds
-    //         )
-    //         || jsonMaxAgeSeconds <= 5
-    //     )
-    //     {
-    //         jsonMaxAgeSeconds = 5;
-    //     }
-    //
-    //     return new(
-    //         UpstreamUrls: upstream,
-    //         PublicUrl: new(
-    //             configuration["Proxy:PublicUrl"] ?? throw new UnreachableException("Proxy:PublicUrl not provided")
-    //         ),
-    //         Packages: configuration["Proxy:Packages"] ?? ApplicationConfigLocator.ConfigurationFilesPath,
-    //         JsonMaxAgeSeconds: jsonMaxAgeSeconds
-    //     );
-    // }
-
     [SuppressMessage(
         category: "Microsoft.Reliability",
         checkId: "CA2000:DisposeObjectsBeforeLosingScope",
