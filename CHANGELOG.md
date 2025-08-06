@@ -23,6 +23,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Credfeto.Enumeration to 1.2.121.1337
 - Dependencies - Updated xunit.analyzers to 1.23.0
 - Dependencies - Updated xunit.v3 to 3.0.0
+- Dependencies - Updated Credfeto.Date to 1.1.131.1251
 ### Removed
 ### Deployment Changes
 
