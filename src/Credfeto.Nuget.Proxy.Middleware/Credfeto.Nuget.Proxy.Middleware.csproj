@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <AnalysisLevel>latest</AnalysisLevel>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
@@ -53,7 +53,6 @@
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Extensions\Credfeto.Nuget.Proxy.Extensions.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Index.Transformer.Interfaces\Credfeto.Nuget.Proxy.Index.Transformer.Interfaces.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
   </ItemGroup>
