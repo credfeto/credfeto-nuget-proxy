@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <AnalysisLevel>latest</AnalysisLevel>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
@@ -110,6 +110,5 @@
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Package.Storage.FileSystem\Credfeto.Nuget.Proxy.Package.Storage.FileSystem.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Logic\Credfeto.Nuget.Proxy.Logic.csproj" />
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Middleware\Credfeto.Nuget.Proxy.Middleware.csproj" />
-    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
   </ItemGroup>
 </Project>
