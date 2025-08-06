@@ -20,6 +20,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Philips.CodeAnalysis.MaintainabilityAnalyzers to 1.6.4
 - Dependencies - Updated Roslynator.Analyzers to 4.14.0
 - Dependencies - Updated SonarAnalyzer.CSharp to 10.15.0.120848
+- Dependencies - Updated FunFair.Test.Common to 6.1.280.1580
 ### Removed
 ### Deployment Changes
 
