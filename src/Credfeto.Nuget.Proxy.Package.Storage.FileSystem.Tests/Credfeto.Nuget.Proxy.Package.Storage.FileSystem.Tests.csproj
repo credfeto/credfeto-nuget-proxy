@@ -53,9 +53,9 @@
     <ProjectReference Include="..\Credfeto.Nuget.Proxy.Package.Storage.FileSystem\Credfeto.Nuget.Proxy.Package.Storage.FileSystem.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FunFair.Test.Common" Version="6.1.274.1486" />
+    <PackageReference Include="FunFair.Test.Common" Version="6.1.280.1580" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
-    <PackageReference Include="xunit.v3" Version="2.0.3" />
+    <PackageReference Include="xunit.v3" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsyncFixer" Version="1.6.0" PrivateAssets="All" ExcludeAssets="runtime" />
@@ -75,6 +75,6 @@
     <PackageReference Include="SonarAnalyzer.CSharp" Version="10.15.0.120848" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="ToStringWithoutOverrideAnalyzer" Version="0.6.0" PrivateAssets="All" ExcludeAssets="runtime" />
-    <PackageReference Include="xunit.analyzers" Version="1.22.0" PrivateAssets="All" ExcludeAssets="runtime" />
+    <PackageReference Include="xunit.analyzers" Version="1.23.0" PrivateAssets="All" ExcludeAssets="runtime" />
   </ItemGroup>
 </Project>
