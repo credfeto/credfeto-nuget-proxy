@@ -11,6 +11,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.1.15.1339
 - Dependencies - Updated Credfeto.Date to 1.1.133.1257
+- Dependencies - Updated FunFair.Test.Common to 6.1.281.1593
 ### Removed
 ### Deployment Changes
 
