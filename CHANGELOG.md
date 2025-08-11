@@ -11,9 +11,9 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.111.775
 - Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.52.345
-- Dependencies - Updated FunFair.Test.Common to 6.1.283.1612
 - Dependencies - Updated FunFair.CodeAnalysis to 7.1.19.1359
 - Dependencies - Updated Credfeto.Enumeration to 1.2.126.1361
+- Dependencies - Updated FunFair.Test.Common to 6.1.284.1617
 ### Removed
 ### Deployment Changes
 
