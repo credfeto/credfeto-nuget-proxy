@@ -109,8 +109,6 @@ public abstract class JsonIndexTransformerBase
 
     protected string ReplaceUrls(string json)
     {
-
-
         return this.Config.UpstreamUrls.Aggregate(seed: json, func: this.ReplaceOneUrl);
     }
 
@@ -143,15 +141,15 @@ public abstract class JsonIndexTransformerBase
 
         for (int index = 0; index < this.Config.UpstreamUrls.Count; ++index)
         {
-            builder = builder.Append(index)
-                             .Append(" ==> (")
-                             .Append((object?)this.Config.UpstreamUrls[index])
-                             .Append(')')
-                             .Append(' ');
+            builder = builder
+                .Append(index)
+                .Append(" ==> (")
+                .Append((object?)this.Config.UpstreamUrls[index])
+                .Append(')')
+                .Append(' ');
         }
 
-        return builder.ToString()
-                      .TrimEnd(' ');
+        return builder.ToString().TrimEnd(' ');
     }
 
     private static string CleanUpstreamUrl(string uri)
