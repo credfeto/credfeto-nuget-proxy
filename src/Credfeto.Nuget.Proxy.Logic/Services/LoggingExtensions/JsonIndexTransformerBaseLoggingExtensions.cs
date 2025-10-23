@@ -22,4 +22,11 @@ internal static partial class JsonIndexTransformerBaseLoggingExtensions
 
     [LoggerMessage(LogLevel.Information, EventId = 3, Message = "Url Replacement: Replaced {from} with {to}")]
     public static partial void LogUriReplace(this ILogger logger, string from, string to);
+
+    [LoggerMessage(LogLevel.Warning, EventId = 4, Message = "Stripping missing replacement urls")]
+    public static partial void StrippingMissingReplacementUrls(this ILogger logger);
+
+    [LoggerMessage(LogLevel.Warning, EventId = 5, Message = "Replacement urls: {urls}")]
+    public static partial void ReplacementUrls(this ILogger logger, string urls);
+
 }

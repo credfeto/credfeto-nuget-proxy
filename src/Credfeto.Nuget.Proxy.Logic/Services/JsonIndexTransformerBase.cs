@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Extensions;
@@ -108,13 +109,23 @@ public abstract class JsonIndexTransformerBase
 
     protected string ReplaceUrls(string json)
     {
+
+
         return this.Config.UpstreamUrls.Aggregate(seed: json, func: this.ReplaceOneUrl);
     }
 
     private string ReplaceOneUrl(string current, string uri)
     {
-        string from = new Uri(uri).CleanUri();
-        string to = new Uri(this.Config.PublicUrl).CleanUri();
+        if (string.IsNullOrWhiteSpace(uri))
+        {
+            this._logger.StrippingMissingReplacementUrls();
+            this._logger.ReplacementUrls(this.BuildReplacementUrlsStatus());
+
+            return current;
+        }
+
+        string from = CleanUpstreamUrl(uri);
+        string to = this.CleanPublicUri();
 
         string result = current.Replace(from, to, comparisonType: StringComparison.Ordinal);
 
@@ -124,6 +135,33 @@ public abstract class JsonIndexTransformerBase
         }
 
         return result;
+    }
+
+    private string BuildReplacementUrlsStatus()
+    {
+        StringBuilder builder = new();
+
+        for (int index = 0; index < this.Config.UpstreamUrls.Count; ++index)
+        {
+            builder = builder.Append(index)
+                             .Append(" ==> (")
+                             .Append((object?)this.Config.UpstreamUrls[index])
+                             .Append(')')
+                             .Append(' ');
+        }
+
+        return builder.ToString()
+                      .TrimEnd(' ');
+    }
+
+    private static string CleanUpstreamUrl(string uri)
+    {
+        return new Uri(uri).CleanUri();
+    }
+
+    private string CleanPublicUri()
+    {
+        return new Uri(this.Config.PublicUrl).CleanUri();
     }
 
     private int GetJsonCacheMaxAge(string path)
