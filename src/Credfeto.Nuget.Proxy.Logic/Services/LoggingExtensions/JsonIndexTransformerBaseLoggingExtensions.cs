@@ -28,5 +28,4 @@ internal static partial class JsonIndexTransformerBaseLoggingExtensions
 
     [LoggerMessage(LogLevel.Warning, EventId = 5, Message = "Replacement urls: {urls}")]
     public static partial void ReplacementUrls(this ILogger logger, string urls);
-
 }
