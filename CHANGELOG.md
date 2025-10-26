@@ -18,6 +18,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Roslynator.Analyzers to 4.14.1
 - Dependencies - Updated xunit.analyzers to 1.24.0
 - Dependencies - Updated xunit.v3 to 3.1.0
+- Dependencies - Updated Credfeto.Date to 1.1.138.1330
 ### Removed
 ### Deployment Changes
 
