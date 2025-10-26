@@ -9,6 +9,14 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.100] - 2025-10-26
+### Changed
 - Dependencies - Updated Credfeto.Enumeration to 1.2.129.1430
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.115.836
 - Dependencies - Updated FunFair.CodeAnalysis to 7.1.25.1550
@@ -20,12 +28,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated xunit.v3 to 3.1.0
 - Dependencies - Updated Credfeto.Date to 1.1.138.1330
 - Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.53.355
-### Removed
-### Deployment Changes
 
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 ## [0.0.99] - 2025-10-15
 ### Changed
 - SDK - Updated DotNet SDK to 9.0.305
