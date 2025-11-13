@@ -1,23 +1,16 @@
 using System;
+using Figgle;
 
 namespace Credfeto.Nuget.Proxy.Server.Helpers;
 
-internal static class StartupBanner
+// https://www.figlet.org/examples.html
+[GenerateFiggleText("Banner", "basic", "NuGet Proxy")]
+internal static partial class StartupBanner
 {
     public static void Show()
     {
-        // Generated from https://fsymbols.com/generators/carty/
-        const string banner =
-            @"
-███╗░░██╗██╗░░░██╗░██████╗░███████╗████████╗  ██████╗░██████╗░░█████╗░██╗░░██╗██╗░░░██╗
-████╗░██║██║░░░██║██╔════╝░██╔════╝╚══██╔══╝  ██╔══██╗██╔══██╗██╔══██╗╚██╗██╔╝╚██╗░██╔╝
-██╔██╗██║██║░░░██║██║░░██╗░█████╗░░░░░██║░░░  ██████╔╝██████╔╝██║░░██║░╚███╔╝░░╚████╔╝░
-██║╚████║██║░░░██║██║░░╚██╗██╔══╝░░░░░██║░░░  ██╔═══╝░██╔══██╗██║░░██║░██╔██╗░░░╚██╔╝░░
-██║░╚███║╚██████╔╝╚██████╔╝███████╗░░░██║░░░  ██║░░░░░██║░░██║╚█████╔╝██╔╝╚██╗░░░██║░░░
-╚═╝░░╚══╝░╚═════╝░░╚═════╝░╚══════╝░░░╚═╝░░░  ╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚═╝░░╚═╝░░░╚═╝░░░";
-
-        Console.WriteLine(banner);
-
-        Console.WriteLine("Starting version " + VersionInformation.Version + "...");
+        Console.WriteLine(Banner);
+        Console.WriteLine();
+        Console.WriteLine();        Console.WriteLine("Starting version " + VersionInformation.Version + "...");
     }
 }
