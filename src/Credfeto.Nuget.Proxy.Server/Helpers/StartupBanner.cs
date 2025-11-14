@@ -11,6 +11,7 @@ internal static partial class StartupBanner
     {
         Console.WriteLine(Banner);
         Console.WriteLine();
-        Console.WriteLine();        Console.WriteLine("Starting version " + VersionInformation.Version + "...");
+        Console.WriteLine();
+        Console.WriteLine("Starting version " + VersionInformation.Version + "...");
     }
 }
