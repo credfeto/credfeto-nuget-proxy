@@ -15,6 +15,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Meziantou.Analyzer to 2.0.253
 - Dependencies - Updated Microsoft.Sbom.Targets to 4.1.3
 - Dependencies - Updated Credfeto.Date to 1.1.139.1389
+- Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.56.476
 ### Removed
 ### Deployment Changes
 
