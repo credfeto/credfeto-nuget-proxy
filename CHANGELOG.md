@@ -25,6 +25,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated FunFair.Test.Source.Generator to 6.2.16.1963
 - Dependencies - Updated Microsoft.Extensions to 10.0.3
 - Dependencies - Updated Serilog.Extensions.Logging to 10.0.0
+- Dependencies - Updated Serilog to 4.3.1
 ### Removed
 ### Deployment Changes
 
