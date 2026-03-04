@@ -14,6 +14,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Meziantou.Analyzer to 3.0.15
 - Dependencies - Updated Credfeto.Date to 1.1.146.1588
 - Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.61.659
+- Dependencies - Updated FunFair.Test.Common to 6.2.17.1982
 ### Removed
 ### Deployment Changes
 
