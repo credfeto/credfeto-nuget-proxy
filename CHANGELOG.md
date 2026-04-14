@@ -9,6 +9,14 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.110] - 2026-04-14
+### Changed
 - Dependencies - Updated Credfeto.Enumeration to 1.2.140.1751
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.121.1094
 - Dependencies - Updated Figgle to 0.6.6
@@ -21,12 +29,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated FunFair.Test.Common to 6.2.19.2017
 - Dependencies - Updated FunFair.Test.Source.Generator to 6.2.19.2017
 - Dependencies - Updated Microsoft.Extensions to 10.0.5
-### Removed
-### Deployment Changes
 
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 ## [0.0.109] - 2026-03-14
 ### Changed
 - SDK - Updated DotNet SDK to 10.0.200
