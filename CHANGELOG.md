@@ -13,6 +13,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Philips.CodeAnalysis.DuplicateCodeAnalyzer to 2.0.0
 - Dependencies - Updated Philips.CodeAnalysis.MaintainabilityAnalyzers to 2.0.0
 - Dependencies - Updated Credfeto.Date to 1.1.150.1668
+- Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.63.716
 ### Removed
 ### Deployment Changes
 
