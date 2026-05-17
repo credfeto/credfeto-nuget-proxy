@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Credfeto.Date;
 using Credfeto.Nuget.Proxy.Logic;
@@ -173,10 +174,25 @@ internal static class ServerStartup
         listenOptions.Protocols = HttpProtocols.Http2;
     }
 
+    [SuppressMessage(
+        category: "Microsoft.Reliability",
+        checkId: "CA2000:DisposeObjectsBeforeLosingScope",
+        Justification = "Lives for program lifetime"
+    )]
+    [SuppressMessage(
+        category: "SmartAnalyzers.CSharpExtensions.Annotations",
+        checkId: "CSE007:DisposeObjectsBeforeLosingScope",
+        Justification = "Lives for program lifetime"
+    )]
     private static void SetHttpsListenOptions(ListenOptions listenOptions, string certFile)
     {
         listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
-        listenOptions.UseHttps(fileName: certFile);
+        X509Certificate2 cert = X509CertificateLoader.LoadPkcs12FromFile(
+            certFile,
+            password: null,
+            keyStorageFlags: X509KeyStorageFlags.EphemeralKeySet
+        );
+        listenOptions.UseHttps(cert);
     }
 
     private static void SetKestrelOptions(

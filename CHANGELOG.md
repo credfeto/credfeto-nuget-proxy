@@ -8,6 +8,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ## [Unreleased]
 ### Added
 ### Fixed
+- Use EphemeralKeySet when loading HTTPS certificate to fix Docker container startup failure
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated Meziantou.Analyzer to 3.0.85
