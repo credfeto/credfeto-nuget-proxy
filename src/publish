@@ -65,6 +65,7 @@ info "Clear $OUTFOLDER" \
   && cp "$BASEDIR/../Dockerfile" . \
   && ls -lar \
   && container_run buildx build . -t "credfeto/nuget-proxy:test" \
+  && sudo mkdir -p /cache/nuget-proxy-test \
   && container_run run \
       --name nuget-proxy \
       -it \
