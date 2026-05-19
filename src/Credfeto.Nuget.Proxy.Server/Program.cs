@@ -63,6 +63,7 @@ public static class Program
 
         return (WebApplication)
             app.ConfigureEndpoints()
+                .UseMiddleware<ServerHeaderMiddleware>()
                 .UseMiddleware<JsonMiddleware>()
                 .UseMiddleware<NuPkgMiddleware>()
                 .UseMiddleware<NotFoundMiddleware>();
