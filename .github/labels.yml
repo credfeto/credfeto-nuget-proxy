@@ -54,6 +54,10 @@
    color: "96f7d2"
    description: "Changes in Credfeto.Nuget.Proxy.Middleware project"
 
+ - name: "credfeto-nuget-proxy-middleware-tests"
+   color: "0e8a16"
+   description: "Changes in Credfeto.Nuget.Proxy.Middleware.Tests project"
+
  - name: "credfeto-nuget-proxy-models"
    color: "96f7d2"
    description: "Changes in Credfeto.Nuget.Proxy.Models project"
