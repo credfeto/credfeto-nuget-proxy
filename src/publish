@@ -76,5 +76,5 @@ info "Clear $OUTFOLDER" \
       -e Proxy__PublicUrl=https://localhost:9081 \
       -e Proxy__Packages=/cache \
       -v /cache/nuget-proxy-test:/cache \
-      -v "$BASEDIR/Credfeto.Nuget.Proxy/server.pfx:/usr/src/app/server.pfx" \
+      -v "$BASEDIR/Credfeto.Nuget.Proxy.Server/server.pfx:/usr/src/app/server.pfx" \
       "credfeto/nuget-proxy:test"
