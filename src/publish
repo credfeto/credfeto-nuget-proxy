@@ -19,7 +19,7 @@ PLATFORM=linux-x64
 OUTFOLDER="$BASEDIR/server-dist/$PLATFORM"
 
 if command -v podman > /dev/null 2>&1; then
-    container_run() { podman "$@"; }
+    container_run() { sudo podman "$@"; }
 elif command -v docker > /dev/null 2>&1; then
     container_run() { sudo docker "$@"; }
 else
