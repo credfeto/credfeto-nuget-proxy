@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,10 +26,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
     public async ValueTask<byte[]?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
     {
-        if (!this.BuildPackagePath(path: sourcePath, out string? packagePath, dir: out _))
-        {
-            return null;
-        }
+        (string packagePath, _) = this.BuildPackagePath(path: sourcePath);
 
         try
         {
@@ -55,10 +51,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
     public async ValueTask SaveFileAsync(string sourcePath, byte[] buffer, CancellationToken cancellationToken)
     {
-        if (!this.BuildPackagePath(path: sourcePath, out string? packagePath, out string? dir))
-        {
-            return;
-        }
+        (string packagePath, string dir) = this.BuildPackagePath(path: sourcePath);
 
         try
         {
@@ -86,27 +79,11 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    private bool BuildPackagePath(
-        string path,
-        [NotNullWhen(true)] out string? filename,
-        [NotNullWhen(true)] out string? dir
-    )
+    private (string filename, string dir) BuildPackagePath(string path)
     {
         string f = Path.Combine(path1: this._basePath, path.TrimStart('/'));
 
-        string? d = Path.GetDirectoryName(f);
-
-        if (string.IsNullOrEmpty(d))
-        {
-            filename = null;
-            dir = null;
-
-            return false;
-        }
-
-        filename = f;
-        dir = d;
-
-        return true;
+        // ! Path.Combine with an absolute basePath always produces a path with a directory component
+        return (f, Path.GetDirectoryName(f)!);
     }
 }

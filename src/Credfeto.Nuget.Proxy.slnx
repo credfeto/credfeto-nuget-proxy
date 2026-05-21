@@ -8,11 +8,14 @@
     <File Path="publish" />
   </Folder>
   <Project Path="Credfeto.Nuget.Proxy.Extensions/Credfeto.Nuget.Proxy.Extensions.csproj" />
+  <Project Path="Credfeto.Nuget.Proxy.Extensions.Tests/Credfeto.Nuget.Proxy.Extensions.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Index.Transformer.Interfaces/Credfeto.Nuget.Proxy.Index.Transformer.Interfaces.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Logic/Credfeto.Nuget.Proxy.Logic.csproj" />
+  <Project Path="Credfeto.Nuget.Proxy.Logic.Tests/Credfeto.Nuget.Proxy.Logic.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Middleware.Tests/Credfeto.Nuget.Proxy.Middleware.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Middleware/Credfeto.Nuget.Proxy.Middleware.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Models/Credfeto.Nuget.Proxy.Models.csproj" />
+  <Project Path="Credfeto.Nuget.Proxy.Models.Tests/Credfeto.Nuget.Proxy.Models.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests/Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Package.Storage.FileSystem/Credfeto.Nuget.Proxy.Package.Storage.FileSystem.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Package.Storage.Interfaces/Credfeto.Nuget.Proxy.Package.Storage.Interfaces.csproj" />

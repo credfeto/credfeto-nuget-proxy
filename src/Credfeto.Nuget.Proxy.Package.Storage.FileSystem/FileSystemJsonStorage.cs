@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Buffers.Text;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -33,12 +32,14 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         this.EnsureDirectoryExists(this._basePath);
     }
 
-    public async ValueTask SaveAsync(Uri requestUri, JsonMetadata metadata, string jsonContent, CancellationToken cancellationToken)
+    public async ValueTask SaveAsync(
+        Uri requestUri,
+        JsonMetadata metadata,
+        string jsonContent,
+        CancellationToken cancellationToken
+    )
     {
-        if (!this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath, out string? jsonPath, out string? dir))
-        {
-            return;
-        }
+        (string jsonPath, string dir) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
 
         try
         {
@@ -46,11 +47,21 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
             string compressed = await CompressAsync(source: jsonContent, cancellationToken: cancellationToken);
 
-            JsonItem item = new(metadata.Etag ?? "", size: jsonContent.Length, metadata.ContentType ?? "", content: compressed);
+            JsonItem item = new(
+                metadata.Etag ?? "",
+                size: jsonContent.Length,
+                metadata.ContentType ?? "",
+                content: compressed
+            );
 
             await using (Stream stream = File.OpenWrite(jsonPath))
             {
-                await JsonSerializer.SerializeAsync(utf8Json: stream, value: item, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
+                await JsonSerializer.SerializeAsync(
+                    utf8Json: stream,
+                    value: item,
+                    jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
+                    cancellationToken: cancellationToken
+                );
             }
         }
         catch (Exception exception)
@@ -59,12 +70,12 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    public async ValueTask<(JsonMetadata metadata, string content)?> LoadAsync(Uri requestUri, CancellationToken cancellationToken)
+    public async ValueTask<(JsonMetadata metadata, string content)?> LoadAsync(
+        Uri requestUri,
+        CancellationToken cancellationToken
+    )
     {
-        if (!this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath, out string? jsonPath, dir: out _))
-        {
-            return null;
-        }
+        (string jsonPath, _) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
 
         try
         {
@@ -73,37 +84,53 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                 return null;
             }
 
-            await using (Stream stream = File.OpenRead(path: jsonPath))
-            {
-                JsonItem? item = await JsonSerializer.DeserializeAsync(utf8Json: stream, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem, cancellationToken: cancellationToken);
-
-                if (item is null)
-                {
-                    return null;
-                }
-
-                JsonMetadata metadata = new(Etag: item.Etag, ContentLength: item.Size, ContentType: item.ContentType);
-
-                string content = await DecompressAsync(source: item.Content, cancellationToken: cancellationToken);
-
-                return string.IsNullOrWhiteSpace(content)
-                    ? null
-                    : (metadata, content);
-            }
+            return await ReadFromFileAsync(jsonPath: jsonPath, cancellationToken: cancellationToken);
         }
         catch (UnauthorizedAccessException exception)
         {
-            this._logger.FailedToReadFileFromCache(filename: jsonPath, message: exception.Message, exception: exception);
+            this._logger.FailedToReadFileFromCache(
+                filename: jsonPath,
+                message: exception.Message,
+                exception: exception
+            );
 
             return null;
         }
         catch (Exception exception)
         {
             DeleteCorrupt(jsonPath);
-            this._logger.FailedToReadFileFromCache(filename: jsonPath, message: exception.Message, exception: exception);
+            this._logger.FailedToReadFileFromCache(
+                filename: jsonPath,
+                message: exception.Message,
+                exception: exception
+            );
 
             return null;
         }
+    }
+
+    private static async ValueTask<(JsonMetadata metadata, string content)?> ReadFromFileAsync(
+        string jsonPath,
+        CancellationToken cancellationToken
+    )
+    {
+        await using Stream stream = File.OpenRead(path: jsonPath);
+
+        JsonItem? item = await JsonSerializer.DeserializeAsync(
+            utf8Json: stream,
+            jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
+            cancellationToken: cancellationToken
+        );
+
+        if (item is null)
+        {
+            return null;
+        }
+
+        JsonMetadata metadata = new(Etag: item.Etag, ContentLength: item.Size, ContentType: item.ContentType);
+        string content = await DecompressAsync(source: item.Content, cancellationToken: cancellationToken);
+
+        return string.IsNullOrWhiteSpace(content) ? null : (metadata, content);
     }
 
     private static void DeleteCorrupt(string jsonPath)
@@ -118,24 +145,12 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    private bool BuildJsonPath(string sourceHost, string path, [NotNullWhen(true)] out string? filename, [NotNullWhen(true)] out string? dir)
+    private (string filename, string dir) BuildJsonPath(string sourceHost, string path)
     {
         string f = Path.Combine(path1: this._basePath, path2: sourceHost, path.TrimStart('/'));
 
-        string? d = Path.GetDirectoryName(f);
-
-        if (string.IsNullOrEmpty(d))
-        {
-            filename = null;
-            dir = null;
-
-            return false;
-        }
-
-        filename = f;
-        dir = d;
-
-        return true;
+        // ! Path.Combine with an absolute basePath always produces a path with a directory component
+        return (f, Path.GetDirectoryName(f)!);
     }
 
     private void EnsureDirectoryExists(string folder)
@@ -166,7 +181,6 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                 await using (BrotliStream stream = new(stream: output, compressionLevel: CompressionLevel.SmallestSize))
                 {
                     await input.CopyToAsync(destination: stream, cancellationToken: cancellationToken);
-
                 }
             }
 

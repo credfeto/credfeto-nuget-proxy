@@ -10,6 +10,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 - Add X-Server response header middleware that appends the server hostname to every HTTP response
 - Enable trimmed publish for the service
+- Tests to achieve 100% line coverage across all testable projects
 ### Fixed
 - Use EphemeralKeySet when loading HTTPS certificate to fix Docker container startup failure
 ### Changed
