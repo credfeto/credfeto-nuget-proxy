@@ -94,19 +94,9 @@ public sealed class FileSystemPackageStorage : IPackageStorage
     {
         string f = Path.Combine(path1: this._basePath, path.TrimStart('/'));
 
-        string? d = Path.GetDirectoryName(f);
-
-        if (string.IsNullOrEmpty(d))
-        {
-            filename = null;
-            dir = null;
-
-            return false;
-        }
-
         filename = f;
-        dir = d;
+        dir = Path.GetDirectoryName(f);
 
-        return true;
+        return !string.IsNullOrEmpty(dir);
     }
 }
