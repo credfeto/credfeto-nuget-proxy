@@ -62,4 +62,52 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
         Assert.NotNull(result);
         Assert.Equal(expected: 4, actual: result.Length);
     }
+
+    [Fact]
+    public async Task SaveFileAndReadItBackAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        byte[] content = [1, 2, 3, 4, 5];
+
+        await this._packageStorage.SaveFileAsync(
+            sourcePath: "saved.nupkg",
+            buffer: content,
+            cancellationToken: cancellationToken
+        );
+
+        byte[]? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "saved.nupkg",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Equal(expected: content, actual: result);
+    }
+
+    [Fact]
+    public void ConstructorCreatesNonExistentDirectory()
+    {
+        string newSubDir = Path.Combine(path1: this.TempFolder, path2: "newpackages");
+
+        Assert.False(
+            condition: Directory.Exists(newSubDir),
+            userMessage: "Expected sub-directory to not exist before construction"
+        );
+
+        ProxyServerConfig config = new()
+        {
+            UpstreamUrls = ["https://upstream.example.org"],
+            PublicUrl = "https://nuget.example.org",
+            Packages = newSubDir,
+            JsonMaxAgeSeconds = 60,
+        };
+
+        _ = new FileSystemPackageStorage(Options.Create(config), this.GetTypedLogger<FileSystemPackageStorage>());
+
+        Assert.True(
+            condition: Directory.Exists(newSubDir),
+            userMessage: "Expected sub-directory to be created by constructor"
+        );
+    }
 }
