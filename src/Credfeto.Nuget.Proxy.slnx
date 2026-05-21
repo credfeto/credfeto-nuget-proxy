@@ -8,6 +8,7 @@
     <File Path="publish" />
   </Folder>
   <Project Path="Credfeto.Nuget.Proxy.Extensions/Credfeto.Nuget.Proxy.Extensions.csproj" />
+  <Project Path="Credfeto.Nuget.Proxy.Extensions.Tests/Credfeto.Nuget.Proxy.Extensions.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Index.Transformer.Interfaces/Credfeto.Nuget.Proxy.Index.Transformer.Interfaces.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Logic/Credfeto.Nuget.Proxy.Logic.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Middleware.Tests/Credfeto.Nuget.Proxy.Middleware.Tests.csproj" />
