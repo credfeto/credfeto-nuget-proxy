@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Buffers.Text;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -40,17 +39,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         CancellationToken cancellationToken
     )
     {
-        if (
-            !this.BuildJsonPath(
-                sourceHost: requestUri.Host,
-                path: requestUri.AbsolutePath,
-                out string? jsonPath,
-                out string? dir
-            )
-        )
-        {
-            return;
-        }
+        (string jsonPath, string dir) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
 
         try
         {
@@ -86,17 +75,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         CancellationToken cancellationToken
     )
     {
-        if (
-            !this.BuildJsonPath(
-                sourceHost: requestUri.Host,
-                path: requestUri.AbsolutePath,
-                out string? jsonPath,
-                dir: out _
-            )
-        )
-        {
-            return null;
-        }
+        (string jsonPath, _) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
 
         try
         {
@@ -166,19 +145,12 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    private bool BuildJsonPath(
-        string sourceHost,
-        string path,
-        [NotNullWhen(true)] out string? filename,
-        [NotNullWhen(true)] out string? dir
-    )
+    private (string filename, string dir) BuildJsonPath(string sourceHost, string path)
     {
         string f = Path.Combine(path1: this._basePath, path2: sourceHost, path.TrimStart('/'));
 
-        filename = f;
-        dir = Path.GetDirectoryName(f);
-
-        return !string.IsNullOrEmpty(dir);
+        // ! Path.Combine with an absolute basePath always produces a path with a directory component
+        return (f, Path.GetDirectoryName(f)!);
     }
 
     private void EnsureDirectoryExists(string folder)
