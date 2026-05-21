@@ -14,6 +14,7 @@
   <Project Path="Credfeto.Nuget.Proxy.Middleware.Tests/Credfeto.Nuget.Proxy.Middleware.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Middleware/Credfeto.Nuget.Proxy.Middleware.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Models/Credfeto.Nuget.Proxy.Models.csproj" />
+  <Project Path="Credfeto.Nuget.Proxy.Models.Tests/Credfeto.Nuget.Proxy.Models.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests/Credfeto.Nuget.Proxy.Package.Storage.FileSystem.Tests.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Package.Storage.FileSystem/Credfeto.Nuget.Proxy.Package.Storage.FileSystem.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Package.Storage.Interfaces/Credfeto.Nuget.Proxy.Package.Storage.Interfaces.csproj" />
