@@ -42,6 +42,10 @@
    color: "96f7d2"
    description: "Changes in Credfeto.Nuget.Proxy.Extensions project"
 
+ - name: "credfeto-nuget-proxy-extensions-tests"
+   color: "0e8a16"
+   description: "Changes in Credfeto.Nuget.Proxy.Extensions.Tests project"
+
  - name: "credfeto-nuget-proxy-index-transformer-interfaces"
    color: "96f7d2"
    description: "Changes in Credfeto.Nuget.Proxy.Index.Transformer.Interfaces project"
@@ -49,6 +53,10 @@
  - name: "credfeto-nuget-proxy-logic"
    color: "96f7d2"
    description: "Changes in Credfeto.Nuget.Proxy.Logic project"
+
+ - name: "credfeto-nuget-proxy-logic-tests"
+   color: "0e8a16"
+   description: "Changes in Credfeto.Nuget.Proxy.Logic.Tests project"
 
  - name: "credfeto-nuget-proxy-middleware"
    color: "96f7d2"
@@ -61,6 +69,10 @@
  - name: "credfeto-nuget-proxy-models"
    color: "96f7d2"
    description: "Changes in Credfeto.Nuget.Proxy.Models project"
+
+ - name: "credfeto-nuget-proxy-models-tests"
+   color: "0e8a16"
+   description: "Changes in Credfeto.Nuget.Proxy.Models.Tests project"
 
  - name: "credfeto-nuget-proxy-package-storage-filesystem"
    color: "96f7d2"
