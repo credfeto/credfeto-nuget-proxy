@@ -16,6 +16,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated Meziantou.Analyzer to 3.0.85
+- Explicitly set PublishAot and PublishTrimmed to false for buildcheck compliance (#73)
 ### Removed
 ### Deployment Changes
 <!--

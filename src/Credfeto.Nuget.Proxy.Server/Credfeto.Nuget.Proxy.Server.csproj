@@ -33,6 +33,7 @@
     <OptimizationPreference>speed</OptimizationPreference>
     <OutputType>Exe</OutputType>
     <PackageTags>Nuget Caching Proxy</PackageTags>
+    <PublishAot>false</PublishAot>
     <PublishTrimmed>false</PublishTrimmed>
     <RepositoryUrl>https://github.com/credfeto/credfeto-nuget-porxy</RepositoryUrl>
     <RunAOTCompilation>false</RunAOTCompilation>
