@@ -18,6 +18,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.0.1978
 - Dependencies - Updated Meziantou.Analyzer to 3.0.86
 - Dependencies - Updated Credfeto.Docker.HealthCheck.Http.Client to 0.0.65.765
+- Dependencies - Updated FunFair.Test.Common to 6.2.25.2243
 ### Removed
 ### Deployment Changes
 <!--
