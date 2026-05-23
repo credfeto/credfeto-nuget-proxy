@@ -58,7 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Credfeto.Enumeration.Source.Generation.Attributes" Version="1.2.142.1836" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.8" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsyncFixer" Version="2.1.0" PrivateAssets="All" ExcludeAssets="runtime" />
