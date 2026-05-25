@@ -33,10 +33,12 @@
     <OptimizationPreference>speed</OptimizationPreference>
     <OutputType>Exe</OutputType>
     <PackageTags>Nuget Caching Proxy</PackageTags>
-    <PublishAot>false</PublishAot>
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
     <RepositoryUrl>https://github.com/credfeto/credfeto-nuget-porxy</RepositoryUrl>
     <RunAOTCompilation>false</RunAOTCompilation>
     <RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
     <TargetFramework>net10.0</TargetFramework>
     <TieredCompilation>true</TieredCompilation>
     <TieredPGO>true</TieredPGO>
