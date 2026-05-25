@@ -33,10 +33,12 @@
     <OptimizationPreference>speed</OptimizationPreference>
     <OutputType>Exe</OutputType>
     <PackageTags>Nuget Caching Proxy</PackageTags>
-    <PublishTrimmed>false</PublishTrimmed>
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
     <RepositoryUrl>https://github.com/credfeto/credfeto-nuget-porxy</RepositoryUrl>
     <RunAOTCompilation>false</RunAOTCompilation>
     <RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
     <TargetFramework>net10.0</TargetFramework>
     <TieredCompilation>true</TieredCompilation>
     <TieredPGO>true</TieredPGO>
@@ -77,7 +79,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.8" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.8" />
     <PackageReference Include="Serilog" Version="4.3.1" />
-    <PackageReference Include="Serilog.Enrichers.Demystifier" Version="1.0.3" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
     <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
     <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />

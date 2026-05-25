@@ -134,7 +134,6 @@ internal static class ServerStartup
     private static Logger CreateLogger()
     {
         return new LoggerConfiguration()
-            .Enrich.WithDemystifiedStackTraces()
             .Enrich.FromLogContext()
             .Enrich.WithMachineName()
             .Enrich.WithProcessId()
