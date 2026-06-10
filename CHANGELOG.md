@@ -15,6 +15,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Fixed
 - Use EphemeralKeySet when loading HTTPS certificate to fix Docker container startup failure
 - Re-enabled Native AOT compilation and trimming by adding SuppressTrimAnalysisWarnings to suppress third-party IL2104 warnings blocking dotnet publish
+- Dependabot PR CI checks fixed: inline composite actions for pull_request_target, skip Copilot review and lint-code for Dependabot PRs
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.0.1978
