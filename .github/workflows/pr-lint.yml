@@ -389,6 +389,7 @@ jobs:
   lint-code:
     if: |-
       github.event.pull_request.draft == false &&
+      github.actor != 'dependabot[bot]' &&
       ( !startsWith(github.head_ref, 'release/') && !startsWith(github.head_ref, 'hotfix/') )
     runs-on: ubuntu-latest
     steps:
