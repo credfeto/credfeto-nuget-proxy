@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Models.Config;
@@ -187,5 +188,71 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
             condition: Directory.Exists(newSubDir),
             userMessage: "Expected sub-directory to be created by constructor"
         );
+    }
+
+    [Fact]
+    public async Task ConcurrentSaveFileAsync_FileContainsOneOfTheWrittenValuesAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        byte[] content1 = [1, 2, 3, 4, 5];
+        byte[] content2 = [6, 7, 8, 9, 10];
+
+        await Task.WhenAll(
+            this._packageStorage.SaveFileAsync(
+                    sourcePath: "concurrent.nupkg",
+                    buffer: content1,
+                    cancellationToken: cancellationToken
+                )
+                .AsTask(),
+            this._packageStorage.SaveFileAsync(
+                    sourcePath: "concurrent.nupkg",
+                    buffer: content2,
+                    cancellationToken: cancellationToken
+                )
+                .AsTask()
+        );
+
+        byte[]? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "concurrent.nupkg",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.True(
+            condition: result.SequenceEqual(content1) || result.SequenceEqual(content2),
+            userMessage: "Concurrent writes must not produce a corrupt mix of both payloads"
+        );
+    }
+
+    [Fact]
+    public async Task SaveFileAsync_WhenCancelledBeforeWrite_ExistingFileIsPreservedAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        byte[] original = [1, 2, 3, 4, 5];
+
+        await this._packageStorage.SaveFileAsync(
+            sourcePath: "preserve.nupkg",
+            buffer: original,
+            cancellationToken: cancellationToken
+        );
+
+        using CancellationTokenSource cts = new();
+        await cts.CancelAsync();
+
+        await this._packageStorage.SaveFileAsync(
+            sourcePath: "preserve.nupkg",
+            buffer: [6, 7, 8, 9, 10],
+            cancellationToken: cts.Token
+        );
+
+        byte[]? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "preserve.nupkg",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Equal(expected: original, actual: result);
     }
 }
