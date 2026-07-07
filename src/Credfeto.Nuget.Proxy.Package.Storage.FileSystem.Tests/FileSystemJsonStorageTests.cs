@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Text;
 using System.IO;
 using System.IO.Compression;
@@ -299,6 +299,102 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
         };
 
         _ = new FileSystemJsonStorage(Options.Create(config), this.GetTypedLogger<FileSystemJsonStorage>());
+    }
+
+    [Fact]
+    public async Task ConcurrentSaveAsync_FileContainsOneOfTheWrittenValuesAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+        Uri requestUri = new("https://api.nuget.org/v3/concurrent.json");
+
+        const string JSON_CONTENT_1 = """{"version":"1.0.0"}""";
+        const string JSON_CONTENT_2 = """{"version":"2.0.0"}""";
+
+        JsonMetadata metadata1 = new(
+            Etag: "\"etag1\"",
+            ContentLength: JSON_CONTENT_1.Length,
+            ContentType: "application/json"
+        );
+        JsonMetadata metadata2 = new(
+            Etag: "\"etag2\"",
+            ContentLength: JSON_CONTENT_2.Length,
+            ContentType: "application/json"
+        );
+
+        await Task.WhenAll(
+            this._jsonStorage.SaveAsync(
+                    requestUri: requestUri,
+                    metadata: metadata1,
+                    jsonContent: JSON_CONTENT_1,
+                    cancellationToken: cancellationToken
+                )
+                .AsTask(),
+            this._jsonStorage.SaveAsync(
+                    requestUri: requestUri,
+                    metadata: metadata2,
+                    jsonContent: JSON_CONTENT_2,
+                    cancellationToken: cancellationToken
+                )
+                .AsTask()
+        );
+
+        (JsonMetadata metadata, string content)? result = await this._jsonStorage.LoadAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.True(
+            condition: string.Equals(a: result.Value.content, b: JSON_CONTENT_1, StringComparison.Ordinal)
+                || string.Equals(a: result.Value.content, b: JSON_CONTENT_2, StringComparison.Ordinal),
+            userMessage: "Concurrent writes must not produce a corrupt mix of both payloads"
+        );
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenCancelledBeforeWrite_ExistingFileIsPreservedAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+        Uri requestUri = new("https://api.nuget.org/v3/preserve.json");
+
+        const string ORIGINAL_CONTENT = """{"version":"1.0.0"}""";
+        JsonMetadata originalMetadata = new(
+            Etag: "\"original\"",
+            ContentLength: ORIGINAL_CONTENT.Length,
+            ContentType: "application/json"
+        );
+
+        await this._jsonStorage.SaveAsync(
+            requestUri: requestUri,
+            metadata: originalMetadata,
+            jsonContent: ORIGINAL_CONTENT,
+            cancellationToken: cancellationToken
+        );
+
+        using CancellationTokenSource cts = new();
+        await cts.CancelAsync();
+
+        const string NEW_CONTENT = """{"version":"2.0.0"}""";
+        JsonMetadata newMetadata = new(
+            Etag: "\"new\"",
+            ContentLength: NEW_CONTENT.Length,
+            ContentType: "application/json"
+        );
+
+        await this._jsonStorage.SaveAsync(
+            requestUri: requestUri,
+            metadata: newMetadata,
+            jsonContent: NEW_CONTENT,
+            cancellationToken: cts.Token
+        );
+
+        (JsonMetadata metadata, string content)? result = await this._jsonStorage.LoadAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Equal(expected: ORIGINAL_CONTENT, actual: result.Value.content);
     }
 
     private static async ValueTask<string> CompressToBase64UrlAsync(string source, CancellationToken cancellationToken)
