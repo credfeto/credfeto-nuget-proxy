@@ -20,4 +20,12 @@ internal static partial class FileSystemPackageStorageLoggerExtensions
         string message,
         Exception exception
     );
+
+    [LoggerMessage(LogLevel.Warning, EventId = 4, Message = "Failed to delete temp file {filename}: {message}")]
+    public static partial void TempFileDeletionFailed(
+        this ILogger<FileSystemPackageStorage> logger,
+        string filename,
+        string message,
+        Exception exception
+    );
 }

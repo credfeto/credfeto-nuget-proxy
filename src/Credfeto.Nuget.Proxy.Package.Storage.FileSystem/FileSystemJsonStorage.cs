@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Buffers.Text;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -85,7 +84,11 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                 }
                 catch (Exception exception)
                 {
-                    Debug.WriteLine($"Failed to delete temp file {tempPath}: {exception.Message}");
+                    this._logger.TempFileDeletionFailed(
+                        filename: tempPath,
+                        message: exception.Message,
+                        exception: exception
+                    );
                 }
             }
         }
@@ -122,7 +125,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
         catch (Exception exception)
         {
-            DeleteCorrupt(jsonPath);
+            this.DeleteCorrupt(jsonPath);
             this._logger.FailedToReadFileFromCache(
                 filename: jsonPath,
                 message: exception.Message,
@@ -157,7 +160,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         return string.IsNullOrWhiteSpace(content) ? null : (metadata, content);
     }
 
-    private static void DeleteCorrupt(string jsonPath)
+    private void DeleteCorrupt(string jsonPath)
     {
         try
         {
@@ -165,7 +168,11 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
         catch (Exception exception)
         {
-            Debug.WriteLine($"Corrupt {exception.Message}");
+            this._logger.CorruptFileDeletionFailed(
+                filename: jsonPath,
+                message: exception.Message,
+                exception: exception
+            );
         }
     }
 

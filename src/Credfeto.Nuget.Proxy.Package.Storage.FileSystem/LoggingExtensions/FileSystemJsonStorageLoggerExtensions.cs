@@ -20,4 +20,24 @@ internal static partial class FileSystemJsonStorageLoggerExtensions
         string message,
         Exception exception
     );
+
+    [LoggerMessage(LogLevel.Warning, EventId = 4, Message = "Failed to delete temp file {filename}: {message}")]
+    public static partial void TempFileDeletionFailed(
+        this ILogger<FileSystemJsonStorage> logger,
+        string filename,
+        string message,
+        Exception exception
+    );
+
+    [LoggerMessage(
+        LogLevel.Warning,
+        EventId = 5,
+        Message = "Failed to delete corrupt cache file {filename}: {message}"
+    )]
+    public static partial void CorruptFileDeletionFailed(
+        this ILogger<FileSystemJsonStorage> logger,
+        string filename,
+        string message,
+        Exception exception
+    );
 }
