@@ -57,7 +57,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
             tempPath = Path.Combine(dir, Path.GetRandomFileName());
 
-            await using (Stream stream = File.OpenWrite(tempPath))
+            await using (Stream stream = File.Create(tempPath))
             {
                 await JsonSerializer.SerializeAsync(
                     utf8Json: stream,
