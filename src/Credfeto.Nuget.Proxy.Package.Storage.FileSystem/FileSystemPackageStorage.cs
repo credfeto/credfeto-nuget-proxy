@@ -36,6 +36,10 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         {
             return null;
         }
+        catch (DirectoryNotFoundException)
+        {
+            return null;
+        }
         catch (Exception exception)
         {
             this._logger.FailedToReadFileFromCache(
