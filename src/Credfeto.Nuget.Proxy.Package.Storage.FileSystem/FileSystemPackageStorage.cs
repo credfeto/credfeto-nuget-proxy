@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,7 +76,11 @@ public sealed class FileSystemPackageStorage : IPackageStorage
                 }
                 catch (Exception exception)
                 {
-                    Debug.WriteLine($"Failed to delete temp file {tempPath}: {exception.Message}");
+                    this._logger.TempFileDeletionFailed(
+                        filename: tempPath,
+                        message: exception.Message,
+                        exception: exception
+                    );
                 }
             }
         }
