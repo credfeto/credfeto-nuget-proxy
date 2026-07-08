@@ -7,6 +7,8 @@ namespace Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 
 public interface IJsonStorage
 {
+    ValueTask<JsonMetadata?> LoadMetadataAsync(Uri requestUri, CancellationToken cancellationToken);
+
     ValueTask<(JsonMetadata metadata, string content)?> LoadAsync(Uri requestUri, CancellationToken cancellationToken);
 
     ValueTask SaveAsync(Uri requestUri, JsonMetadata metadata, string jsonContent, CancellationToken cancellationToken);
