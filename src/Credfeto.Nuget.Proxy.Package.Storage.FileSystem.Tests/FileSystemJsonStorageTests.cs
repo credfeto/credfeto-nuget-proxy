@@ -1,9 +1,8 @@
 using System;
-using System.Buffers.Text;
+using System.Buffers.Binary;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Models.Config;
@@ -51,6 +50,20 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
     }
 
     [Fact]
+    public async Task LoadMetadataAsync_WhenFileDoesNotExist_ReturnsNullAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+        Uri requestUri = new("https://api.nuget.org/v3/missing.json");
+
+        JsonMetadata? result = await this._jsonStorage.LoadMetadataAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Null(result);
+    }
+
+    [Fact]
     public async Task SaveAndLoadRoundtripAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();
@@ -81,6 +94,37 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
     }
 
     [Fact]
+    public async Task SaveAndLoadMetadataRoundtripAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+        Uri requestUri = new("https://api.nuget.org/v3/meta-roundtrip.json");
+
+        const string JSON_CONTENT = """{"version":"3.0.0"}""";
+        JsonMetadata metadata = new(
+            Etag: "\"meta-etag\"",
+            ContentLength: JSON_CONTENT.Length,
+            ContentType: "application/json"
+        );
+
+        await this._jsonStorage.SaveAsync(
+            requestUri: requestUri,
+            metadata: metadata,
+            jsonContent: JSON_CONTENT,
+            cancellationToken: cancellationToken
+        );
+
+        JsonMetadata? result = await this._jsonStorage.LoadMetadataAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Equal(expected: "\"meta-etag\"", actual: result.Value.Etag);
+        Assert.Equal(expected: JSON_CONTENT.Length, actual: result.Value.ContentLength);
+        Assert.Equal(expected: "application/json", actual: result.Value.ContentType);
+    }
+
+    [Fact]
     public async Task LoadAsync_WhenFileIsCorrupt_ReturnsNullAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();
@@ -92,7 +136,55 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
 
         await File.WriteAllTextAsync(
             path: filePath,
-            contents: "this is not valid json",
+            contents: "this is not valid binary format",
+            cancellationToken: cancellationToken
+        );
+
+        (JsonMetadata metadata, string content)? result = await this._jsonStorage.LoadAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task LoadMetadataAsync_WhenFileIsCorrupt_ReturnsNullAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+        Uri requestUri = new("https://api.nuget.org/v3/corrupted-meta.json");
+
+        string dir = Path.Combine(path1: this.TempFolder, path2: "api.nuget.org/v3");
+        Directory.CreateDirectory(dir);
+        string filePath = Path.Combine(path1: dir, path2: "corrupted-meta.json");
+
+        await File.WriteAllTextAsync(
+            path: filePath,
+            contents: "this is not valid binary format",
+            cancellationToken: cancellationToken
+        );
+
+        JsonMetadata? result = await this._jsonStorage.LoadMetadataAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenFileHasOldJsonFormat_ReturnsNullAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+        Uri requestUri = new("https://api.nuget.org/v3/oldfmt.json");
+
+        string dir = Path.Combine(path1: this.TempFolder, path2: "api.nuget.org/v3");
+        Directory.CreateDirectory(dir);
+        string filePath = Path.Combine(path1: dir, path2: "oldfmt.json");
+
+        await File.WriteAllTextAsync(
+            path: filePath,
+            contents: """{"etag":"\"e\"","size":3,"contentType":"application/json","content":"abc"}""",
             cancellationToken: cancellationToken
         );
 
@@ -114,12 +206,14 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
         Directory.CreateDirectory(dir);
         string filePath = Path.Combine(path1: dir, path2: "whitespace.json");
 
-        string compressedWhitespace = await CompressToBase64UrlAsync("   ", cancellationToken);
-
-        string jsonItem =
-            $$$"""{"etag":"etag","size":3,"contentType":"application/json","content":"{{{compressedWhitespace}}}"}""";
-
-        await File.WriteAllTextAsync(path: filePath, contents: jsonItem, cancellationToken: cancellationToken);
+        await WriteBinaryFormatFileAsync(
+            filePath: filePath,
+            etag: "etag",
+            size: 3,
+            contentType: "application/json",
+            content: "   ",
+            cancellationToken: cancellationToken
+        );
 
         (JsonMetadata metadata, string content)? result = await this._jsonStorage.LoadAsync(
             requestUri: requestUri,
@@ -156,26 +250,6 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
     }
 
     [Fact]
-    public async Task LoadAsync_WhenDeserializedItemIsNull_ReturnsNullAsync()
-    {
-        CancellationToken cancellationToken = this.CancellationToken();
-        Uri requestUri = new("https://api.nuget.org/v3/nullitem.json");
-
-        string dir = Path.Combine(path1: this.TempFolder, path2: "api.nuget.org/v3");
-        Directory.CreateDirectory(dir);
-        string filePath = Path.Combine(path1: dir, path2: "nullitem.json");
-
-        await File.WriteAllTextAsync(path: filePath, contents: "null", cancellationToken: cancellationToken);
-
-        (JsonMetadata metadata, string content)? result = await this._jsonStorage.LoadAsync(
-            requestUri: requestUri,
-            cancellationToken: cancellationToken
-        );
-
-        Assert.Null(result);
-    }
-
-    [Fact]
     public async Task LoadAsync_WhenFileIsUnreadable_ReturnsNullAsync()
     {
         if (!OperatingSystem.IsLinux())
@@ -209,6 +283,39 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
     }
 
     [Fact]
+    public async Task LoadMetadataAsync_WhenFileIsUnreadable_ReturnsNullAsync()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        CancellationToken cancellationToken = this.CancellationToken();
+        Uri requestUri = new("https://api.nuget.org/v3/unreadable-meta.json");
+
+        string dir = Path.Combine(path1: this.TempFolder, path2: "api.nuget.org/v3");
+        Directory.CreateDirectory(dir);
+        string filePath = Path.Combine(path1: dir, path2: "unreadable-meta.json");
+
+        await File.WriteAllTextAsync(path: filePath, contents: "content", cancellationToken: cancellationToken);
+        File.SetUnixFileMode(path: filePath, mode: UnixFileMode.None);
+
+        try
+        {
+            JsonMetadata? result = await this._jsonStorage.LoadMetadataAsync(
+                requestUri: requestUri,
+                cancellationToken: cancellationToken
+            );
+
+            Assert.Null(result);
+        }
+        finally
+        {
+            File.SetUnixFileMode(path: filePath, mode: UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+    }
+
+    [Fact]
     public async Task LoadAsync_WhenCorruptFileCannotBeDeleted_ReturnsNullAsync()
     {
         if (!OperatingSystem.IsLinux())
@@ -223,7 +330,11 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
         Directory.CreateDirectory(dir);
         string filePath = Path.Combine(path1: dir, path2: "nodelete.json");
 
-        await File.WriteAllTextAsync(path: filePath, contents: "not valid json", cancellationToken: cancellationToken);
+        await File.WriteAllTextAsync(
+            path: filePath,
+            contents: "not valid binary format",
+            cancellationToken: cancellationToken
+        );
         File.SetUnixFileMode(path: dir, mode: UnixFileMode.UserRead | UnixFileMode.UserExecute);
 
         try
@@ -397,21 +508,33 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
         Assert.Equal(expected: ORIGINAL_CONTENT, actual: result.Value.content);
     }
 
-    private static async ValueTask<string> CompressToBase64UrlAsync(string source, CancellationToken cancellationToken)
+    private static async ValueTask WriteBinaryFormatFileAsync(
+        string filePath,
+        string etag,
+        long size,
+        string contentType,
+        string content,
+        CancellationToken cancellationToken
+    )
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(source);
+        byte[] magic = [(byte)'N', (byte)'G', (byte)'J', (byte)'B'];
+        const byte version = 1;
 
-        await using MemoryStream output = new();
+        string metaJson = $$$"""{"etag":"{{{etag}}}","size":{{{size}}},"contentType":"{{{contentType}}}"}""";
+        byte[] metaBytes = Encoding.UTF8.GetBytes(metaJson);
 
-        await using (MemoryStream input = new(buffer: bytes, writable: false))
-        {
-            await using BrotliStream stream = new(stream: output, compressionLevel: CompressionLevel.SmallestSize);
+        await using FileStream stream = File.Create(filePath);
+        await stream.WriteAsync(buffer: magic, cancellationToken: cancellationToken);
+        stream.WriteByte(version);
 
-            await input.CopyToAsync(destination: stream, cancellationToken: cancellationToken);
-        }
+        byte[] lengthBuffer = new byte[4];
+        BinaryPrimitives.WriteUInt32LittleEndian(destination: lengthBuffer, value: (uint)metaBytes.Length);
+        await stream.WriteAsync(buffer: lengthBuffer, cancellationToken: cancellationToken);
 
-        await output.FlushAsync(cancellationToken);
+        await stream.WriteAsync(buffer: metaBytes, cancellationToken: cancellationToken);
 
-        return Base64Url.EncodeToString(output.ToArray());
+        await using BrotliStream brotli = new(stream: stream, compressionLevel: CompressionLevel.Optimal);
+        await using StreamWriter writer = new(stream: brotli, encoding: Encoding.UTF8, leaveOpen: true);
+        await writer.WriteAsync(content.AsMemory(), cancellationToken);
     }
 }

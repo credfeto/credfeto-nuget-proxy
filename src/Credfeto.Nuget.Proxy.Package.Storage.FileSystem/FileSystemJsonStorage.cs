@@ -1,5 +1,5 @@
 using System;
-using System.Buffers.Text;
+using System.Buffers.Binary;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -19,6 +19,10 @@ namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 
 public sealed class FileSystemJsonStorage : IJsonStorage
 {
+    private static readonly byte[] Magic = [(byte)'N', (byte)'G', (byte)'J', (byte)'B'];
+    private const byte FormatVersion = 1;
+    private const int HeaderSize = 4 + 1 + 4;
+
     private readonly string _basePath;
     private readonly ILogger<FileSystemJsonStorage> _logger;
 
@@ -46,25 +50,25 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         {
             this.EnsureDirectoryExists(dir);
 
-            string compressed = await CompressAsync(source: jsonContent, cancellationToken: cancellationToken);
-
-            JsonItem item = new(
-                metadata.Etag ?? "",
-                size: jsonContent.Length,
-                metadata.ContentType ?? "",
-                content: compressed
+            byte[] metaBytes = SerializeMetadata(
+                new(
+                    etag: metadata.Etag ?? string.Empty,
+                    size: metadata.ContentLength,
+                    contentType: metadata.ContentType ?? string.Empty
+                )
             );
 
             tempPath = Path.Combine(dir, Path.GetRandomFileName());
 
             await using (Stream stream = File.Create(tempPath))
             {
-                await JsonSerializer.SerializeAsync(
-                    utf8Json: stream,
-                    value: item,
-                    jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
-                    cancellationToken: cancellationToken
-                );
+                WriteHeader(stream: stream, metaBytes: metaBytes);
+
+                await stream.WriteAsync(buffer: metaBytes, cancellationToken: cancellationToken);
+
+                await using BrotliStream brotli = new(stream: stream, compressionLevel: CompressionLevel.Optimal);
+                await using StreamWriter writer = new(stream: brotli, encoding: Encoding.UTF8, leaveOpen: true);
+                await writer.WriteAsync(jsonContent.AsMemory(), cancellationToken);
             }
 
             File.Move(sourceFileName: tempPath, destFileName: jsonPath, overwrite: true);
@@ -94,16 +98,41 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    public async ValueTask<(JsonMetadata metadata, string content)?> LoadAsync(
+    public ValueTask<JsonMetadata?> LoadMetadataAsync(Uri requestUri, CancellationToken cancellationToken)
+    {
+        (string jsonPath, _) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
+
+        return this.ReadFromCacheAsync(
+            jsonPath: jsonPath,
+            readAsync: ReadMetadataFromFileAsync,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public ValueTask<(JsonMetadata metadata, string content)?> LoadAsync(
         Uri requestUri,
         CancellationToken cancellationToken
     )
     {
         (string jsonPath, _) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
 
+        return this.ReadFromCacheAsync(
+            jsonPath: jsonPath,
+            readAsync: ReadFromFileAsync,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async ValueTask<T?> ReadFromCacheAsync<T>(
+        string jsonPath,
+        Func<string, CancellationToken, ValueTask<T?>> readAsync,
+        CancellationToken cancellationToken
+    )
+        where T : struct
+    {
         try
         {
-            return await ReadFromFileAsync(jsonPath: jsonPath, cancellationToken: cancellationToken);
+            return await readAsync(jsonPath, cancellationToken);
         }
         catch (FileNotFoundException)
         {
@@ -136,6 +165,23 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
+    private static async ValueTask<JsonMetadata?> ReadMetadataFromFileAsync(
+        string jsonPath,
+        CancellationToken cancellationToken
+    )
+    {
+        await using Stream stream = File.OpenRead(path: jsonPath);
+
+        JsonItem? item = await ReadHeaderAndMetadataAsync(stream: stream, cancellationToken: cancellationToken);
+
+        if (item is null)
+        {
+            return null;
+        }
+
+        return new JsonMetadata(Etag: item.Etag, ContentLength: item.Size, ContentType: item.ContentType);
+    }
+
     private static async ValueTask<(JsonMetadata metadata, string content)?> ReadFromFileAsync(
         string jsonPath,
         CancellationToken cancellationToken
@@ -143,21 +189,108 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     {
         await using Stream stream = File.OpenRead(path: jsonPath);
 
-        JsonItem? item = await JsonSerializer.DeserializeAsync(
-            utf8Json: stream,
-            jsonTypeInfo: FileSystemJsonContext.Default.JsonItem,
-            cancellationToken: cancellationToken
-        );
+        JsonItem? item = await ReadHeaderAndMetadataAsync(stream: stream, cancellationToken: cancellationToken);
 
         if (item is null)
         {
             return null;
         }
 
-        JsonMetadata metadata = new(Etag: item.Etag, ContentLength: item.Size, ContentType: item.ContentType);
-        string content = await DecompressAsync(source: item.Content, cancellationToken: cancellationToken);
+        string content = await DecompressBodyAsync(stream: stream, cancellationToken: cancellationToken);
 
-        return string.IsNullOrWhiteSpace(content) ? null : (metadata, content);
+        return string.IsNullOrWhiteSpace(content)
+            ? null
+            : (new JsonMetadata(Etag: item.Etag, ContentLength: item.Size, ContentType: item.ContentType), content);
+    }
+
+    private static async ValueTask<JsonItem?> ReadHeaderAndMetadataAsync(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
+    {
+        byte[] header = new byte[HeaderSize];
+
+        if (!await ReadExactAsync(stream: stream, buffer: header, cancellationToken: cancellationToken))
+        {
+            return null;
+        }
+
+        if (!IsMagicValid(header))
+        {
+            return null;
+        }
+
+        if (header[4] != FormatVersion)
+        {
+            return null;
+        }
+
+        uint metaLength = BinaryPrimitives.ReadUInt32LittleEndian(header.AsSpan(5));
+
+        if (metaLength > 1024 * 1024)
+        {
+            return null;
+        }
+
+        byte[] metaBytes = new byte[metaLength];
+
+        if (!await ReadExactAsync(stream: stream, buffer: metaBytes, cancellationToken: cancellationToken))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize(utf8Json: metaBytes, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem);
+    }
+
+    private static bool IsMagicValid(byte[] header)
+    {
+        return header[0] == Magic[0] && header[1] == Magic[1] && header[2] == Magic[2] && header[3] == Magic[3];
+    }
+
+    private static async ValueTask<bool> ReadExactAsync(
+        Stream stream,
+        byte[] buffer,
+        CancellationToken cancellationToken
+    )
+    {
+        int totalRead = 0;
+
+        while (totalRead < buffer.Length)
+        {
+            int read = await stream.ReadAsync(buffer: buffer.AsMemory(totalRead), cancellationToken: cancellationToken);
+
+            if (read == 0)
+            {
+                return false;
+            }
+
+            totalRead += read;
+        }
+
+        return true;
+    }
+
+    private static async ValueTask<string> DecompressBodyAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        await using BrotliStream brotli = new(stream: stream, mode: CompressionMode.Decompress, leaveOpen: true);
+        using StreamReader reader = new(stream: brotli, encoding: Encoding.UTF8, leaveOpen: true);
+
+        return await reader.ReadToEndAsync(cancellationToken);
+    }
+
+    private static byte[] SerializeMetadata(JsonItem item)
+    {
+        return JsonSerializer.SerializeToUtf8Bytes(value: item, jsonTypeInfo: FileSystemJsonContext.Default.JsonItem);
+    }
+
+    private static void WriteHeader(Stream stream, byte[] metaBytes)
+    {
+        stream.Write(buffer: Magic);
+        stream.WriteByte(FormatVersion);
+
+        Span<byte> lengthBuffer = stackalloc byte[4];
+        BinaryPrimitives.WriteUInt32LittleEndian(destination: lengthBuffer, value: (uint)metaBytes.Length);
+        stream.Write(buffer: lengthBuffer);
     }
 
     private void DeleteCorrupt(string jsonPath)
@@ -198,45 +331,6 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         catch (Exception exception)
         {
             this._logger.SaveFailed(filename: folder, message: exception.Message, exception: exception);
-        }
-    }
-
-    private static async ValueTask<string> CompressAsync(string source, CancellationToken cancellationToken)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(source);
-
-        await using (MemoryStream output = new())
-        {
-            await using (MemoryStream input = new(buffer: bytes, writable: false))
-            {
-                await using (BrotliStream stream = new(stream: output, compressionLevel: CompressionLevel.SmallestSize))
-                {
-                    await input.CopyToAsync(destination: stream, cancellationToken: cancellationToken);
-                }
-            }
-
-            await output.FlushAsync(cancellationToken);
-
-            return Base64Url.EncodeToString(output.ToArray());
-        }
-    }
-
-    private static async ValueTask<string> DecompressAsync(string source, CancellationToken cancellationToken)
-    {
-        byte[] bytes = Base64Url.DecodeFromChars(source);
-
-        await using (MemoryStream output = new())
-        {
-            await using (MemoryStream input = new(buffer: bytes, writable: true))
-            {
-                await using (BrotliStream stream = new(stream: input, mode: CompressionMode.Decompress))
-                {
-                    await stream.CopyToAsync(destination: output, cancellationToken: cancellationToken);
-                }
-
-                await output.FlushAsync(cancellationToken);
-                return Encoding.UTF8.GetString(output.ToArray());
-            }
         }
     }
 }
