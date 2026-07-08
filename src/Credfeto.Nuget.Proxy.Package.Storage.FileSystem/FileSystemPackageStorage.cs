@@ -30,12 +30,15 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 
         try
         {
-            if (!File.Exists(packagePath))
-            {
-                return null;
-            }
-
             return await File.ReadAllBytesAsync(path: packagePath, cancellationToken: cancellationToken);
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return null;
         }
         catch (Exception exception)
         {
@@ -53,14 +56,37 @@ public sealed class FileSystemPackageStorage : IPackageStorage
     {
         (string packagePath, string dir) = this.BuildPackagePath(path: sourcePath);
 
+        string? tempPath = null;
+
         try
         {
             this.EnsureDirectoryExists(dir);
-            await File.WriteAllBytesAsync(path: packagePath, bytes: buffer, cancellationToken: cancellationToken);
+            tempPath = Path.Combine(dir, Path.GetRandomFileName());
+            await File.WriteAllBytesAsync(path: tempPath, bytes: buffer, cancellationToken: cancellationToken);
+            File.Move(sourceFileName: tempPath, destFileName: packagePath, overwrite: true);
+            tempPath = null;
         }
         catch (Exception exception)
         {
             this._logger.SaveFailed(filename: packagePath, message: exception.Message, exception: exception);
+        }
+        finally
+        {
+            if (tempPath is not null)
+            {
+                try
+                {
+                    File.Delete(tempPath);
+                }
+                catch (Exception exception)
+                {
+                    this._logger.TempFileDeletionFailed(
+                        filename: tempPath,
+                        message: exception.Message,
+                        exception: exception
+                    );
+                }
+            }
         }
     }
 

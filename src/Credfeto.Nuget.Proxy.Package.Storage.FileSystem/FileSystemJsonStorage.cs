@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Buffers.Text;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -41,6 +40,8 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     {
         (string jsonPath, string dir) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
 
+        string? tempPath = null;
+
         try
         {
             this.EnsureDirectoryExists(dir);
@@ -54,7 +55,9 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                 content: compressed
             );
 
-            await using (Stream stream = File.OpenWrite(jsonPath))
+            tempPath = Path.Combine(dir, Path.GetRandomFileName());
+
+            await using (Stream stream = File.Create(tempPath))
             {
                 await JsonSerializer.SerializeAsync(
                     utf8Json: stream,
@@ -63,10 +66,31 @@ public sealed class FileSystemJsonStorage : IJsonStorage
                     cancellationToken: cancellationToken
                 );
             }
+
+            File.Move(sourceFileName: tempPath, destFileName: jsonPath, overwrite: true);
+            tempPath = null;
         }
         catch (Exception exception)
         {
             this._logger.SaveFailed(filename: jsonPath, message: exception.Message, exception: exception);
+        }
+        finally
+        {
+            if (tempPath is not null)
+            {
+                try
+                {
+                    File.Delete(tempPath);
+                }
+                catch (Exception exception)
+                {
+                    this._logger.TempFileDeletionFailed(
+                        filename: tempPath,
+                        message: exception.Message,
+                        exception: exception
+                    );
+                }
+            }
         }
     }
 
@@ -79,12 +103,15 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
         try
         {
-            if (!File.Exists(jsonPath))
-            {
-                return null;
-            }
-
             return await ReadFromFileAsync(jsonPath: jsonPath, cancellationToken: cancellationToken);
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return null;
         }
         catch (UnauthorizedAccessException exception)
         {
@@ -98,7 +125,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
         catch (Exception exception)
         {
-            DeleteCorrupt(jsonPath);
+            this.DeleteCorrupt(jsonPath);
             this._logger.FailedToReadFileFromCache(
                 filename: jsonPath,
                 message: exception.Message,
@@ -133,7 +160,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         return string.IsNullOrWhiteSpace(content) ? null : (metadata, content);
     }
 
-    private static void DeleteCorrupt(string jsonPath)
+    private void DeleteCorrupt(string jsonPath)
     {
         try
         {
@@ -141,7 +168,11 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
         catch (Exception exception)
         {
-            Debug.WriteLine($"Corrupt {exception.Message}");
+            this._logger.CorruptFileDeletionFailed(
+                filename: jsonPath,
+                message: exception.Message,
+                exception: exception
+            );
         }
     }
 
