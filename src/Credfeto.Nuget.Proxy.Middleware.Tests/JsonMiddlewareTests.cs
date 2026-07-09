@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -337,6 +337,186 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
         );
 
         Assert.Equal(expected: HttpStatusCode.OK, actual: response.StatusCode);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Returns304_WhenIfNoneMatchMatchesETagAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        const string ETAG = "\"abc123\"";
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpRequestMessage request = new(
+            method: HttpMethod.Get,
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative)
+        );
+        request.Headers.TryAddWithoutValidation(name: "If-None-Match", value: ETAG);
+        using HttpResponseMessage response = await client.SendAsync(
+            request: request,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.NotModified, actual: response.StatusCode);
+        string body = await response.Content.ReadAsStringAsync(cancellationToken);
+        Assert.Empty(body);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Returns304_WhenIfNoneMatchWeakMatchesStrongETagAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        const string ETAG = "\"abc123\"";
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpRequestMessage request = new(
+            method: HttpMethod.Get,
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative)
+        );
+        request.Headers.TryAddWithoutValidation(name: "If-None-Match", value: "W/" + ETAG);
+        using HttpResponseMessage response = await client.SendAsync(
+            request: request,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.NotModified, actual: response.StatusCode);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Returns304_WhenIfNoneMatchIsWildcardAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        const string ETAG = "\"abc123\"";
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpRequestMessage request = new(
+            method: HttpMethod.Get,
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative)
+        );
+        request.Headers.TryAddWithoutValidation(name: "If-None-Match", value: "*");
+        using HttpResponseMessage response = await client.SendAsync(
+            request: request,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.NotModified, actual: response.StatusCode);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Returns200_WhenIfNoneMatchDoesNotMatchAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        const string ETAG = "\"abc123\"";
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpRequestMessage request = new(
+            method: HttpMethod.Get,
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative)
+        );
+        request.Headers.TryAddWithoutValidation(name: "If-None-Match", value: "\"different\"");
+        using HttpResponseMessage response = await client.SendAsync(
+            request: request,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.OK, actual: response.StatusCode);
+        string body = await response.Content.ReadAsStringAsync(cancellationToken);
+        Assert.Equal(expected: JSON, actual: body);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Returns304_WithETagAndCacheControlHeadersAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        const string ETAG = "\"abc123\"";
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpRequestMessage request = new(
+            method: HttpMethod.Get,
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative)
+        );
+        request.Headers.TryAddWithoutValidation(name: "If-None-Match", value: ETAG);
+        using HttpResponseMessage response = await client.SendAsync(
+            request: request,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.NotModified, actual: response.StatusCode);
+        Assert.True(response.Headers.Contains("ETag"), userMessage: "ETag header should be present");
+        Assert.True(response.Headers.CacheControl?.Public, userMessage: "Cache-Control should be public");
+        Assert.True(
+            response.Headers.CacheControl?.MustRevalidate,
+            userMessage: "Cache-Control should require revalidation"
+        );
     }
 
     [Fact]
