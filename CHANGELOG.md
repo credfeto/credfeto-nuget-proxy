@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Enable trimmed publish for the service
 - Tests to achieve 100% line coverage across all testable projects
 - Enable Native AOT compilation for published service
+- Placeholder: Return 304 Not Modified from JsonMiddleware when If-None-Match matches the response ETag (#101)
 ### Fixed
 - Use EphemeralKeySet when loading HTTPS certificate to fix Docker container startup failure
 - Re-enabled Native AOT compilation and trimming by adding SuppressTrimAnalysisWarnings to suppress third-party IL2104 warnings blocking dotnet publish
