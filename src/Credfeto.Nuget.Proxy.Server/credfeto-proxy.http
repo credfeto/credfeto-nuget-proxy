@@ -20,6 +20,12 @@ Accept: application/json
 GET https://api.nuget.local:5555/v3/index.json
 Accept: application/json
 
-###  
+###
 GET {{credfeto_proxy_HostAddress}}/search/query?q=asyncfixer&skip=0&take=2147483647&prerelease=false&semVerLevel=2.0.0
 Accept: application/json
+
+###
+
+GET {{credfeto_proxy_HostAddress}}:/v3/index.json
+Accept: application/json
+If-None-Match: "replace-with-etag-from-previous-response"
