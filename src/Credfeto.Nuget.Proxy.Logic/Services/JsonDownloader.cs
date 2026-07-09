@@ -27,7 +27,12 @@ public sealed class JsonDownloader : IJsonDownloader
     private readonly IJsonStorage _jsonStorage;
     private readonly ILogger<JsonDownloader> _logger;
 
-    public JsonDownloader(IOptions<ProxyServerConfig> config, IHttpClientFactory httpClientFactory, IJsonStorage jsonStorage, ILogger<JsonDownloader> logger)
+    public JsonDownloader(
+        IOptions<ProxyServerConfig> config,
+        IHttpClientFactory httpClientFactory,
+        IJsonStorage jsonStorage,
+        ILogger<JsonDownloader> logger
+    )
     {
         this._config = config.Value;
         this._httpClientFactory = httpClientFactory;
@@ -35,61 +40,176 @@ public sealed class JsonDownloader : IJsonDownloader
         this._logger = logger;
     }
 
-    public async ValueTask<JsonResponse> ReadUpstreamAsync(Uri requestUri, ProductInfoHeaderValue? userAgent, CancellationToken cancellationToken)
+    public async ValueTask<JsonResponse> ReadUpstreamAsync(
+        Uri requestUri,
+        ProductInfoHeaderValue? userAgent,
+        CancellationToken cancellationToken
+    )
     {
         HttpClient client = this.GetClient(userAgent);
 
-        (JsonMetadata metadata, string content)? cached = await this._jsonStorage.LoadAsync(requestUri: requestUri, cancellationToken: cancellationToken);
+        JsonMetadata? cachedMetadata = await this._jsonStorage.LoadMetadataAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
 
-        if (cached is not null && !string.IsNullOrWhiteSpace(cached.Value.metadata.Etag))
+        if (cachedMetadata.HasValue && !string.IsNullOrWhiteSpace(cachedMetadata.Value.Etag))
         {
-            this._logger.PreviouslyCached(upstream: requestUri, etag: cached.Value.metadata.Etag);
-            AddEtag(client: client, cached: cached.Value.metadata);
+            this._logger.PreviouslyCached(upstream: requestUri, etag: cachedMetadata.Value.Etag);
+            AddEtag(client: client, cached: cachedMetadata.Value);
         }
 
-        using (HttpResponseMessage result = await client.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken))
-        {
-            if (cached is not null && result.StatusCode == HttpStatusCode.NotModified)
-            {
-                this._logger.ReturningCached(upstream: requestUri, metadata: cached.Value.metadata, httpStatus: result.StatusCode);
+        using HttpResponseMessage result = await client.GetAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
 
-                // ! Should always have ETag at this point
-                return new JsonResponse(Json: cached.Value.content, ETag: cached.Value.metadata.Etag!);
-            }
-
-            if (!result.IsSuccessStatusCode)
-            {
-                return Failed(requestUri: requestUri, resultStatusCode: result.StatusCode);
-            }
-
-            string? eTag = ExtractHeaderValue(headers: result.Headers, name: "ETag");
-
-            if (cached is not null && !string.IsNullOrEmpty(cached.Value.metadata.Etag) && !string.IsNullOrWhiteSpace(eTag) && StringComparer.Ordinal.Equals(x: eTag, y: cached.Value.metadata.Etag))
-            {
-                this._logger.ReturningCached(upstream: requestUri, metadata: cached.Value.metadata, httpStatus: result.StatusCode);
-
-                return new JsonResponse(Json: cached.Value.content, ETag: cached.Value.metadata.Etag);
-            }
-
-            string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
-
-            JsonMetadata jsonMetadata = LoadMetadata(result: result, eTag: eTag, contentLength: json.Length);
-
-            this._logger.Metadata(upstream: requestUri, metadata: jsonMetadata, httpStatus: result.StatusCode);
-
-            await this.SaveToCacheAsync(requestUri: requestUri, jsonMetadata: jsonMetadata, json: json, cancellationToken: cancellationToken);
-
-            return new (Json: json, ETag:
-                        string.IsNullOrEmpty(jsonMetadata.Etag)
-                        ? HashJson(json)
-                        : jsonMetadata.Etag);
-        }
+        return await this.BuildResponseAsync(
+            requestUri: requestUri,
+            cachedMetadata: cachedMetadata,
+            result: result,
+            cancellationToken: cancellationToken
+        );
     }
 
-    private static  string HashJson(string json)
+    private async ValueTask<JsonResponse> BuildResponseAsync(
+        Uri requestUri,
+        JsonMetadata? cachedMetadata,
+        HttpResponseMessage result,
+        CancellationToken cancellationToken
+    )
     {
-        return Base64Url.EncodeToString(
-        SHA512.HashData(Encoding.UTF8.GetBytes(json)));
+        if (result.StatusCode == HttpStatusCode.NotModified)
+        {
+            JsonResponse? notModified = await this.TryBuildCachedResponseAsync(
+                requestUri: requestUri,
+                httpStatus: result.StatusCode,
+                cancellationToken: cancellationToken
+            );
+
+            if (notModified is not null)
+            {
+                return notModified.Value;
+            }
+        }
+
+        if (!result.IsSuccessStatusCode)
+        {
+            return Failed(requestUri: requestUri, resultStatusCode: result.StatusCode);
+        }
+
+        string? eTag = ExtractHeaderValue(headers: result.Headers, name: "ETag");
+
+        if (cachedMetadata.HasValue)
+        {
+            string? matchedETag = GetMatchedETag(cachedMetadata: cachedMetadata.Value, eTag: eTag);
+
+            if (matchedETag is not null)
+            {
+                JsonResponse? eTagMatch = await this.TryBuildCachedResponseOnETagMatchAsync(
+                    requestUri: requestUri,
+                    cachedMetadata: cachedMetadata.Value,
+                    cachedETag: matchedETag,
+                    httpStatus: result.StatusCode,
+                    cancellationToken: cancellationToken
+                );
+
+                if (eTagMatch is not null)
+                {
+                    return eTagMatch.Value;
+                }
+            }
+        }
+
+        return await this.DownloadAndCacheAsync(
+            requestUri: requestUri,
+            result: result,
+            eTag: eTag,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async ValueTask<JsonResponse?> TryBuildCachedResponseAsync(
+        Uri requestUri,
+        HttpStatusCode httpStatus,
+        CancellationToken cancellationToken
+    )
+    {
+        (JsonMetadata metadata, string content)? cached = await this._jsonStorage.LoadAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        if (cached is null)
+        {
+            return null;
+        }
+
+        this._logger.ReturningCached(upstream: requestUri, metadata: cached.Value.metadata, httpStatus: httpStatus);
+
+        // ! Should always have ETag at this point
+        return new JsonResponse(Json: cached.Value.content, ETag: cached.Value.metadata.Etag!);
+    }
+
+    private async ValueTask<JsonResponse?> TryBuildCachedResponseOnETagMatchAsync(
+        Uri requestUri,
+        JsonMetadata cachedMetadata,
+        string cachedETag,
+        HttpStatusCode httpStatus,
+        CancellationToken cancellationToken
+    )
+    {
+        (JsonMetadata metadata, string content)? cached = await this._jsonStorage.LoadAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        if (cached is null)
+        {
+            return null;
+        }
+
+        this._logger.ReturningCached(upstream: requestUri, metadata: cachedMetadata, httpStatus: httpStatus);
+
+        return new JsonResponse(Json: cached.Value.content, ETag: cachedETag);
+    }
+
+    private static string? GetMatchedETag(in JsonMetadata cachedMetadata, string? eTag)
+    {
+        if (string.IsNullOrEmpty(cachedMetadata.Etag) || string.IsNullOrWhiteSpace(eTag))
+        {
+            return null;
+        }
+
+        return StringComparer.Ordinal.Equals(x: eTag, y: cachedMetadata.Etag) ? cachedMetadata.Etag : null;
+    }
+
+    private async ValueTask<JsonResponse> DownloadAndCacheAsync(
+        Uri requestUri,
+        HttpResponseMessage result,
+        string? eTag,
+        CancellationToken cancellationToken
+    )
+    {
+        string json = await result.Content.ReadAsStringAsync(cancellationToken: cancellationToken);
+
+        JsonMetadata jsonMetadata = LoadMetadata(result: result, eTag: eTag, contentLength: json.Length);
+
+        this._logger.Metadata(upstream: requestUri, metadata: jsonMetadata, httpStatus: result.StatusCode);
+
+        await this.SaveToCacheAsync(
+            requestUri: requestUri,
+            jsonMetadata: jsonMetadata,
+            json: json,
+            cancellationToken: cancellationToken
+        );
+
+        return new(Json: json, ETag: string.IsNullOrEmpty(jsonMetadata.Etag) ? HashJson(json) : jsonMetadata.Etag);
+    }
+
+    private static string HashJson(string json)
+    {
+        return Base64Url.EncodeToString(SHA512.HashData(Encoding.UTF8.GetBytes(json)));
     }
 
     private static void AddEtag(HttpClient client, in JsonMetadata cached)
@@ -106,12 +226,15 @@ public sealed class JsonDownloader : IJsonDownloader
 
     private static string EnsureQuoted(string source)
     {
-        return source.StartsWith('"') && source.EndsWith('"')
-            ? source
-            : "\"" + source + "\"";
+        return source.StartsWith('"') && source.EndsWith('"') ? source : "\"" + source + "\"";
     }
 
-    private async ValueTask SaveToCacheAsync(Uri requestUri, JsonMetadata jsonMetadata, string json, CancellationToken cancellationToken)
+    private async ValueTask SaveToCacheAsync(
+        Uri requestUri,
+        JsonMetadata jsonMetadata,
+        string json,
+        CancellationToken cancellationToken
+    )
     {
         if (string.IsNullOrWhiteSpace(jsonMetadata.Etag) || string.IsNullOrWhiteSpace(jsonMetadata.ContentType))
         {
@@ -123,7 +246,12 @@ public sealed class JsonDownloader : IJsonDownloader
             return;
         }
 
-        await this._jsonStorage.SaveAsync(requestUri: requestUri, metadata: jsonMetadata, jsonContent: json, cancellationToken: cancellationToken);
+        await this._jsonStorage.SaveAsync(
+            requestUri: requestUri,
+            metadata: jsonMetadata,
+            jsonContent: json,
+            cancellationToken: cancellationToken
+        );
     }
 
     private static JsonMetadata LoadMetadata(HttpResponseMessage result, string? eTag, long contentLength)
@@ -136,14 +264,19 @@ public sealed class JsonDownloader : IJsonDownloader
     [DoesNotReturn]
     private static JsonResponse Failed(Uri requestUri, HttpStatusCode resultStatusCode)
     {
-        throw new HttpRequestException($"Failed to download {requestUri}: {resultStatusCode.GetName()}", inner: null, statusCode: resultStatusCode);
+        throw new HttpRequestException(
+            $"Failed to download {requestUri}: {resultStatusCode.GetName()}",
+            inner: null,
+            statusCode: resultStatusCode
+        );
     }
 
     private HttpClient GetClient(ProductInfoHeaderValue? userAgent)
     {
-        return this._httpClientFactory.CreateClient(HttpClientNames.Json)
-                   .WithBaseAddress(new(this._config.UpstreamUrls[0]))
-                   .WithUserAgent(userAgent);
+        return this
+            ._httpClientFactory.CreateClient(HttpClientNames.Json)
+            .WithBaseAddress(new(this._config.UpstreamUrls[0]))
+            .WithUserAgent(userAgent);
     }
 
     private static string? ExtractHeaderValue(HttpResponseHeaders headers, string name)

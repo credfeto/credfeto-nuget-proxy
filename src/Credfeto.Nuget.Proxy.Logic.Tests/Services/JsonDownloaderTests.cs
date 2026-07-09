@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -39,8 +39,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
-        this._jsonStorage.LoadAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>())
-            .Returns(default((JsonMetadata metadata, string content)?));
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: null);
 
         using TestHttpMessageHandler handler = new(CreateJsonResponse(SAMPLE_JSON, etag: "\"etag1\""));
         using HttpClient client = new(handler);
@@ -61,8 +60,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
-        this._jsonStorage.LoadAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>())
-            .Returns(default((JsonMetadata metadata, string content)?));
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: null);
 
         using TestHttpMessageHandler handler = new(CreateJsonResponse(SAMPLE_JSON, etag: "\"etag2\""));
         using HttpClient client = new(handler);
@@ -84,13 +82,14 @@ public sealed class JsonDownloaderTests : LoggingTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
+        const string ETAG = "\"etag-cached\"";
         JsonMetadata cachedMetadata = new(
-            Etag: "\"etag-cached\"",
+            Etag: ETAG,
             ContentLength: SAMPLE_JSON.Length,
             ContentType: "application/json"
         );
-        this._jsonStorage.LoadAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>())
-            .Returns((cachedMetadata, SAMPLE_JSON));
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: cachedMetadata);
+        MockJsonStorageLoadResult(storage: this._jsonStorage, result: (cachedMetadata, SAMPLE_JSON));
 
         using TestHttpMessageHandler handler = new(new HttpResponseMessage(HttpStatusCode.NotModified));
         using HttpClient client = new(handler);
@@ -103,7 +102,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         );
 
         Assert.Equal(expected: SAMPLE_JSON, actual: result.Json);
-        Assert.Equal(expected: "\"etag-cached\"", actual: result.ETag);
+        Assert.Equal(expected: ETAG, actual: result.ETag);
     }
 
     [Fact]
@@ -117,8 +116,8 @@ public sealed class JsonDownloaderTests : LoggingTestBase
             ContentLength: SAMPLE_JSON.Length,
             ContentType: "application/json"
         );
-        this._jsonStorage.LoadAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>())
-            .Returns((cachedMetadata, SAMPLE_JSON));
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: cachedMetadata);
+        MockJsonStorageLoadResult(storage: this._jsonStorage, result: (cachedMetadata, SAMPLE_JSON));
 
         using TestHttpMessageHandler handler = new(CreateJsonResponse(SAMPLE_JSON, etag: ETAG));
         using HttpClient client = new(handler);
@@ -139,8 +138,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
-        this._jsonStorage.LoadAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>())
-            .Returns(default((JsonMetadata metadata, string content)?));
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: null);
 
         using TestHttpMessageHandler handler = new(CreateJsonResponse(SAMPLE_JSON, etag: null));
         using HttpClient client = new(handler);
@@ -161,8 +159,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
-        this._jsonStorage.LoadAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>())
-            .Returns(default((JsonMetadata metadata, string content)?));
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: null);
 
         using TestHttpMessageHandler handler = new(new HttpResponseMessage(HttpStatusCode.NotFound));
         using HttpClient client = new(handler);
@@ -186,8 +183,8 @@ public sealed class JsonDownloaderTests : LoggingTestBase
             ContentLength: SAMPLE_JSON.Length,
             ContentType: "application/json"
         );
-        this._jsonStorage.LoadAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>())
-            .Returns((cachedMetadata, SAMPLE_JSON));
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: cachedMetadata);
+        MockJsonStorageLoadResult(storage: this._jsonStorage, result: null);
 
         const string NEW_JSON = """{"version":"3.0.1"}""";
         const string NEW_ETAG = "\"new-etag\"";
@@ -203,6 +200,18 @@ public sealed class JsonDownloaderTests : LoggingTestBase
 
         Assert.Equal(expected: NEW_JSON, actual: result.Json);
         Assert.Equal(expected: NEW_ETAG, actual: result.ETag);
+    }
+
+    private static void MockJsonStorageLoadMetadata(IJsonStorage storage, JsonMetadata? result)
+    {
+        storage
+            .LoadMetadataAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(result);
+    }
+
+    private static void MockJsonStorageLoadResult(IJsonStorage storage, (JsonMetadata metadata, string content)? result)
+    {
+        storage.LoadAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>()).Returns(result);
     }
 
     private IJsonDownloader CreateDownloader(HttpClient client)
