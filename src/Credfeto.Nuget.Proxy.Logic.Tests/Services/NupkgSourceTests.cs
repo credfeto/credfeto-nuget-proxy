@@ -1,7 +1,12 @@
-﻿using System.Net.Http.Headers;
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
+using Credfeto.Nuget.Proxy.Logic.Services;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Package.Storage.Interfaces;
 using FunFair.Test.Common;
@@ -29,11 +34,11 @@ public sealed class NupkgSourceTests : LoggingTestBase
         this._packageStorage = GetSubstitute<IPackageStorage>();
         this._packageDownloader = GetSubstitute<IPackageDownloader>();
 
-        this._nupkgSource = new Credfeto.Nuget.Proxy.Logic.Services.NupkgSource(
+        this._nupkgSource = new NupkgSource(
             Options.Create(Config),
             this._packageStorage,
             this._packageDownloader,
-            this.GetTypedLogger<Credfeto.Nuget.Proxy.Logic.Services.NupkgSource>()
+            this.GetTypedLogger<NupkgSource>()
         );
     }
 
@@ -57,20 +62,32 @@ public sealed class NupkgSourceTests : LoggingTestBase
         CancellationToken cancellationToken = this.CancellationToken();
 
         byte[] data = [1, 2, 3, 4];
-        this._packageStorage.ReadFileAsync(
-                sourcePath: Arg.Any<string>(),
-                cancellationToken: Arg.Any<CancellationToken>()
-            )
-            .Returns(data);
+        string cachedFilePath = Path.GetTempFileName();
 
-        PackageResult? result = await this._nupkgSource.GetFromUpstreamAsync(
-            path: "/packages/test/1.0.0/test.1.0.0.nupkg",
-            userAgent: null,
-            cancellationToken: cancellationToken
-        );
+        try
+        {
+            await File.WriteAllBytesAsync(cachedFilePath, data, cancellationToken);
 
-        Assert.NotNull(result);
-        Assert.Equal(expected: data, actual: result.Value.Data);
+            this._packageStorage.ReadFileAsync(
+                    sourcePath: Arg.Any<string>(),
+                    cancellationToken: Arg.Any<CancellationToken>()
+                )
+                .Returns(cachedFilePath);
+
+            await using PackageResult? result = await this._nupkgSource.GetFromUpstreamAsync(
+                path: "/packages/test/1.0.0/test.1.0.0.nupkg",
+                userAgent: null,
+                cancellationToken: cancellationToken
+            );
+
+            Assert.NotNull(result);
+            Assert.Equal(expected: cachedFilePath, actual: result.CachedFilePath);
+            Assert.Equal(expected: data.Length, actual: result.ContentLength);
+        }
+        finally
+        {
+            File.Delete(cachedFilePath);
+        }
     }
 
     [Fact]
@@ -84,29 +101,51 @@ public sealed class NupkgSourceTests : LoggingTestBase
                 sourcePath: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
-            .Returns((byte[]?)null);
+            .Returns((string?)null);
+
+        using HttpResponseMessage httpResponse = new(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(downloadedData),
+        };
+        UpstreamPackageResponse upstream = await UpstreamPackageResponse.CreateAsync(httpResponse, cancellationToken);
 
         this._packageDownloader.ReadUpstreamAsync(
-                requestUri: Arg.Any<System.Uri>(),
+                requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
-            .Returns(downloadedData);
+            .Returns(upstream);
 
-        PackageResult? result = await this._nupkgSource.GetFromUpstreamAsync(
+        this._packageStorage.SaveFileAsync(
+                sourcePath: Arg.Any<string>(),
+                content: Arg.Any<Stream>(),
+                contentLength: Arg.Any<long?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(callInfo => callInfo.ArgAt<Stream>(1));
+
+        await using PackageResult? result = await this._nupkgSource.GetFromUpstreamAsync(
             path: "/packages/test/1.0.0/test.1.0.0.nupkg",
             userAgent: null,
             cancellationToken: cancellationToken
         );
 
         Assert.NotNull(result);
-        Assert.Equal(expected: downloadedData, actual: result.Value.Data);
+        Assert.Equal(expected: downloadedData.Length, actual: result.ContentLength);
 
-        await this
+        Stream? upstreamStream = result.UpstreamStream;
+        Assert.NotNull(upstreamStream);
+
+        await using MemoryStream buffer = new();
+        await upstreamStream.CopyToAsync(buffer, cancellationToken);
+        Assert.Equal(expected: downloadedData, actual: buffer.ToArray());
+
+        await using Stream verifyStream = await this
             ._packageStorage.Received(1)
             .SaveFileAsync(
                 sourcePath: Arg.Any<string>(),
-                buffer: Arg.Any<byte[]>(),
+                content: Arg.Any<Stream>(),
+                contentLength: Arg.Any<long?>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             );
     }

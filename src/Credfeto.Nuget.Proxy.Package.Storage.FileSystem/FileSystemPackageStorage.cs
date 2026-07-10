@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,13 +25,28 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         this.EnsureDirectoryExists(this._basePath);
     }
 
-    public async ValueTask<byte[]?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
+    public async ValueTask<string?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
     {
         (string packagePath, _) = this.BuildPackagePath(path: sourcePath);
 
         try
         {
-            return await File.ReadAllBytesAsync(path: packagePath, cancellationToken: cancellationToken);
+            await using (
+                FileStream stream = new(
+                    path: packagePath,
+                    mode: FileMode.Open,
+                    access: FileAccess.Read,
+                    share: FileShare.Read,
+                    bufferSize: 1,
+                    useAsync: true
+                )
+            )
+            {
+                // Opened purely to validate the file exists and is readable, without buffering its contents.
+                _ = stream.Length;
+            }
+
+            return packagePath;
         }
         catch (FileNotFoundException)
         {
@@ -52,41 +68,49 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    public async ValueTask SaveFileAsync(string sourcePath, byte[] buffer, CancellationToken cancellationToken)
+    [SuppressMessage(
+        category: "Microsoft.Reliability",
+        checkId: "CA2000: Dispose objects before losing scope",
+        Justification = "Ownership of the returned tee stream transfers to the caller, who disposes it"
+    )]
+    public ValueTask<Stream> SaveFileAsync(
+        string sourcePath,
+        Stream content,
+        long? contentLength,
+        CancellationToken cancellationToken
+    )
     {
         (string packagePath, string dir) = this.BuildPackagePath(path: sourcePath);
-
-        string? tempPath = null;
 
         try
         {
             this.EnsureDirectoryExists(dir);
-            tempPath = Path.Combine(dir, Path.GetRandomFileName());
-            await File.WriteAllBytesAsync(path: tempPath, bytes: buffer, cancellationToken: cancellationToken);
-            File.Move(sourceFileName: tempPath, destFileName: packagePath, overwrite: true);
-            tempPath = null;
+            string tempPath = Path.Combine(dir, Path.GetRandomFileName());
+
+            FileStream tempFileStream = new(
+                path: tempPath,
+                mode: FileMode.Create,
+                access: FileAccess.Write,
+                share: FileShare.None,
+                bufferSize: 4096,
+                useAsync: true
+            );
+
+            Stream tee = new CachingTeeStream(
+                source: content,
+                tempFileStream: tempFileStream,
+                tempPath: tempPath,
+                finalPath: packagePath,
+                logger: this._logger
+            );
+
+            return ValueTask.FromResult(tee);
         }
         catch (Exception exception)
         {
             this._logger.SaveFailed(filename: packagePath, message: exception.Message, exception: exception);
-        }
-        finally
-        {
-            if (tempPath is not null)
-            {
-                try
-                {
-                    File.Delete(tempPath);
-                }
-                catch (Exception exception)
-                {
-                    this._logger.TempFileDeletionFailed(
-                        filename: tempPath,
-                        message: exception.Message,
-                        exception: exception
-                    );
-                }
-            }
+
+            return ValueTask.FromResult(content);
         }
     }
 
