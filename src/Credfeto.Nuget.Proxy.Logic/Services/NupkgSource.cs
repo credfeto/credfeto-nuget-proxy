@@ -102,10 +102,15 @@ public sealed class NupkgSource : INupkgSource
             cancellationToken: cancellationToken
         );
 
+        // When caching fails, SaveFileAsync hands back the upstream content stream unwrapped; that
+        // stream's disposal is already owned by UpstreamPackageResponse, so it must not be disposed twice.
+        bool cachingSucceeded = !ReferenceEquals(cachingStream, upstream.Content);
+
         return PackageResult.FromUpstream(
             stream: cachingStream,
             contentLength: upstream.ContentLength,
-            additionalDisposable: upstream
+            additionalDisposable: upstream,
+            disposeStream: cachingSucceeded
         );
     }
 
