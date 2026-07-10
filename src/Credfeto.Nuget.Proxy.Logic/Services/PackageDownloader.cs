@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -39,7 +40,7 @@ public sealed class PackageDownloader : IPackageDownloader
         {
             if (!result.IsSuccessStatusCode)
             {
-                throw Failed(requestUri, result.StatusCode);
+                return Failed(requestUri, result.StatusCode);
             }
 
             return await UpstreamPackageResponse.CreateAsync(response: result, cancellationToken: cancellationToken);
@@ -51,9 +52,10 @@ public sealed class PackageDownloader : IPackageDownloader
         }
     }
 
-    private static HttpRequestException Failed(Uri requestUri, HttpStatusCode resultStatusCode)
+    [DoesNotReturn]
+    private static UpstreamPackageResponse Failed(Uri requestUri, HttpStatusCode resultStatusCode)
     {
-        return new(
+        throw new HttpRequestException(
             $"Failed to download {requestUri}: {resultStatusCode.GetName()}",
             inner: null,
             statusCode: resultStatusCode
