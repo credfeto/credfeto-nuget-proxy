@@ -1,9 +1,11 @@
-﻿using System;
+using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.Nuget.Proxy.Logic.Services;
 using Credfeto.Nuget.Proxy.Models.Config;
 using FunFair.Test.Common;
 using Microsoft.Extensions.Options;
@@ -37,18 +39,16 @@ public sealed class PackageDownloaderTests : LoggingTestBase
         IHttpClientFactory factory = Substitute.For<IHttpClientFactory>();
         factory.CreateClient(name: Arg.Any<string>()).Returns(client);
 
-        IPackageDownloader downloader = new Credfeto.Nuget.Proxy.Logic.Services.PackageDownloader(
-            Options.Create(Config),
-            factory
-        );
+        IPackageDownloader downloader = new PackageDownloader(Options.Create(Config), factory);
 
-        byte[] result = await downloader.ReadUpstreamAsync(
+        await using UpstreamPackageResponse result = await downloader.ReadUpstreamAsync(
             requestUri: new Uri("https://api.nuget.org/packages/test.1.0.0.nupkg"),
             userAgent: null,
             cancellationToken: cancellationToken
         );
 
-        Assert.Equal(expected: expected, actual: result);
+        Assert.Equal(expected: expected.Length, actual: result.ContentLength);
+        Assert.Equal(expected: expected, actual: await ReadAllAsync(result.Content, cancellationToken));
     }
 
     [Fact]
@@ -65,20 +65,17 @@ public sealed class PackageDownloaderTests : LoggingTestBase
         IHttpClientFactory factory = Substitute.For<IHttpClientFactory>();
         factory.CreateClient(name: Arg.Any<string>()).Returns(client);
 
-        IPackageDownloader downloader = new Credfeto.Nuget.Proxy.Logic.Services.PackageDownloader(
-            Options.Create(Config),
-            factory
-        );
+        IPackageDownloader downloader = new PackageDownloader(Options.Create(Config), factory);
 
         ProductInfoHeaderValue userAgent = new(productName: "MyClient", productVersion: "1.0");
 
-        byte[] result = await downloader.ReadUpstreamAsync(
+        await using UpstreamPackageResponse result = await downloader.ReadUpstreamAsync(
             requestUri: new Uri("https://api.nuget.org/packages/test.1.0.0.nupkg"),
             userAgent: userAgent,
             cancellationToken: cancellationToken
         );
 
-        Assert.Equal(expected: expected, actual: result);
+        Assert.Equal(expected: expected, actual: await ReadAllAsync(result.Content, cancellationToken));
     }
 
     [Fact]
@@ -91,10 +88,7 @@ public sealed class PackageDownloaderTests : LoggingTestBase
         IHttpClientFactory factory = Substitute.For<IHttpClientFactory>();
         factory.CreateClient(name: Arg.Any<string>()).Returns(client);
 
-        IPackageDownloader downloader = new Credfeto.Nuget.Proxy.Logic.Services.PackageDownloader(
-            Options.Create(Config),
-            factory
-        );
+        IPackageDownloader downloader = new PackageDownloader(Options.Create(Config), factory);
 
         await Assert.ThrowsAsync<HttpRequestException>(() =>
             downloader
@@ -105,6 +99,14 @@ public sealed class PackageDownloaderTests : LoggingTestBase
                 )
                 .AsTask()
         );
+    }
+
+    private static async Task<byte[]> ReadAllAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        await using MemoryStream buffer = new();
+        await stream.CopyToAsync(buffer, cancellationToken);
+
+        return buffer.ToArray();
     }
 
     private sealed class TestHttpMessageHandler : HttpMessageHandler
