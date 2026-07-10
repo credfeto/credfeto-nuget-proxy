@@ -27,6 +27,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Microsoft.Extensions to 10.0.8
 - SDK - Updated DotNet SDK to 10.0.301
 - perf: Replace JSON+Base64Url cache format with binary format to eliminate per-request decompression overhead
+- perf: Stream .nupkg package downloads and cache reads instead of buffering whole files in memory (#100)
 ### Removed
 - Serilog.Enrichers.Demystifier as Ben.Demystifier is incompatible with Native AOT (IL2104/IL3000/IL3002)
 ### Deployment Changes
