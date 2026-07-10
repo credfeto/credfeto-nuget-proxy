@@ -37,7 +37,7 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
-        byte[]? result = await this._packageStorage.ReadFileAsync(
+        string? result = await this._packageStorage.ReadFileAsync(
             sourcePath: "doesnotexist",
             cancellationToken: cancellationToken
         );
@@ -56,13 +56,13 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
             cancellationToken: cancellationToken
         );
 
-        byte[]? result = await this._packageStorage.ReadFileAsync(
+        string? result = await this._packageStorage.ReadFileAsync(
             sourcePath: "file.txt",
             cancellationToken: cancellationToken
         );
 
         Assert.NotNull(result);
-        Assert.Equal(expected: 4, actual: result.Length);
+        Assert.Equal(expected: 4, actual: new FileInfo(result).Length);
     }
 
     [Fact]
@@ -72,19 +72,15 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
 
         byte[] content = [1, 2, 3, 4, 5];
 
-        await this._packageStorage.SaveFileAsync(
-            sourcePath: "saved.nupkg",
-            buffer: content,
-            cancellationToken: cancellationToken
-        );
+        await this.SaveAndDrainAsync(sourcePath: "saved.nupkg", content: content, cancellationToken: cancellationToken);
 
-        byte[]? result = await this._packageStorage.ReadFileAsync(
+        string? result = await this._packageStorage.ReadFileAsync(
             sourcePath: "saved.nupkg",
             cancellationToken: cancellationToken
         );
 
         Assert.NotNull(result);
-        Assert.Equal(expected: content, actual: result);
+        Assert.Equal(expected: content, actual: await File.ReadAllBytesAsync(result, cancellationToken));
     }
 
     [Fact]
@@ -103,7 +99,7 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
 
         try
         {
-            byte[]? result = await this._packageStorage.ReadFileAsync(
+            string? result = await this._packageStorage.ReadFileAsync(
                 sourcePath: "unreadable.nupkg",
                 cancellationToken: cancellationToken
             );
@@ -132,11 +128,16 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
 
         try
         {
-            await this._packageStorage.SaveFileAsync(
+            await using MemoryStream content = new([1, 2, 3]);
+
+            await using Stream result = await this._packageStorage.SaveFileAsync(
                 sourcePath: "readonly-dir/test.nupkg",
-                buffer: [1, 2, 3],
+                content: content,
+                contentLength: 3,
                 cancellationToken: cancellationToken
             );
+
+            Assert.Same(expected: content, actual: result);
         }
         finally
         {
@@ -199,28 +200,27 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
         byte[] content2 = [6, 7, 8, 9, 10];
 
         await Task.WhenAll(
-            this._packageStorage.SaveFileAsync(
-                    sourcePath: "concurrent.nupkg",
-                    buffer: content1,
-                    cancellationToken: cancellationToken
-                )
-                .AsTask(),
-            this._packageStorage.SaveFileAsync(
-                    sourcePath: "concurrent.nupkg",
-                    buffer: content2,
-                    cancellationToken: cancellationToken
-                )
-                .AsTask()
+            this.SaveAndDrainAsync(
+                sourcePath: "concurrent.nupkg",
+                content: content1,
+                cancellationToken: cancellationToken
+            ),
+            this.SaveAndDrainAsync(
+                sourcePath: "concurrent.nupkg",
+                content: content2,
+                cancellationToken: cancellationToken
+            )
         );
 
-        byte[]? result = await this._packageStorage.ReadFileAsync(
+        string? result = await this._packageStorage.ReadFileAsync(
             sourcePath: "concurrent.nupkg",
             cancellationToken: cancellationToken
         );
 
         Assert.NotNull(result);
+        byte[] resultBytes = await File.ReadAllBytesAsync(result, cancellationToken);
         Assert.True(
-            condition: result.SequenceEqual(content1) || result.SequenceEqual(content2),
+            condition: resultBytes.SequenceEqual(content1) || resultBytes.SequenceEqual(content2),
             userMessage: "Concurrent writes must not produce a corrupt mix of both payloads"
         );
     }
@@ -232,27 +232,46 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
 
         byte[] original = [1, 2, 3, 4, 5];
 
-        await this._packageStorage.SaveFileAsync(
+        await this.SaveAndDrainAsync(
             sourcePath: "preserve.nupkg",
-            buffer: original,
+            content: original,
             cancellationToken: cancellationToken
         );
 
         using CancellationTokenSource cts = new();
         await cts.CancelAsync();
 
-        await this._packageStorage.SaveFileAsync(
+        await using MemoryStream cancelledContent = new([6, 7, 8, 9, 10]);
+
+        await using Stream cancelledTee = await this._packageStorage.SaveFileAsync(
             sourcePath: "preserve.nupkg",
-            buffer: [6, 7, 8, 9, 10],
+            content: cancelledContent,
+            contentLength: 5,
             cancellationToken: cts.Token
         );
 
-        byte[]? result = await this._packageStorage.ReadFileAsync(
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelledTee.CopyToAsync(Stream.Null, cts.Token));
+
+        string? result = await this._packageStorage.ReadFileAsync(
             sourcePath: "preserve.nupkg",
             cancellationToken: cancellationToken
         );
 
         Assert.NotNull(result);
-        Assert.Equal(expected: original, actual: result);
+        Assert.Equal(expected: original, actual: await File.ReadAllBytesAsync(result, cancellationToken));
+    }
+
+    private async Task SaveAndDrainAsync(string sourcePath, byte[] content, CancellationToken cancellationToken)
+    {
+        await using MemoryStream source = new(content);
+
+        await using Stream tee = await this._packageStorage.SaveFileAsync(
+            sourcePath: sourcePath,
+            content: source,
+            contentLength: content.Length,
+            cancellationToken: cancellationToken
+        );
+
+        await tee.CopyToAsync(Stream.Null, cancellationToken);
     }
 }
