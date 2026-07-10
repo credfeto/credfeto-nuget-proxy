@@ -22,7 +22,7 @@ public sealed class PackageDownloader : IPackageDownloader
         this._httpClientFactory = httpClientFactory;
     }
 
-    public async ValueTask<byte[]> ReadUpstreamAsync(
+    public async ValueTask<UpstreamPackageResponse> ReadUpstreamAsync(
         Uri requestUri,
         ProductInfoHeaderValue? userAgent,
         CancellationToken cancellationToken
@@ -30,21 +30,30 @@ public sealed class PackageDownloader : IPackageDownloader
     {
         HttpClient client = this.GetClient(userAgent);
 
-        using (
-            HttpResponseMessage result = await client.GetAsync(
-                requestUri: requestUri,
-                cancellationToken: cancellationToken
-            )
-        )
+        HttpResponseMessage result = await client.GetAsync(
+            requestUri: requestUri,
+            completionOption: HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken: cancellationToken
+        );
+
+        try
         {
-            return !result.IsSuccessStatusCode
-                ? Failed(requestUri, result.StatusCode)
-                : await result.Content.ReadAsByteArrayAsync(cancellationToken: cancellationToken);
+            if (!result.IsSuccessStatusCode)
+            {
+                Failed(requestUri, result.StatusCode);
+            }
+
+            return await UpstreamPackageResponse.CreateAsync(response: result, cancellationToken: cancellationToken);
+        }
+        catch
+        {
+            result.Dispose();
+            throw;
         }
     }
 
     [DoesNotReturn]
-    private static byte[] Failed(Uri requestUri, HttpStatusCode resultStatusCode)
+    private static void Failed(Uri requestUri, HttpStatusCode resultStatusCode)
     {
         throw new HttpRequestException(
             $"Failed to download {requestUri}: {resultStatusCode.GetName()}",

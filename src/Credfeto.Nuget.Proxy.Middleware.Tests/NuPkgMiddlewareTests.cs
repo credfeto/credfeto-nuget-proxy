@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -185,7 +186,7 @@ public sealed class NuPkgMiddlewareTests : LoggingTestBase
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
-            .Returns(new PackageResult(Data: data));
+            .Returns(PackageResult.FromUpstream(new MemoryStream(data), data.Length));
 
         using IHost host = BuildHost(nupkgSource);
         await host.StartAsync(cancellationToken);
@@ -214,7 +215,7 @@ public sealed class NuPkgMiddlewareTests : LoggingTestBase
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
-            .Returns(new PackageResult(Data: data));
+            .Returns(PackageResult.FromUpstream(new MemoryStream(data), data.Length));
 
         using IHost host = BuildHost(nupkgSource);
         await host.StartAsync(cancellationToken);
