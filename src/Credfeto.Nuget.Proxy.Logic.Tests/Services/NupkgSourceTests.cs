@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Credfeto.Nuget.Proxy.Logic.Tests.Services;
 
-public sealed class NupkgSourceTests : LoggingTestBase
+public sealed class NupkgSourceTests : LoggingFolderCleanupTestBase
 {
     private static readonly ProxyServerConfig Config = new()
     {
@@ -62,32 +62,25 @@ public sealed class NupkgSourceTests : LoggingTestBase
         CancellationToken cancellationToken = this.CancellationToken();
 
         byte[] data = [1, 2, 3, 4];
-        string cachedFilePath = Path.GetTempFileName();
+        string cachedFilePath = Path.Combine(this.TempFolder, "cached.nupkg");
 
-        try
-        {
-            await File.WriteAllBytesAsync(cachedFilePath, data, cancellationToken);
+        await File.WriteAllBytesAsync(cachedFilePath, data, cancellationToken);
 
-            this._packageStorage.ReadFileAsync(
-                    sourcePath: Arg.Any<string>(),
-                    cancellationToken: Arg.Any<CancellationToken>()
-                )
-                .Returns(cachedFilePath);
+        this._packageStorage.ReadFileAsync(
+                sourcePath: Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(cachedFilePath);
 
-            await using PackageResult? result = await this._nupkgSource.GetFromUpstreamAsync(
-                path: "/packages/test/1.0.0/test.1.0.0.nupkg",
-                userAgent: null,
-                cancellationToken: cancellationToken
-            );
+        await using PackageResult? result = await this._nupkgSource.GetFromUpstreamAsync(
+            path: "/packages/test/1.0.0/test.1.0.0.nupkg",
+            userAgent: null,
+            cancellationToken: cancellationToken
+        );
 
-            Assert.NotNull(result);
-            Assert.Equal(expected: cachedFilePath, actual: result.CachedFilePath);
-            Assert.Equal(expected: data.Length, actual: result.ContentLength);
-        }
-        finally
-        {
-            File.Delete(cachedFilePath);
-        }
+        Assert.NotNull(result);
+        Assert.Equal(expected: cachedFilePath, actual: result.CachedFilePath);
+        Assert.Equal(expected: data.Length, actual: result.ContentLength);
     }
 
     [Fact]
