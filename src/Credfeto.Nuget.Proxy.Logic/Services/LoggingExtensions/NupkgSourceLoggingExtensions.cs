@@ -26,7 +26,7 @@ internal static partial class NupkgSourceLoggingExtensions
         this ILogger<NupkgSource> logger,
         Uri upstream,
         HttpStatusCode statusCode,
-        int length
+        long? length
     );
 
     [LoggerMessage(
