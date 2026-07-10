@@ -10,7 +10,7 @@ internal static partial class NuPkgMiddlewareLoggingExtensions
     public static partial void NoContent(this ILogger<NuPkgMiddleware> logger, string path);
 
     [LoggerMessage(LogLevel.Warning, EventId = 2, Message = "Found {path} from upstream of {length} bytes.")]
-    public static partial void FoundContent(this ILogger<NuPkgMiddleware> logger, string path, long length);
+    public static partial void FoundContent(this ILogger<NuPkgMiddleware> logger, string path, long? length);
 
     [LoggerMessage(
         LogLevel.Warning,
