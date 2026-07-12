@@ -1,4 +1,5 @@
 # credfeto-nuget-proxy
+
 Simple Caching NuGet proxy server
 
 Caches packages rather than metadata, but returns the metadata with caching headers so that an downstream cache can cache the responses for a longer time.
@@ -7,8 +8,8 @@ Rewrites the urls in the metadata for upstream urls to point to the public name 
 
 ## Build Status
 
-| Branch  | Status                                                                                                                                                                                                                                |
-|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Branch  | Status                                                                                                                                                                                                                                        |
+|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | main    | [![Build: Pre-Release](https://github.com/credfeto/credfeto-nuget-proxy/actions/workflows/build-and-publish-pre-release.yml/badge.svg)](https://github.com/credfeto/credfeto-nuget-proxy/actions/workflows/build-and-publish-pre-release.yml) |
 | release | [![Build: Release](https://github.com/credfeto/credfeto-nuget-proxy/actions/workflows/build-and-publish-release.yml/badge.svg)](https://github.com/credfeto/credfeto-nuget-proxy/actions/workflows/build-and-publish-release.yml)             |
 
