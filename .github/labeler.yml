@@ -20,6 +20,8 @@
   - any: ['src/Credfeto.Nuget.Proxy.Index.Transformer.Interfaces/**/*']
 "credfeto-nuget-proxy-logic":
   - any: ['src/Credfeto.Nuget.Proxy.Logic/**/*']
+"credfeto-nuget-proxy-logic-benchmark-tests":
+  - any: ['src/Credfeto.Nuget.Proxy.Logic.Benchmark.Tests/**/*']
 "credfeto-nuget-proxy-logic-tests":
   - any: ['src/Credfeto.Nuget.Proxy.Logic.Tests/**/*']
 "credfeto-nuget-proxy-middleware":
