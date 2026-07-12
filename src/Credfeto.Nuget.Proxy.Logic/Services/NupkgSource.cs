@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -57,12 +58,21 @@ public sealed class NupkgSource : INupkgSource
         CancellationToken cancellationToken
     )
     {
-        byte[]? data = await this._packageStorage.ReadFileAsync(
+        string? path = await this._packageStorage.ReadFileAsync(
             sourcePath: sourcePath,
             cancellationToken: cancellationToken
         );
 
-        return data is null ? null : new(data);
+        if (path is null)
+        {
+            return null;
+        }
+
+        long size = new FileInfo(path).Length;
+
+        this._logger.CachedPackage(upstream: this.GetRequestUri(sourcePath), length: size);
+
+        return PackageResult.FromCache(path: path, size: size);
     }
 
     private async ValueTask<PackageResult?> GetFromUpstream2Async(
@@ -73,21 +83,35 @@ public sealed class NupkgSource : INupkgSource
     {
         Uri requestUri = this.GetRequestUri(sourcePath);
 
-        byte[] data = await this._packageDownloader.ReadUpstreamAsync(
+        UpstreamPackageResponse upstream = await this._packageDownloader.ReadUpstreamAsync(
             requestUri: requestUri,
             userAgent: userAgent,
             cancellationToken: cancellationToken
         );
 
-        this._logger.UpstreamPackageOk(upstream: requestUri, statusCode: HttpStatusCode.OK, length: data.Length);
+        this._logger.UpstreamPackageOk(
+            upstream: requestUri,
+            statusCode: HttpStatusCode.OK,
+            length: upstream.ContentLength
+        );
 
-        await this._packageStorage.SaveFileAsync(
+        Stream cachingStream = await this._packageStorage.SaveFileAsync(
             sourcePath: sourcePath,
-            buffer: data,
+            content: upstream.Content,
+            contentLength: upstream.ContentLength,
             cancellationToken: cancellationToken
         );
 
-        return new PackageResult(data);
+        // When caching fails, SaveFileAsync hands back the upstream content stream unwrapped; that
+        // stream's disposal is already owned by UpstreamPackageResponse, so it must not be disposed twice.
+        bool cachingSucceeded = !ReferenceEquals(cachingStream, upstream.Content);
+
+        return PackageResult.FromUpstream(
+            stream: cachingStream,
+            contentLength: upstream.ContentLength,
+            additionalDisposable: upstream,
+            disposeStream: cachingSucceeded
+        );
     }
 
     private Uri GetRequestUri(string path)

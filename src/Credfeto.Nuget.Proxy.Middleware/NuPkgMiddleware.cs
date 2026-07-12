@@ -13,6 +13,7 @@ using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Middleware.Extensions;
 using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 using Polly.Bulkhead;
 using Polly.Timeout;
@@ -58,9 +59,11 @@ public sealed class NuPkgMiddleware : IMiddleware
         CancellationToken cancellationToken = context.RequestAborted;
         ProductInfoHeaderValue? userAgent = context.GetUserAgent();
 
+        PackageResult? result = null;
+
         try
         {
-            PackageResult? result = await this._nupkgSource.GetFromUpstreamAsync(
+            result = await this._nupkgSource.GetFromUpstreamAsync(
                 path: path,
                 userAgent: userAgent,
                 cancellationToken: cancellationToken
@@ -73,8 +76,8 @@ public sealed class NuPkgMiddleware : IMiddleware
                 return;
             }
 
-            this._logger.FoundContent(path: path, length: result.Value.Data.Length);
-            await this.SuccessAsync(context: context, data: result.Value, cancellationToken: cancellationToken);
+            this._logger.FoundContent(path: path, length: result.ContentLength);
+            await this.SuccessAsync(context: context, data: result, cancellationToken: cancellationToken);
         }
         catch (HttpRequestException exception)
         {
@@ -97,6 +100,13 @@ public sealed class NuPkgMiddleware : IMiddleware
             this._logger.InternalServerError(path: path, message: exception.Message, exception: exception);
             Failed(context: context, result: HttpStatusCode.InternalServerError);
         }
+        finally
+        {
+            if (result is not null)
+            {
+                await result.DisposeAsync();
+            }
+        }
     }
 
     private async ValueTask SuccessAsync(HttpContext context, PackageResult data, CancellationToken cancellationToken)
@@ -109,9 +119,20 @@ public sealed class NuPkgMiddleware : IMiddleware
             .AddSeconds(63072000)
             .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
 
-        await using (MemoryStream stream = new(data.Data, false))
+        if (data.ContentLength is long contentLength)
         {
-            await stream.CopyToAsync(context.Response.Body, cancellationToken);
+            context.Response.ContentLength = contentLength;
+        }
+
+        if (data.CachedFilePath is string cachedFilePath)
+        {
+            await context.Response.SendFileAsync(cachedFilePath, cancellationToken);
+            return;
+        }
+
+        if (data.UpstreamStream is Stream upstreamStream)
+        {
+            await upstreamStream.CopyToAsync(context.Response.Body, cancellationToken);
         }
     }
 
