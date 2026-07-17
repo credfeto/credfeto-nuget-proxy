@@ -20,16 +20,6 @@ using Polly.Timeout;
 
 namespace Credfeto.Nuget.Proxy.Middleware;
 
-[SuppressMessage(
-    category: "Microsoft.Security",
-    checkId: "CA3003: Potential Path injection",
-    Justification = "Avoided by checking path above"
-)]
-[SuppressMessage(
-    category: "SecurityCodeScan.VS2019",
-    checkId: "SCS0018: Potential Path injection",
-    Justification = "Avoided by checking path above"
-)]
 public sealed class NuPkgMiddleware : IMiddleware
 {
     private readonly INupkgSource _nupkgSource;

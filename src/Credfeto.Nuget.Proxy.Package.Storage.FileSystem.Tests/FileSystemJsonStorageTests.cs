@@ -94,6 +94,35 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
     }
 
     [Fact]
+    public async Task SaveAndLoadRoundtripAsync_WhenFilenameContainsDoubleDotSubstring()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+        Uri requestUri = new("https://api.nuget.org/v3/foo..bar.json");
+
+        const string JSON_CONTENT = """{"version":"3.0.0"}""";
+        JsonMetadata metadata = new(
+            Etag: "\"abc123\"",
+            ContentLength: JSON_CONTENT.Length,
+            ContentType: "application/json"
+        );
+
+        await this._jsonStorage.SaveAsync(
+            requestUri: requestUri,
+            metadata: metadata,
+            jsonContent: JSON_CONTENT,
+            cancellationToken: cancellationToken
+        );
+
+        (JsonMetadata metadata, string content)? result = await this._jsonStorage.LoadAsync(
+            requestUri: requestUri,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Equal(expected: JSON_CONTENT, actual: result.Value.content);
+    }
+
+    [Fact]
     public async Task SaveAndLoadMetadataRoundtripAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();
