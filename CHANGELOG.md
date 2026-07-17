@@ -7,6 +7,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 
 ## [Unreleased]
 ### Security
+- Harden package cache path handling against path traversal (#99)
 ### Added
 - Add X-Server response header middleware that appends the server hostname to every HTTP response
 - Enable trimmed publish for the service
