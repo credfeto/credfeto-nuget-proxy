@@ -84,6 +84,28 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     }
 
     [Fact]
+    public async Task SaveFileAndReadItBackAsync_WhenFilenameContainsDoubleDotSubstring()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        byte[] content = [1, 2, 3, 4, 5];
+
+        await this.SaveAndDrainAsync(
+            sourcePath: "pkg/foo..bar.nupkg",
+            content: content,
+            cancellationToken: cancellationToken
+        );
+
+        string? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "pkg/foo..bar.nupkg",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Equal(expected: content, actual: await File.ReadAllBytesAsync(result, cancellationToken));
+    }
+
+    [Fact]
     public async Task ReadFileAsync_WhenFileIsUnreadable_ReturnsNullAsync()
     {
         if (!OperatingSystem.IsLinux())
@@ -259,6 +281,88 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
 
         Assert.NotNull(result);
         Assert.Equal(expected: original, actual: await File.ReadAllBytesAsync(result, cancellationToken));
+    }
+
+    [Theory]
+    [InlineData("../escape.nupkg")]
+    [InlineData("..\\escape.nupkg")]
+    [InlineData("valid/../../escape.nupkg")]
+    public async Task ReadFileAsync_WhenPathTraversal_ReturnsNullAsync(string sourcePath)
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        string basePath = Path.Combine(path1: this.TempFolder, path2: "packages");
+        string escapeFile = Path.Combine(path1: this.TempFolder, path2: "escape.nupkg");
+        await File.WriteAllTextAsync(path: escapeFile, contents: "outside", cancellationToken: cancellationToken);
+
+        IPackageStorage storage = this.CreateStorage(basePath);
+
+        string? result = await storage.ReadFileAsync(sourcePath: sourcePath, cancellationToken: cancellationToken);
+
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData("../escape.nupkg")]
+    [InlineData("..\\escape.nupkg")]
+    [InlineData("valid/../../escape.nupkg")]
+    public async Task SaveFileAsync_WhenPathTraversal_DoesNotWriteOutsideBaseAsync(string sourcePath)
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        string basePath = Path.Combine(path1: this.TempFolder, path2: "packages");
+        string escapeFile = Path.Combine(path1: this.TempFolder, path2: "escape.nupkg");
+
+        IPackageStorage storage = this.CreateStorage(basePath);
+
+        await using MemoryStream source = new([1, 2, 3]);
+        await using Stream tee = await storage.SaveFileAsync(
+            sourcePath: sourcePath,
+            content: source,
+            contentLength: 3,
+            cancellationToken: cancellationToken
+        );
+        await tee.CopyToAsync(Stream.Null, cancellationToken);
+
+        Assert.False(condition: File.Exists(escapeFile), userMessage: "Traversal write must not escape the base path");
+    }
+
+    [Fact]
+    public async Task SaveFileAsync_WhenPathResolvesToPrefixCollisionSibling_DoesNotWriteOutsideBaseAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        string basePath = Path.Combine(path1: this.TempFolder, path2: "packages");
+        string siblingFile = Path.Combine(path1: this.TempFolder, path2: "packages-evil", path3: "x.nupkg");
+
+        IPackageStorage storage = this.CreateStorage(basePath);
+
+        await using MemoryStream source = new([1, 2, 3]);
+        await using Stream tee = await storage.SaveFileAsync(
+            sourcePath: "../packages-evil/x.nupkg",
+            content: source,
+            contentLength: 3,
+            cancellationToken: cancellationToken
+        );
+        await tee.CopyToAsync(Stream.Null, cancellationToken);
+
+        Assert.False(
+            condition: File.Exists(siblingFile),
+            userMessage: "Prefix-collision sibling directory must not be treated as contained"
+        );
+    }
+
+    private FileSystemPackageStorage CreateStorage(string basePath)
+    {
+        ProxyServerConfig config = new()
+        {
+            UpstreamUrls = ["https://upstream.example.org"],
+            PublicUrl = "https://nuget.example.org",
+            Packages = basePath,
+            JsonMaxAgeSeconds = 60,
+        };
+
+        return new FileSystemPackageStorage(Options.Create(config), this.GetTypedLogger<FileSystemPackageStorage>());
     }
 
     private async Task SaveAndDrainAsync(string sourcePath, byte[] content, CancellationToken cancellationToken)

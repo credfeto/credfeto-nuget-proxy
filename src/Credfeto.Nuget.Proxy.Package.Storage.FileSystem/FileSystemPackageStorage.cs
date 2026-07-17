@@ -15,19 +15,28 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 {
     private readonly ILogger<FileSystemPackageStorage> _logger;
     private readonly string _basePath;
+    private readonly string _basePathWithSeparator;
 
     public FileSystemPackageStorage(IOptions<ProxyServerConfig> config, ILogger<FileSystemPackageStorage> logger)
     {
         this._logger = logger;
 
-        this._basePath = config.Value.Packages;
+        this._basePath = Path.GetFullPath(config.Value.Packages);
+        this._basePathWithSeparator = this._basePath + Path.DirectorySeparatorChar;
 
         this.EnsureDirectoryExists(this._basePath);
     }
 
     public async ValueTask<string?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
     {
-        (string packagePath, _) = this.BuildPackagePath(path: sourcePath);
+        (string filename, string dir)? built = this.BuildPackagePath(path: sourcePath);
+
+        if (built is null)
+        {
+            return null;
+        }
+
+        string packagePath = built.Value.filename;
 
         try
         {
@@ -80,7 +89,14 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         CancellationToken cancellationToken
     )
     {
-        (string packagePath, string dir) = this.BuildPackagePath(path: sourcePath);
+        (string filename, string dir)? built = this.BuildPackagePath(path: sourcePath);
+
+        if (built is null)
+        {
+            return ValueTask.FromResult(content);
+        }
+
+        (string packagePath, string dir) = built.Value;
 
         try
         {
@@ -129,11 +145,24 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    private (string filename, string dir) BuildPackagePath(string path)
+    private (string filename, string dir)? BuildPackagePath(string path)
     {
-        string f = Path.Combine(path1: this._basePath, path.TrimStart('/'));
+        if (PathContainment.ContainsTraversalSegment(path))
+        {
+            return null;
+        }
 
-        // ! Path.Combine with an absolute basePath always produces a path with a directory component
+        string? f = PathContainment.ResolveWithinBase(
+            basePathWithSeparator: this._basePathWithSeparator,
+            combinedPath: Path.Combine(path1: this._basePath, path.TrimStart('/'))
+        );
+
+        if (f is null)
+        {
+            return null;
+        }
+
+        // ! Path under _basePathWithSeparator always produces a path with a directory component
         return (f, Path.GetDirectoryName(f)!);
     }
 }
