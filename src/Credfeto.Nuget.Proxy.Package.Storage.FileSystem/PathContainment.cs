@@ -23,10 +23,7 @@ internal static class PathContainment
     {
         if (ContainsTraversalSegment(segment))
         {
-            filename = string.Empty;
-            dir = string.Empty;
-
-            return false;
+            return Fail(filename: out filename, dir: out dir);
         }
 
         string full = Path.GetFullPath(Path.Combine(basePath, segment.TrimStart('/')));
@@ -45,10 +42,7 @@ internal static class PathContainment
     {
         if (ContainsTraversalSegment(segment1) || ContainsTraversalSegment(segment2))
         {
-            filename = string.Empty;
-            dir = string.Empty;
-
-            return false;
+            return Fail(filename: out filename, dir: out dir);
         }
 
         string full = Path.GetFullPath(Path.Combine(basePath, segment1.TrimStart('/'), segment2.TrimStart('/')));
@@ -60,10 +54,7 @@ internal static class PathContainment
     {
         if (!full.StartsWith(basePathWithSeparator, StringComparison.Ordinal))
         {
-            filename = string.Empty;
-            dir = string.Empty;
-
-            return false;
+            return Fail(filename: out filename, dir: out dir);
         }
 
         filename = full;
@@ -74,6 +65,17 @@ internal static class PathContainment
         return true;
     }
 
+    private static bool Fail(out string filename, out string dir)
+    {
+        filename = string.Empty;
+        dir = string.Empty;
+
+        return false;
+    }
+
+    // Defense-in-depth only: Path.GetFullPath + the base-path prefix check in TryFinish is the
+    // actual containment boundary and already rejects any real escape (including prefix-collision
+    // siblings). This rejects obviously-malicious segments up front.
     private static bool ContainsTraversalSegment(string path)
     {
         if (path.Contains(value: '\\', comparisonType: StringComparison.Ordinal))
