@@ -377,6 +377,35 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
         );
     }
 
+    [Fact]
+    public async Task SaveFileAndReadItBackAsync_WhenConfiguredPackagesPathHasTrailingSeparatorAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        string basePath = Path.Combine(path1: this.TempFolder, path2: "packages") + Path.DirectorySeparatorChar;
+
+        IPackageStorage storage = this.CreateStorage(basePath);
+
+        byte[] content = [1, 2, 3, 4, 5];
+
+        await using MemoryStream source = new(content);
+        await using Stream tee = await storage.SaveFileAsync(
+            sourcePath: "trailing-sep.nupkg",
+            content: source,
+            contentLength: content.Length,
+            cancellationToken: cancellationToken
+        );
+        await tee.CopyToAsync(Stream.Null, cancellationToken);
+
+        string? result = await storage.ReadFileAsync(
+            sourcePath: "trailing-sep.nupkg",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Equal(expected: content, actual: await File.ReadAllBytesAsync(result, cancellationToken));
+    }
+
     private FileSystemPackageStorage CreateStorage(string basePath)
     {
         ProxyServerConfig config = new()

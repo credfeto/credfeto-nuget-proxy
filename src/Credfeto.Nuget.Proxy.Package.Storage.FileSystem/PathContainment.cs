@@ -8,7 +8,10 @@ internal static class PathContainment
 {
     public static (string basePath, string basePathWithSeparator) CreateBase(string configuredPath)
     {
-        string basePath = Path.GetFullPath(configuredPath);
+        // Path.GetFullPath preserves a trailing separator if one was configured; trim it so
+        // basePathWithSeparator below doesn't end up doubled (which would make every built path
+        // fail the TryFinish containment check, rejecting all reads/writes).
+        string basePath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(configuredPath));
 
         return (basePath, basePath + Path.DirectorySeparatorChar);
     }
