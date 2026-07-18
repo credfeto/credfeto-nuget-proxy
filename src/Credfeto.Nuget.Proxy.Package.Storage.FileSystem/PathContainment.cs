@@ -16,12 +16,12 @@ internal static class PathContainment
     public static bool TryBuildContainedPath(
         string basePath,
         string basePathWithSeparator,
-        string[] segments,
+        string segment,
         out string filename,
         out string dir
     )
     {
-        if (segments.Any(ContainsTraversalSegment))
+        if (ContainsTraversalSegment(segment))
         {
             filename = string.Empty;
             dir = string.Empty;
@@ -29,16 +29,35 @@ internal static class PathContainment
             return false;
         }
 
-        string[] combineParts = new string[segments.Length + 1];
-        combineParts[0] = basePath;
+        string full = Path.GetFullPath(Path.Combine(basePath, segment.TrimStart('/')));
 
-        for (int i = 0; i < segments.Length; ++i)
+        return TryFinish(full: full, basePathWithSeparator: basePathWithSeparator, filename: out filename, dir: out dir);
+    }
+
+    public static bool TryBuildContainedPath(
+        string basePath,
+        string basePathWithSeparator,
+        string segment1,
+        string segment2,
+        out string filename,
+        out string dir
+    )
+    {
+        if (ContainsTraversalSegment(segment1) || ContainsTraversalSegment(segment2))
         {
-            combineParts[i + 1] = segments[i].TrimStart('/');
+            filename = string.Empty;
+            dir = string.Empty;
+
+            return false;
         }
 
-        string full = Path.GetFullPath(Path.Combine(combineParts));
+        string full = Path.GetFullPath(Path.Combine(basePath, segment1.TrimStart('/'), segment2.TrimStart('/')));
 
+        return TryFinish(full: full, basePathWithSeparator: basePathWithSeparator, filename: out filename, dir: out dir);
+    }
+
+    private static bool TryFinish(string full, string basePathWithSeparator, out string filename, out string dir)
+    {
         if (!full.StartsWith(basePathWithSeparator, StringComparison.Ordinal))
         {
             filename = string.Empty;

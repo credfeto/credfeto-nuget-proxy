@@ -141,7 +141,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         return PathContainment.TryBuildContainedPath(
             basePath: this._basePath,
             basePathWithSeparator: this._basePathWithSeparator,
-            segments: [path],
+            segment: path,
             filename: out filename,
             dir: out dir
         );

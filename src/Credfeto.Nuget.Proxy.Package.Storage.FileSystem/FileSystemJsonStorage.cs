@@ -362,7 +362,8 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         return PathContainment.TryBuildContainedPath(
             basePath: this._basePath,
             basePathWithSeparator: this._basePathWithSeparator,
-            segments: [sourceHost, path],
+            segment1: sourceHost,
+            segment2: path,
             filename: out filename,
             dir: out dir
         );
