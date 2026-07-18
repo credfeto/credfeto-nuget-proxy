@@ -31,8 +31,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     {
         this._logger = logger;
 
-        this._basePath = Path.GetFullPath(config.Value.Metadata);
-        this._basePathWithSeparator = this._basePath + Path.DirectorySeparatorChar;
+        (this._basePath, this._basePathWithSeparator) = PathContainment.CreateBase(config.Value.Metadata);
 
         this.EnsureDirectoryExists(this._basePath);
     }
@@ -44,17 +43,17 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         CancellationToken cancellationToken
     )
     {
-        (string filename, string dir)? built = this.BuildJsonPath(
-            sourceHost: requestUri.Host,
-            path: requestUri.AbsolutePath
-        );
-
-        if (built is null)
+        if (
+            !this.TryBuildJsonPath(
+                sourceHost: requestUri.Host,
+                path: requestUri.AbsolutePath,
+                filename: out string jsonPath,
+                dir: out string dir
+            )
+        )
         {
             return;
         }
-
-        (string jsonPath, string dir) = built.Value;
 
         await this.WriteFileAsync(
             jsonPath: jsonPath,
@@ -129,18 +128,20 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
     public ValueTask<JsonMetadata?> LoadMetadataAsync(Uri requestUri, CancellationToken cancellationToken)
     {
-        (string filename, string dir)? built = this.BuildJsonPath(
-            sourceHost: requestUri.Host,
-            path: requestUri.AbsolutePath
-        );
-
-        if (built is null)
+        if (
+            !this.TryBuildJsonPath(
+                sourceHost: requestUri.Host,
+                path: requestUri.AbsolutePath,
+                filename: out string jsonPath,
+                dir: out _
+            )
+        )
         {
             return ValueTask.FromResult<JsonMetadata?>(null);
         }
 
         return this.ReadFromCacheAsync(
-            jsonPath: built.Value.filename,
+            jsonPath: jsonPath,
             readAsync: ReadMetadataFromFileAsync,
             cancellationToken: cancellationToken
         );
@@ -151,18 +152,20 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         CancellationToken cancellationToken
     )
     {
-        (string filename, string dir)? built = this.BuildJsonPath(
-            sourceHost: requestUri.Host,
-            path: requestUri.AbsolutePath
-        );
-
-        if (built is null)
+        if (
+            !this.TryBuildJsonPath(
+                sourceHost: requestUri.Host,
+                path: requestUri.AbsolutePath,
+                filename: out string jsonPath,
+                dir: out _
+            )
+        )
         {
             return ValueTask.FromResult<(JsonMetadata metadata, string content)?>(null);
         }
 
         return this.ReadFromCacheAsync(
-            jsonPath: built.Value.filename,
+            jsonPath: jsonPath,
             readAsync: ReadFromFileAsync,
             cancellationToken: cancellationToken
         );
@@ -354,25 +357,15 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    private (string filename, string dir)? BuildJsonPath(string sourceHost, string path)
+    private bool TryBuildJsonPath(string sourceHost, string path, out string filename, out string dir)
     {
-        if (PathContainment.ContainsTraversalSegment(sourceHost) || PathContainment.ContainsTraversalSegment(path))
-        {
-            return null;
-        }
-
-        string? f = PathContainment.ResolveWithinBase(
+        return PathContainment.TryBuildContainedPath(
+            basePath: this._basePath,
             basePathWithSeparator: this._basePathWithSeparator,
-            combinedPath: Path.Combine(path1: this._basePath, path2: sourceHost, path.TrimStart('/'))
+            segments: [sourceHost, path],
+            filename: out filename,
+            dir: out dir
         );
-
-        if (f is null)
-        {
-            return null;
-        }
-
-        // ! Path under _basePathWithSeparator always produces a path with a directory component
-        return (f, Path.GetDirectoryName(f)!);
     }
 
     private void EnsureDirectoryExists(string folder)
