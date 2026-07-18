@@ -21,22 +21,17 @@ public sealed class FileSystemPackageStorage : IPackageStorage
     {
         this._logger = logger;
 
-        this._basePath = Path.GetFullPath(config.Value.Packages);
-        this._basePathWithSeparator = this._basePath + Path.DirectorySeparatorChar;
+        (this._basePath, this._basePathWithSeparator) = PathContainment.CreateBase(config.Value.Packages);
 
         this.EnsureDirectoryExists(this._basePath);
     }
 
     public async ValueTask<string?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
     {
-        (string filename, string dir)? built = this.BuildPackagePath(path: sourcePath);
-
-        if (built is null)
+        if (!this.TryBuildPackagePath(path: sourcePath, filename: out string packagePath, dir: out _))
         {
             return null;
         }
-
-        string packagePath = built.Value.filename;
 
         try
         {
@@ -89,14 +84,10 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         CancellationToken cancellationToken
     )
     {
-        (string filename, string dir)? built = this.BuildPackagePath(path: sourcePath);
-
-        if (built is null)
+        if (!this.TryBuildPackagePath(path: sourcePath, filename: out string packagePath, dir: out string dir))
         {
             return ValueTask.FromResult(content);
         }
-
-        (string packagePath, string dir) = built.Value;
 
         try
         {
@@ -145,24 +136,14 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    private (string filename, string dir)? BuildPackagePath(string path)
+    private bool TryBuildPackagePath(string path, out string filename, out string dir)
     {
-        if (PathContainment.ContainsTraversalSegment(path))
-        {
-            return null;
-        }
-
-        string? f = PathContainment.ResolveWithinBase(
+        return PathContainment.TryBuildContainedPath(
+            basePath: this._basePath,
             basePathWithSeparator: this._basePathWithSeparator,
-            combinedPath: Path.Combine(path1: this._basePath, path.TrimStart('/'))
+            segments: [path],
+            filename: out filename,
+            dir: out dir
         );
-
-        if (f is null)
-        {
-            return null;
-        }
-
-        // ! Path under _basePathWithSeparator always produces a path with a directory component
-        return (f, Path.GetDirectoryName(f)!);
     }
 }
