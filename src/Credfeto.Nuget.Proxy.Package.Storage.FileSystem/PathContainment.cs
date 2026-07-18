@@ -26,7 +26,10 @@ internal static class PathContainment
             return Fail(filename: out filename, dir: out dir);
         }
 
-        string full = Path.GetFullPath(Path.Combine(basePath, segment.TrimStart('/')));
+        if (!TryGetFullPath(Path.Combine(basePath, segment.TrimStart('/')), out string full))
+        {
+            return Fail(filename: out filename, dir: out dir);
+        }
 
         return TryFinish(full: full, basePathWithSeparator: basePathWithSeparator, filename: out filename, dir: out dir);
     }
@@ -45,9 +48,36 @@ internal static class PathContainment
             return Fail(filename: out filename, dir: out dir);
         }
 
-        string full = Path.GetFullPath(Path.Combine(basePath, segment1.TrimStart('/'), segment2.TrimStart('/')));
+        if (
+            !TryGetFullPath(
+                Path.Combine(basePath, segment1.TrimStart('/'), segment2.TrimStart('/')),
+                out string full
+            )
+        )
+        {
+            return Fail(filename: out filename, dir: out dir);
+        }
 
         return TryFinish(full: full, basePathWithSeparator: basePathWithSeparator, filename: out filename, dir: out dir);
+    }
+
+    // Path.GetFullPath throws ArgumentException for inputs it cannot canonicalise (e.g. an
+    // embedded NUL character); treat that the same as any other rejected segment instead of
+    // letting it propagate as an unhandled exception out of the storage layer.
+    private static bool TryGetFullPath(string combined, out string full)
+    {
+        try
+        {
+            full = Path.GetFullPath(combined);
+
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            full = string.Empty;
+
+            return false;
+        }
     }
 
     private static bool TryFinish(string full, string basePathWithSeparator, out string filename, out string dir)

@@ -328,6 +328,31 @@ public sealed class FileSystemPackageStorageTests : LoggingFolderCleanupTestBase
     }
 
     [Fact]
+    public async Task ReadFileAsync_WhenPathContainsNullCharacter_ReturnsNullAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        string? result = await this._packageStorage.ReadFileAsync(
+            sourcePath: "foo\0bar.nupkg",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public Task SaveFileAsync_WhenPathContainsNullCharacter_DoesNotThrowAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        return this.SaveAndDrainAsync(
+            sourcePath: "foo\0bar.nupkg",
+            content: [1, 2, 3],
+            cancellationToken: cancellationToken
+        );
+    }
+
+    [Fact]
     public async Task SaveFileAsync_WhenPathResolvesToPrefixCollisionSibling_DoesNotWriteOutsideBaseAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();
