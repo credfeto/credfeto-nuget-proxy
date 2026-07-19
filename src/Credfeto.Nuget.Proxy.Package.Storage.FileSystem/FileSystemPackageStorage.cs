@@ -15,19 +15,23 @@ public sealed class FileSystemPackageStorage : IPackageStorage
 {
     private readonly ILogger<FileSystemPackageStorage> _logger;
     private readonly string _basePath;
+    private readonly string _basePathWithSeparator;
 
     public FileSystemPackageStorage(IOptions<ProxyServerConfig> config, ILogger<FileSystemPackageStorage> logger)
     {
         this._logger = logger;
 
-        this._basePath = config.Value.Packages;
+        (this._basePath, this._basePathWithSeparator) = PathContainment.CreateBase(config.Value.Packages);
 
         this.EnsureDirectoryExists(this._basePath);
     }
 
     public async ValueTask<string?> ReadFileAsync(string sourcePath, CancellationToken cancellationToken)
     {
-        (string packagePath, _) = this.BuildPackagePath(path: sourcePath);
+        if (!this.TryBuildPackagePath(path: sourcePath, filename: out string packagePath, dir: out _))
+        {
+            return null;
+        }
 
         try
         {
@@ -80,7 +84,10 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         CancellationToken cancellationToken
     )
     {
-        (string packagePath, string dir) = this.BuildPackagePath(path: sourcePath);
+        if (!this.TryBuildPackagePath(path: sourcePath, filename: out string packagePath, dir: out string dir))
+        {
+            return ValueTask.FromResult(content);
+        }
 
         try
         {
@@ -129,11 +136,14 @@ public sealed class FileSystemPackageStorage : IPackageStorage
         }
     }
 
-    private (string filename, string dir) BuildPackagePath(string path)
+    private bool TryBuildPackagePath(string path, out string filename, out string dir)
     {
-        string f = Path.Combine(path1: this._basePath, path.TrimStart('/'));
-
-        // ! Path.Combine with an absolute basePath always produces a path with a directory component
-        return (f, Path.GetDirectoryName(f)!);
+        return PathContainment.TryBuildContainedPath(
+            basePath: this._basePath,
+            basePathWithSeparator: this._basePathWithSeparator,
+            segment: path,
+            filename: out filename,
+            dir: out dir
+        );
     }
 }

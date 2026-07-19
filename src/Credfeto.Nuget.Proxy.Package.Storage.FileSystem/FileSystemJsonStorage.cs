@@ -24,13 +24,14 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     private const int HeaderSize = 4 + 1 + 4;
 
     private readonly string _basePath;
+    private readonly string _basePathWithSeparator;
     private readonly ILogger<FileSystemJsonStorage> _logger;
 
     public FileSystemJsonStorage(IOptions<ProxyServerConfig> config, ILogger<FileSystemJsonStorage> logger)
     {
         this._logger = logger;
 
-        this._basePath = config.Value.Metadata;
+        (this._basePath, this._basePathWithSeparator) = PathContainment.CreateBase(config.Value.Metadata);
 
         this.EnsureDirectoryExists(this._basePath);
     }
@@ -42,8 +43,35 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         CancellationToken cancellationToken
     )
     {
-        (string jsonPath, string dir) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
+        if (
+            !this.TryBuildJsonPath(
+                sourceHost: requestUri.Host,
+                path: requestUri.AbsolutePath,
+                filename: out string jsonPath,
+                dir: out string dir
+            )
+        )
+        {
+            return;
+        }
 
+        await this.WriteFileAsync(
+            jsonPath: jsonPath,
+            dir: dir,
+            metadata: metadata,
+            jsonContent: jsonContent,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async ValueTask WriteFileAsync(
+        string jsonPath,
+        string dir,
+        JsonMetadata metadata,
+        string jsonContent,
+        CancellationToken cancellationToken
+    )
+    {
         string? tempPath = null;
 
         try
@@ -100,7 +128,17 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
     public ValueTask<JsonMetadata?> LoadMetadataAsync(Uri requestUri, CancellationToken cancellationToken)
     {
-        (string jsonPath, _) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
+        if (
+            !this.TryBuildJsonPath(
+                sourceHost: requestUri.Host,
+                path: requestUri.AbsolutePath,
+                filename: out string jsonPath,
+                dir: out _
+            )
+        )
+        {
+            return ValueTask.FromResult<JsonMetadata?>(null);
+        }
 
         return this.ReadFromCacheAsync(
             jsonPath: jsonPath,
@@ -114,7 +152,17 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         CancellationToken cancellationToken
     )
     {
-        (string jsonPath, _) = this.BuildJsonPath(sourceHost: requestUri.Host, path: requestUri.AbsolutePath);
+        if (
+            !this.TryBuildJsonPath(
+                sourceHost: requestUri.Host,
+                path: requestUri.AbsolutePath,
+                filename: out string jsonPath,
+                dir: out _
+            )
+        )
+        {
+            return ValueTask.FromResult<(JsonMetadata metadata, string content)?>(null);
+        }
 
         return this.ReadFromCacheAsync(
             jsonPath: jsonPath,
@@ -309,12 +357,16 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         }
     }
 
-    private (string filename, string dir) BuildJsonPath(string sourceHost, string path)
+    private bool TryBuildJsonPath(string sourceHost, string path, out string filename, out string dir)
     {
-        string f = Path.Combine(path1: this._basePath, path2: sourceHost, path.TrimStart('/'));
-
-        // ! Path.Combine with an absolute basePath always produces a path with a directory component
-        return (f, Path.GetDirectoryName(f)!);
+        return PathContainment.TryBuildContainedPath(
+            basePath: this._basePath,
+            basePathWithSeparator: this._basePathWithSeparator,
+            segment1: sourceHost,
+            segment2: path,
+            filename: out filename,
+            dir: out dir
+        );
     }
 
     private void EnsureDirectoryExists(string folder)
