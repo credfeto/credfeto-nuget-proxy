@@ -1,6 +1,9 @@
 ﻿# Changelog
 All notable changes to this project will be documented in this file.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 <!--
 Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 -->
@@ -18,6 +21,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Use EphemeralKeySet when loading HTTPS certificate to fix Docker container startup failure
 - Re-enabled Native AOT compilation and trimming by adding SuppressTrimAnalysisWarnings to suppress third-party IL2104 warnings blocking dotnet publish
 - Cache file writes are now atomic - use write-to-temp-then-rename to prevent corrupt cache entries from interrupted or concurrent writes
+- Mixed-case upstream host names in the nuget.org index are now proxied correctly instead of being returned unrewritten (#104)
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.0.1978
@@ -29,6 +33,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - perf: Replace JSON+Base64Url cache format with binary format to eliminate per-request decompression overhead
 - perf: Stream .nupkg package downloads and cache reads instead of buffering whole files in memory (#100)
 - SDK - Updated DotNet SDK to 10.0.302
+### Deprecated
 ### Removed
 - Serilog.Enrichers.Demystifier as Ben.Demystifier is incompatible with Native AOT (IL2104/IL3000/IL3002)
 ### Deployment Changes
