@@ -21,7 +21,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Use EphemeralKeySet when loading HTTPS certificate to fix Docker container startup failure
 - Re-enabled Native AOT compilation and trimming by adding SuppressTrimAnalysisWarnings to suppress third-party IL2104 warnings blocking dotnet publish
 - Cache file writes are now atomic - use write-to-temp-then-rename to prevent corrupt cache entries from interrupted or concurrent writes
-- Rewrite resource URLs by position instead of case-sensitive string replacement, so mixed-case upstream host names are proxied correctly (#104)
+- Mixed-case upstream host names in the nuget.org index are now proxied correctly instead of being returned unrewritten (#104)
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.0.1978
