@@ -92,14 +92,12 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     {
         foreach (Uri uri in UpstreamUrl)
         {
-            if (resource.Id.StartsWith(uri.CleanUri(), comparisonType: StringComparison.OrdinalIgnoreCase))
+            string cleanedUpstreamUrl = uri.CleanUri();
+
+            if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 return new(
-                    resource.Id.Replace(
-                        uri.CleanUri(),
-                        new Uri(this.Config.PublicUrl).CleanUri(),
-                        comparisonType: StringComparison.Ordinal
-                    ),
+                    new Uri(this.Config.PublicUrl).CleanUri() + resource.Id[cleanedUpstreamUrl.Length..],
                     type: resource.Type,
                     comment: resource.Comment
                 );

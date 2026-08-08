@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -72,6 +72,32 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         Assert.DoesNotContain(NOT_NEEDED_TYPE, result.Value.Json, StringComparison.Ordinal);
         Assert.Contains("https://nuget.example.org", result.Value.Json, StringComparison.Ordinal);
         Assert.DoesNotContain("https://api.nuget.org", result.Value.Json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetFromUpstreamAsync_RewritesMixedCaseUpstreamHost_WhenPathIsIndexAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string UPSTREAM_JSON =
+            """{"version":"3.0.0","resources":[{"@id":"https://API.NuGet.org/v3/query","@type":"SearchQueryService/3.0.0-beta"}]}""";
+
+        this._jsonDownloader.ReadUpstreamAsync(
+                requestUri: Arg.Any<Uri>(),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag6\""));
+
+        JsonResult? result = await this._transformer.GetFromUpstreamAsync(
+            path: "/v3/index.json",
+            userAgent: null,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        Assert.Contains("https://nuget.example.org/v3/query", result.Value.Json, StringComparison.Ordinal);
+        Assert.DoesNotContain("nuget.org", result.Value.Json, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
