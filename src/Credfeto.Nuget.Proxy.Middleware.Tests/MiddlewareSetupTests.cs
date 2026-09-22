@@ -28,14 +28,26 @@ public sealed class MiddlewareSetupTests : DependencyInjectionTestsBase
     }
 
     [Fact]
-    public void ServerHeaderMiddlewareShouldBeRegistered() => this.RequireService<ServerHeaderMiddleware>();
+    public void ServerHeaderMiddlewareShouldBeRegistered()
+    {
+        this.RequireService<ServerHeaderMiddleware>();
+    }
 
     [Fact]
-    public void JsonMiddlewareShouldBeRegistered() => this.RequireService<JsonMiddleware>();
+    public void JsonMiddlewareShouldBeRegistered()
+    {
+        this.RequireService<JsonMiddleware>();
+    }
 
     [Fact]
-    public void NuPkgMiddlewareShouldBeRegistered() => this.RequireService<NuPkgMiddleware>();
+    public void NuPkgMiddlewareShouldBeRegistered()
+    {
+        this.RequireService<NuPkgMiddleware>();
+    }
 
     [Fact]
-    public void NotFoundMiddlewareShouldBeRegistered() => this.RequireService<NotFoundMiddleware>();
+    public void NotFoundMiddlewareShouldBeRegistered()
+    {
+        this.RequireService<NotFoundMiddleware>();
+    }
 }

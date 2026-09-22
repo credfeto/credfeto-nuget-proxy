@@ -24,7 +24,7 @@ namespace Credfeto.Nuget.Proxy.Logic.Benchmark.Tests;
 )]
 public class NupkgSourceDownloadBenchmark
 {
-    private const int PayloadSizeBytes = 256 * 1024;
+    private const int PAYLOAD_SIZE_BYTES = 256 * 1024;
 
     private byte[] _payload = [];
     private string _tempDir = string.Empty;
@@ -33,7 +33,7 @@ public class NupkgSourceDownloadBenchmark
     [GlobalSetup]
     public void GlobalSetup()
     {
-        this._payload = new byte[PayloadSizeBytes];
+        this._payload = new byte[PAYLOAD_SIZE_BYTES];
         RandomNumberGenerator.Fill(this._payload);
 
         this._tempDir = Directory.CreateTempSubdirectory("nupkg-source-benchmark-").FullName;
