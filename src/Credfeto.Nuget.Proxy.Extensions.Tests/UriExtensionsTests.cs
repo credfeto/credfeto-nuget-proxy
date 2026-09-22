@@ -14,7 +14,7 @@ public sealed class UriExtensionsTests : LoggingTestBase
     [InlineData("https://example.com/path", "https://example.com/path")]
     [InlineData("https://example.com/", "https://example.com")]
     [InlineData("https://example.com", "https://example.com")]
-    public void CleanUri_StripsTrailingSlash(string input, string expected)
+    public static void CleanUri_StripsTrailingSlash(string input, string expected)
     {
         string result = new Uri(input).CleanUri();
 

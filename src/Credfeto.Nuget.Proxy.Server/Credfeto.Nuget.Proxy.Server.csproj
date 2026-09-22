@@ -74,17 +74,18 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Credfeto.Date" Version="1.1.151.1695" />
-    <PackageReference Include="Credfeto.Docker.HealthCheck.Http.Client" Version="0.0.65.765" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.8" />
-    <PackageReference Include="Serilog" Version="4.3.1" />
-    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
-    <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
-    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <PackageReference Include="Credfeto.Date" Version="1.1.151.1695" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Credfeto.Docker.HealthCheck.Http.Client" Version="0.0.65.765" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.8" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.8" IncludeAssets="compile;runtime" />
+    <!-- Serilog ships MSBuild build/buildTransitive targets that other packages here do not, so buildcheck expects the wider asset set -->
+    <PackageReference Include="Serilog" Version="4.3.1" IncludeAssets="compile;runtime;build;buildTransitive" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" IncludeAssets="compile;runtime" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsyncFixer" Version="2.1.0" PrivateAssets="All" ExcludeAssets="runtime" />
@@ -107,8 +108,8 @@
     <PackageReference Include="ToStringWithoutOverrideAnalyzer" Version="0.6.0" PrivateAssets="All" ExcludeAssets="runtime" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Package.Storage.FileSystem\Credfeto.Nuget.Proxy.Package.Storage.FileSystem.csproj" />
-    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Logic\Credfeto.Nuget.Proxy.Logic.csproj" />
-    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Middleware\Credfeto.Nuget.Proxy.Middleware.csproj" />
+    <ProjectReference Include="../Credfeto.Nuget.Proxy.Package.Storage.FileSystem/Credfeto.Nuget.Proxy.Package.Storage.FileSystem.csproj" />
+    <ProjectReference Include="../Credfeto.Nuget.Proxy.Logic/Credfeto.Nuget.Proxy.Logic.csproj" />
+    <ProjectReference Include="../Credfeto.Nuget.Proxy.Middleware/Credfeto.Nuget.Proxy.Middleware.csproj" />
   </ItemGroup>
 </Project>

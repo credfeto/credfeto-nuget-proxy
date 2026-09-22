@@ -51,7 +51,7 @@
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Credfeto.Nuget.Proxy.Models\Credfeto.Nuget.Proxy.Models.csproj" />
+    <ProjectReference Include="../Credfeto.Nuget.Proxy.Models/Credfeto.Nuget.Proxy.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsyncFixer" Version="2.1.0" PrivateAssets="All" ExcludeAssets="runtime" />
