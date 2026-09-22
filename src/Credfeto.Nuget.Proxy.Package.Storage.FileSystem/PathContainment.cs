@@ -34,7 +34,12 @@ internal static class PathContainment
             return Fail(filename: out filename, dir: out dir);
         }
 
-        return TryFinish(full: full, basePathWithSeparator: basePathWithSeparator, filename: out filename, dir: out dir);
+        return TryFinish(
+            full: full,
+            basePathWithSeparator: basePathWithSeparator,
+            filename: out filename,
+            dir: out dir
+        );
     }
 
     public static bool TryBuildContainedPath(
@@ -51,17 +56,17 @@ internal static class PathContainment
             return Fail(filename: out filename, dir: out dir);
         }
 
-        if (
-            !TryGetFullPath(
-                Path.Combine(basePath, segment1.TrimStart('/'), segment2.TrimStart('/')),
-                out string full
-            )
-        )
+        if (!TryGetFullPath(Path.Combine(basePath, segment1.TrimStart('/'), segment2.TrimStart('/')), out string full))
         {
             return Fail(filename: out filename, dir: out dir);
         }
 
-        return TryFinish(full: full, basePathWithSeparator: basePathWithSeparator, filename: out filename, dir: out dir);
+        return TryFinish(
+            full: full,
+            basePathWithSeparator: basePathWithSeparator,
+            filename: out filename,
+            dir: out dir
+        );
     }
 
     // Path.GetFullPath throws ArgumentException for inputs it cannot canonicalise (e.g. an
