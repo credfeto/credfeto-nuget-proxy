@@ -78,6 +78,7 @@
     <PackageReference Include="Credfeto.Docker.HealthCheck.Http.Client" Version="0.0.65.765" IncludeAssets="compile;runtime" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.8" IncludeAssets="compile;runtime" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.8" IncludeAssets="compile;runtime" />
+    <!-- Serilog ships MSBuild build/buildTransitive targets that other packages here do not, so buildcheck expects the wider asset set -->
     <PackageReference Include="Serilog" Version="4.3.1" IncludeAssets="compile;runtime;build;buildTransitive" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" IncludeAssets="compile;runtime" />
     <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" IncludeAssets="compile;runtime" />
