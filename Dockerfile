@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-preview-noble-chiseled
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-noble-chiseled
 
 WORKDIR /usr/src/app
 
