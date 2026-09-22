@@ -20,8 +20,8 @@ namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 public sealed class FileSystemJsonStorage : IJsonStorage
 {
     private static readonly byte[] Magic = [(byte)'N', (byte)'G', (byte)'J', (byte)'B'];
-    private const byte FormatVersion = 1;
-    private const int HeaderSize = 4 + 1 + 4;
+    private const byte FORMAT_VERSION = 1;
+    private const int HEADER_SIZE = 4 + 1 + 4;
 
     private readonly string _basePath;
     private readonly string _basePathWithSeparator;
@@ -256,7 +256,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
         CancellationToken cancellationToken
     )
     {
-        byte[] header = new byte[HeaderSize];
+        byte[] header = new byte[HEADER_SIZE];
 
         if (!await ReadExactAsync(stream: stream, buffer: header, cancellationToken: cancellationToken))
         {
@@ -268,7 +268,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
             return null;
         }
 
-        if (header[4] != FormatVersion)
+        if (header[4] != FORMAT_VERSION)
         {
             return null;
         }
@@ -334,7 +334,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     private static void WriteHeader(Stream stream, byte[] metaBytes)
     {
         stream.Write(buffer: Magic);
-        stream.WriteByte(FormatVersion);
+        stream.WriteByte(FORMAT_VERSION);
 
         Span<byte> lengthBuffer = stackalloc byte[4];
         BinaryPrimitives.WriteUInt32LittleEndian(destination: lengthBuffer, value: (uint)metaBytes.Length);
