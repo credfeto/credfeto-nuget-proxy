@@ -34,7 +34,6 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Microsoft.Extensions to 10.0.8
 - perf: Replace JSON+Base64Url cache format with binary format to eliminate per-request decompression overhead
 - perf: Stream .nupkg package downloads and cache reads instead of buffering whole files in memory (#100)
-- SDK - Updated DotNet SDK to 10.0.401
 - SDK - Updated DotNet SDK to 11.0.100-rc.1.26425.128
 ### Deprecated
 ### Removed
