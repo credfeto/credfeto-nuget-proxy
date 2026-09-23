@@ -115,6 +115,66 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
     }
 
     [Fact]
+    public async Task GetFromUpstreamAsync_ForwardsQueryString_AndBypassesCacheAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        this._jsonDownloader.ReadUpstreamAsync(
+                requestUri: Arg.Any<Uri>(),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: false,
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResponse(Json: """{"results":[]}""", ETag: "\"etag-search\""));
+
+        JsonResult? result = await this._transformer.GetFromUpstreamAsync(
+            path: "/search/query",
+            userAgent: null,
+            queryString: "?q=Newtonsoft&prerelease=false",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        await this
+            ._jsonDownloader.Received(1)
+            .ReadUpstreamAsync(
+                requestUri: new Uri("https://api.nuget.org/search/query?q=Newtonsoft&prerelease=false"),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: false,
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task GetFromUpstreamAsync_UsesCache_WhenNoQueryStringPresentAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        this._jsonDownloader.ReadUpstreamAsync(
+                requestUri: Arg.Any<Uri>(),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResponse(Json: """{"data":"test"}""", ETag: "\"etag\""));
+
+        JsonResult? result = await this._transformer.GetFromUpstreamAsync(
+            path: "/v3/catalog/data.json",
+            userAgent: null,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        await this
+            ._jsonDownloader.Received(1)
+            .ReadUpstreamAsync(
+                requestUri: Arg.Any<Uri>(),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: true,
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
     public async Task GetFromUpstreamAsync_ReturnsUnchangedJson_WhenOneUpstreamUrlIsWhitespaceAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();

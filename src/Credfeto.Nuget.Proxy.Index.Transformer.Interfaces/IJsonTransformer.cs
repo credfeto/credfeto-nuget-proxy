@@ -11,6 +11,7 @@ public interface IJsonTransformer
     ValueTask<JsonResult?> GetFromUpstreamAsync(
         string path,
         ProductInfoHeaderValue? userAgent,
-        CancellationToken cancellationToken
+        string queryString = "",
+        CancellationToken cancellationToken = default
     );
 }

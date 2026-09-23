@@ -39,7 +39,8 @@ public abstract class JsonIndexTransformerBase
     public async ValueTask<JsonResult?> GetFromUpstreamAsync(
         string path,
         ProductInfoHeaderValue? userAgent,
-        CancellationToken cancellationToken
+        string queryString = "",
+        CancellationToken cancellationToken = default
     )
     {
         if (this._indexReplacement)
@@ -58,6 +59,7 @@ public abstract class JsonIndexTransformerBase
 
         return await this.GetJsonFromUpstreamWithReplacementsAsync(
             path: path,
+            queryString: queryString,
             userAgent: userAgent,
             transformer: this.ReplaceUrls,
             cancellationToken: cancellationToken
@@ -82,16 +84,18 @@ public abstract class JsonIndexTransformerBase
 
     protected async ValueTask<JsonResult?> GetJsonFromUpstreamWithReplacementsAsync(
         string path,
+        string queryString,
         ProductInfoHeaderValue? userAgent,
         Func<string, string> transformer,
         CancellationToken cancellationToken
     )
     {
-        Uri requestUri = this.GetRequestUri(path);
+        Uri requestUri = this.GetRequestUri(path: path, queryString: queryString);
 
         JsonResponse response = await this._jsonDownloader.ReadUpstreamAsync(
             requestUri: requestUri,
             userAgent: userAgent,
+            useCache: string.IsNullOrEmpty(queryString),
             cancellationToken: cancellationToken
         );
 
@@ -102,9 +106,9 @@ public abstract class JsonIndexTransformerBase
         return new(Json: json, this.GetJsonCacheMaxAge(path), ETag: response.ETag);
     }
 
-    protected Uri GetRequestUri(string path)
+    protected virtual Uri GetRequestUri(string path, string queryString)
     {
-        return new(new Uri(this.Config.UpstreamUrls[0]).CleanUri() + path);
+        return new(new Uri(this.Config.UpstreamUrls[0]).CleanUri() + path + queryString);
     }
 
     protected string ReplaceUrls(string json)

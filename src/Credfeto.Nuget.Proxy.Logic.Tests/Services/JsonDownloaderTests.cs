@@ -202,6 +202,68 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         Assert.Equal(expected: NEW_ETAG, actual: result.ETag);
     }
 
+    [Fact]
+    public async Task ReadUpstreamAsync_SkipsDiskCache_WhenUseCacheIsFalseAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        using TestHttpMessageHandler handler = new(CreateJsonResponse(SAMPLE_JSON, etag: "\"etag-nocache\""));
+        using HttpClient client = new(handler);
+        IJsonDownloader downloader = this.CreateDownloader(client);
+
+        JsonResponse result = await downloader.ReadUpstreamAsync(
+            requestUri: RequestUri,
+            userAgent: null,
+            useCache: false,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: SAMPLE_JSON, actual: result.Json);
+        await this
+            ._jsonStorage.DidNotReceive()
+            .LoadMetadataAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>());
+        await this
+            ._jsonStorage.DidNotReceive()
+            .SaveAsync(
+                requestUri: Arg.Any<Uri>(),
+                metadata: Arg.Any<JsonMetadata>(),
+                jsonContent: Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task ReadUpstreamAsync_UsesDiskCache_WhenUseCacheIsTrueAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: null);
+
+        using TestHttpMessageHandler handler = new(CreateJsonResponse(SAMPLE_JSON, etag: "\"etag-cache\""));
+        using HttpClient client = new(handler);
+        IJsonDownloader downloader = this.CreateDownloader(client);
+
+        JsonResponse result = await downloader.ReadUpstreamAsync(
+            requestUri: RequestUri,
+            userAgent: null,
+            useCache: true,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: SAMPLE_JSON, actual: result.Json);
+        await this
+            ._jsonStorage.Received(1)
+            .LoadMetadataAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>());
+        await this
+            ._jsonStorage.Received(1)
+            .SaveAsync(
+                requestUri: Arg.Any<Uri>(),
+                metadata: Arg.Any<JsonMetadata>(),
+                jsonContent: Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
+    }
+
     private static void MockJsonStorageLoadMetadata(IJsonStorage storage, JsonMetadata? result)
     {
         storage

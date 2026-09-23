@@ -178,6 +178,86 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
     }
 
     [Fact]
+    public async Task GetFromUpstreamAsync_RoutesToDiscoveredUpstream_ForRewrittenSearchPathAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string UPSTREAM_INDEX_JSON =
+            """{"version":"3.0.0","resources":[{"@id":"https://azuresearch-ussc.nuget.org/query","@type":"SearchQueryService/3.0.0-beta"}]}""";
+
+        this._jsonDownloader.ReadUpstreamAsync(
+                requestUri: Arg.Any<Uri>(),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResponse(Json: UPSTREAM_INDEX_JSON, ETag: "\"etag-index\""));
+
+        await this._transformer.GetFromUpstreamAsync(
+            path: "/v3/index.json",
+            userAgent: null,
+            cancellationToken: cancellationToken
+        );
+
+        const string SEARCH_JSON = """{"totalHits":0,"data":[]}""";
+        this._jsonDownloader.ReadUpstreamAsync(
+                requestUri: Arg.Any<Uri>(),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: false,
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResponse(Json: SEARCH_JSON, ETag: "\"etag-search\""));
+
+        JsonResult? result = await this._transformer.GetFromUpstreamAsync(
+            path: "/query",
+            userAgent: null,
+            queryString: "?q=Newtonsoft",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        await this
+            ._jsonDownloader.Received(1)
+            .ReadUpstreamAsync(
+                requestUri: new Uri("https://azuresearch-ussc.nuget.org/query?q=Newtonsoft"),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: false,
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task GetFromUpstreamAsync_UsesDefaultUpstream_ForSearchPath_WhenIndexNotYetFetchedAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string SEARCH_JSON = """{"totalHits":0,"data":[]}""";
+        this._jsonDownloader.ReadUpstreamAsync(
+                requestUri: Arg.Any<Uri>(),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: false,
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResponse(Json: SEARCH_JSON, ETag: "\"etag-search\""));
+
+        JsonResult? result = await this._transformer.GetFromUpstreamAsync(
+            path: "/query",
+            userAgent: null,
+            queryString: "?q=Newtonsoft",
+            cancellationToken: cancellationToken
+        );
+
+        Assert.NotNull(result);
+        await this
+            ._jsonDownloader.Received(1)
+            .ReadUpstreamAsync(
+                requestUri: new Uri("https://api.nuget.org/query?q=Newtonsoft"),
+                userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: false,
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
     public async Task GetFromUpstreamAsync_WithUserAgent_FiltersAndRewritesResourcesAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();

@@ -43,15 +43,15 @@ public sealed class JsonDownloader : IJsonDownloader
     public async ValueTask<JsonResponse> ReadUpstreamAsync(
         Uri requestUri,
         ProductInfoHeaderValue? userAgent,
-        CancellationToken cancellationToken
+        bool useCache = true,
+        CancellationToken cancellationToken = default
     )
     {
         HttpClient client = this.GetClient(userAgent);
 
-        JsonMetadata? cachedMetadata = await this._jsonStorage.LoadMetadataAsync(
-            requestUri: requestUri,
-            cancellationToken: cancellationToken
-        );
+        JsonMetadata? cachedMetadata = useCache
+            ? await this._jsonStorage.LoadMetadataAsync(requestUri: requestUri, cancellationToken: cancellationToken)
+            : null;
 
         if (cachedMetadata.HasValue && !string.IsNullOrWhiteSpace(cachedMetadata.Value.Etag))
         {
@@ -68,6 +68,7 @@ public sealed class JsonDownloader : IJsonDownloader
             requestUri: requestUri,
             cachedMetadata: cachedMetadata,
             result: result,
+            useCache: useCache,
             cancellationToken: cancellationToken
         );
     }
@@ -76,6 +77,7 @@ public sealed class JsonDownloader : IJsonDownloader
         Uri requestUri,
         JsonMetadata? cachedMetadata,
         HttpResponseMessage result,
+        bool useCache,
         CancellationToken cancellationToken
     )
     {
@@ -125,6 +127,7 @@ public sealed class JsonDownloader : IJsonDownloader
             requestUri: requestUri,
             result: result,
             eTag: eTag,
+            useCache: useCache,
             cancellationToken: cancellationToken
         );
     }
@@ -188,6 +191,7 @@ public sealed class JsonDownloader : IJsonDownloader
         Uri requestUri,
         HttpResponseMessage result,
         string? eTag,
+        bool useCache,
         CancellationToken cancellationToken
     )
     {
@@ -197,12 +201,15 @@ public sealed class JsonDownloader : IJsonDownloader
 
         this._logger.Metadata(upstream: requestUri, metadata: jsonMetadata, httpStatus: result.StatusCode);
 
-        await this.SaveToCacheAsync(
-            requestUri: requestUri,
-            jsonMetadata: jsonMetadata,
-            json: json,
-            cancellationToken: cancellationToken
-        );
+        if (useCache)
+        {
+            await this.SaveToCacheAsync(
+                requestUri: requestUri,
+                jsonMetadata: jsonMetadata,
+                json: json,
+                cancellationToken: cancellationToken
+            );
+        }
 
         return new(Json: json, ETag: string.IsNullOrEmpty(jsonMetadata.Etag) ? HashJson(json) : jsonMetadata.Etag);
     }
