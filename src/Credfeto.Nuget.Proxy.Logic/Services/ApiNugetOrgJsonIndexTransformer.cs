@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -13,6 +12,7 @@ using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NonBlocking;
 using AppJsonContexts = Credfeto.Nuget.Proxy.Models.Models.AppJsonContexts;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
@@ -41,10 +41,13 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         new("https://azuresearch-ussc.nuget.org"),
     ];
 
-    private ImmutableDictionary<string, Uri> _rewrittenPathUpstreams = ImmutableDictionary<
-        string,
-        Uri
-    >.Empty.WithComparers(StringComparer.OrdinalIgnoreCase);
+    // Seeded with the search/autocomplete paths this transformer whitelists so routing is correct even
+    // before /v3/index.json has been fetched once to learn the full mapping below.
+    private readonly ConcurrentDictionary<string, Uri> _rewrittenPathUpstreams = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["/query"] = UpstreamUrl[1],
+        ["/autocomplete"] = UpstreamUrl[1],
+    };
 
     public ApiNugetOrgJsonIndexTransformer(
         IOptions<ProxyServerConfig> config,
@@ -104,12 +107,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
             if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 string rewrittenPath = resource.Id[cleanedUpstreamUrl.Length..];
-                ImmutableInterlocked.AddOrUpdate(
-                    location: ref this._rewrittenPathUpstreams,
-                    key: rewrittenPath,
-                    addValue: uri,
-                    updateValueFactory: (_, _) => uri
-                );
+                this._rewrittenPathUpstreams.TryAdd(rewrittenPath, uri);
 
                 return new(
                     new Uri(this.Config.PublicUrl).CleanUri() + rewrittenPath,
@@ -125,7 +123,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     protected override Uri GetRequestUri(string path, string queryString)
     {
         // Rewritten search/autocomplete resources can be served from an upstream host (e.g. azuresearch-ussc.nuget.org)
-        // other than UpstreamUrls[0]; the mapping is learned the first time /v3/index.json rewrites that resource.
+        // other than UpstreamUrls[0]; known paths are seeded above, others are learned as /v3/index.json rewrites them.
         return this._rewrittenPathUpstreams.TryGetValue(path, out Uri? upstream)
             ? new(upstream.CleanUri() + path + queryString)
             : base.GetRequestUri(path: path, queryString: queryString);

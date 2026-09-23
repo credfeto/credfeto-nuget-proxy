@@ -226,7 +226,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
     }
 
     [Fact]
-    public async Task GetFromUpstreamAsync_UsesDefaultUpstream_ForSearchPath_WhenIndexNotYetFetchedAsync()
+    public async Task GetFromUpstreamAsync_RoutesToAzureSearch_ForSearchPath_WhenIndexNotYetFetchedAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
@@ -250,7 +250,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         await this
             ._jsonDownloader.Received(1)
             .ReadUpstreamAsync(
-                requestUri: new Uri("https://api.nuget.org/query?q=Newtonsoft"),
+                requestUri: new Uri("https://azuresearch-ussc.nuget.org/query?q=Newtonsoft"),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
                 useCache: false,
                 cancellationToken: Arg.Any<CancellationToken>()
