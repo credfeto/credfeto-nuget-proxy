@@ -24,6 +24,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Mixed-case upstream host names in the nuget.org index are now proxied correctly instead of being returned unrewritten (#104)
 - Fixed pre-commit build check failures caused by MSBuild backslash path separators, missing PackageReference asset metadata, and an outdated test package set incompatible with the AOT xunit runner
 - Fixed a HIGH severity OpenSSL vulnerability (CVE-2026-45447) in the published container image by switching the base image from the frozen 10.0-preview-noble-chiseled tag to the actively rebuilt 10.0-noble-chiseled GA tag
+- TBD - to be finalized after review
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.0.1978
