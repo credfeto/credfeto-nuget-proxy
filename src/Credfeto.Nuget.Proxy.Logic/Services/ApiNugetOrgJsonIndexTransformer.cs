@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -40,6 +41,11 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         new("https://azuresearch-ussc.nuget.org"),
     ];
 
+    private ImmutableDictionary<string, Uri> _rewrittenPathUpstreams = ImmutableDictionary<
+        string,
+        Uri
+    >.Empty.WithComparers(StringComparer.OrdinalIgnoreCase);
+
     public ApiNugetOrgJsonIndexTransformer(
         IOptions<ProxyServerConfig> config,
         IJsonDownloader jsonDownloader,
@@ -57,6 +63,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         {
             JsonResult? result = await this.GetJsonFromUpstreamWithReplacementsAsync(
                 path: path,
+                queryString: string.Empty,
                 userAgent: userAgent,
                 transformer: this.ReplaceIndex,
                 cancellationToken: cancellationToken
@@ -96,8 +103,16 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
             if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
+                string rewrittenPath = resource.Id[cleanedUpstreamUrl.Length..];
+                ImmutableInterlocked.AddOrUpdate(
+                    location: ref this._rewrittenPathUpstreams,
+                    key: rewrittenPath,
+                    addValue: uri,
+                    updateValueFactory: (_, _) => uri
+                );
+
                 return new(
-                    new Uri(this.Config.PublicUrl).CleanUri() + resource.Id[cleanedUpstreamUrl.Length..],
+                    new Uri(this.Config.PublicUrl).CleanUri() + rewrittenPath,
                     type: resource.Type,
                     comment: resource.Comment
                 );
@@ -105,6 +120,15 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         }
 
         return resource;
+    }
+
+    protected override Uri GetRequestUri(string path, string queryString)
+    {
+        // Rewritten search/autocomplete resources can be served from an upstream host (e.g. azuresearch-ussc.nuget.org)
+        // other than UpstreamUrls[0]; the mapping is learned the first time /v3/index.json rewrites that resource.
+        return this._rewrittenPathUpstreams.TryGetValue(path, out Uri? upstream)
+            ? new(upstream.CleanUri() + path + queryString)
+            : base.GetRequestUri(path: path, queryString: queryString);
     }
 
     public bool IsNuget => true;
