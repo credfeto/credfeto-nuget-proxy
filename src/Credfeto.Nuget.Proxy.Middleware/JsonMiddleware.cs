@@ -25,7 +25,13 @@ namespace Credfeto.Nuget.Proxy.Middleware;
 
 public sealed class JsonMiddleware : IMiddleware
 {
-    private static readonly IReadOnlyList<string> WhiteListedPaths = ["/autocomplete/query", "/search/query"];
+    private static readonly IReadOnlyList<string> WhiteListedPaths =
+    [
+        "/autocomplete/query",
+        "/search/query",
+        "/query",
+        "/autocomplete",
+    ];
     private readonly ICurrentTimeSource _currentTimeSource;
     private readonly ILogger<JsonMiddleware> _logger;
     private readonly IJsonTransformer _jsonTransformer;
@@ -44,7 +50,10 @@ public sealed class JsonMiddleware : IMiddleware
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        if (context.GetEndpoint() is not null || !IsMatchingRequest(context: context, out string? path))
+        if (
+            context.GetEndpoint() is not null
+            || !IsMatchingRequest(context: context, out string? path, out string queryString)
+        )
         {
             await next(context);
 
@@ -61,30 +70,14 @@ public sealed class JsonMiddleware : IMiddleware
                 context: context,
                 next: next,
                 path: path,
+                queryString: queryString,
                 userAgent: userAgent,
                 cancellationToken: cancellationToken
             );
         }
         catch (HttpRequestException exception)
         {
-            HttpStatusCode errorCode = exception.StatusCode ?? HttpStatusCode.InternalServerError;
-
-            if (errorCode == HttpStatusCode.NotFound)
-            {
-                this._logger.HttpNotFound(path: path);
-                this.NotFound(context: context, result: errorCode);
-            }
-            else
-            {
-                this._logger.HttpError(
-                    path: path,
-                    statusCode: errorCode,
-                    message: exception.Message,
-                    exception: exception
-                );
-
-                Failed(context: context, result: errorCode);
-            }
+            this.HandleHttpRequestException(context: context, path: path, exception: exception);
         }
         catch (JsonException exception)
         {
@@ -103,10 +96,28 @@ public sealed class JsonMiddleware : IMiddleware
         }
     }
 
+    private void HandleHttpRequestException(HttpContext context, string path, HttpRequestException exception)
+    {
+        HttpStatusCode errorCode = exception.StatusCode ?? HttpStatusCode.InternalServerError;
+
+        if (errorCode == HttpStatusCode.NotFound)
+        {
+            this._logger.HttpNotFound(path: path);
+            this.NotFound(context: context, result: errorCode);
+        }
+        else
+        {
+            this._logger.HttpError(path: path, statusCode: errorCode, message: exception.Message, exception: exception);
+
+            Failed(context: context, result: errorCode);
+        }
+    }
+
     private async Task ServeUpstreamAsync(
         HttpContext context,
         RequestDelegate next,
         string path,
+        string queryString,
         ProductInfoHeaderValue? userAgent,
         CancellationToken cancellationToken
     )
@@ -114,6 +125,7 @@ public sealed class JsonMiddleware : IMiddleware
         JsonResult? result = await this._jsonTransformer.GetFromUpstreamAsync(
             path: path,
             userAgent: userAgent,
+            queryString: queryString,
             cancellationToken: cancellationToken
         );
 
@@ -135,7 +147,11 @@ public sealed class JsonMiddleware : IMiddleware
         );
     }
 
-    private static bool IsMatchingRequest(HttpContext context, [NotNullWhen(true)] out string? path)
+    private static bool IsMatchingRequest(
+        HttpContext context,
+        [NotNullWhen(true)] out string? path,
+        out string queryString
+    )
     {
         if (
             StringComparer.Ordinal.Equals(x: context.Request.Method, y: "GET")
@@ -144,11 +160,13 @@ public sealed class JsonMiddleware : IMiddleware
         )
         {
             path = context.Request.Path.Value;
+            queryString = context.Request.QueryString.HasValue ? context.Request.QueryString.Value : string.Empty;
 
             return true;
         }
 
         path = null;
+        queryString = string.Empty;
 
         return false;
     }
