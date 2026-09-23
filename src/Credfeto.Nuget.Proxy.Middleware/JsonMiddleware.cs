@@ -160,7 +160,7 @@ public sealed class JsonMiddleware : IMiddleware
         )
         {
             path = context.Request.Path.Value;
-            queryString = context.Request.QueryString.HasValue ? context.Request.QueryString.Value : string.Empty;
+            queryString = context.GetQueryString();
 
             return true;
         }
