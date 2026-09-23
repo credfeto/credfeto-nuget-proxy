@@ -214,7 +214,11 @@ public sealed class JsonMiddleware : IMiddleware
 
     private static string EnsureQuoted(string source)
     {
-        return source.StartsWith('"') && source.EndsWith('"') ? source : "\"" + source + "\"";
+        return
+            source.StartsWith(value: '"', comparisonType: StringComparison.Ordinal)
+            && source.EndsWith(value: '"', comparisonType: StringComparison.Ordinal)
+            ? source
+            : "\"" + source + "\"";
     }
 
     private static void Failed(HttpContext context, HttpStatusCode result)

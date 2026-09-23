@@ -28,13 +28,22 @@ public sealed class LogicSetupTests : DependencyInjectionTestsBase
     }
 
     [Fact]
-    public void IJsonDownloaderShouldBeRegistered() => this.RequireService<IJsonDownloader>();
+    public void IJsonDownloaderShouldBeRegistered()
+    {
+        this.RequireService<IJsonDownloader>();
+    }
 
     [Fact]
-    public void IPackageDownloaderShouldBeRegistered() => this.RequireService<IPackageDownloader>();
+    public void IPackageDownloaderShouldBeRegistered()
+    {
+        this.RequireService<IPackageDownloader>();
+    }
 
     [Fact]
-    public void INupkgSourceShouldBeRegistered() => this.RequireService<INupkgSource>();
+    public void INupkgSourceShouldBeRegistered()
+    {
+        this.RequireService<INupkgSource>();
+    }
 
     [Fact]
     public void CanCreateJsonHttpClient()

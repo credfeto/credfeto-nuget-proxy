@@ -113,7 +113,10 @@ public sealed class PackageDownloaderTests : LoggingTestBase
     {
         private readonly HttpResponseMessage _response;
 
-        public TestHttpMessageHandler(HttpResponseMessage response) => this._response = response;
+        public TestHttpMessageHandler(HttpResponseMessage response)
+        {
+            this._response = response;
+        }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,

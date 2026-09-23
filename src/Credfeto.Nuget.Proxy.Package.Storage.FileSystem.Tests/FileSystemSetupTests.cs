@@ -25,8 +25,14 @@ public sealed class FileSystemSetupTests : DependencyInjectionTestsBase
     }
 
     [Fact]
-    public void IJsonStorageShouldBeRegistered() => this.RequireService<IJsonStorage>();
+    public void IJsonStorageShouldBeRegistered()
+    {
+        this.RequireService<IJsonStorage>();
+    }
 
     [Fact]
-    public void IPackageStorageShouldBeRegistered() => this.RequireService<IPackageStorage>();
+    public void IPackageStorageShouldBeRegistered()
+    {
+        this.RequireService<IPackageStorage>();
+    }
 }
