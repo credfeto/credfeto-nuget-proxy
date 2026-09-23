@@ -281,6 +281,111 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
         Assert.Equal(expected: HttpStatusCode.OK, actual: response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("/query")]
+    [InlineData("/autocomplete")]
+    public async Task InvokeAsync_Returns200_WhenSearchWhitelistedPathMatchesAsync(string path)
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"results":[]}""";
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: "\"etag\""));
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            requestUri: new Uri(uriString: path, UriKind.Relative),
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.OK, actual: response.StatusCode);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_ForwardsQueryString_ToTransformerAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"results":[]}""";
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: "\"etag\""));
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            requestUri: new Uri(uriString: "/search/query?q=Newtonsoft&prerelease=false", UriKind.Relative),
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.OK, actual: response.StatusCode);
+        await transformer
+            .Received(1)
+            .GetFromUpstreamAsync(
+                path: "/search/query",
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: "?q=Newtonsoft&prerelease=false",
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task InvokeAsync_ForwardsEmptyQueryString_WhenRequestHasNoQueryAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: "\"etag\""));
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative),
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.OK, actual: response.StatusCode);
+        await transformer
+            .Received(1)
+            .GetFromUpstreamAsync(
+                path: "/v3/index.json",
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: string.Empty,
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
+    }
+
     [Fact]
     public async Task InvokeAsync_Returns200_WhenUserAgentIsValidAsync()
     {
