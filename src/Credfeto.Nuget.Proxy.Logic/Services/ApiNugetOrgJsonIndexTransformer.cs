@@ -41,14 +41,16 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         new("https://azuresearch-ussc.nuget.org"),
     ];
 
+    private static readonly string CleanedAzureSearchUpstream = UpstreamUrl[1].CleanUri();
+
     // Seeded with the search/autocomplete paths this transformer whitelists so routing is correct even
     // before /v3/index.json has been fetched once to learn the full mapping below.
     private readonly ConcurrentDictionary<string, string> _rewrittenPathUpstreams = new(
         StringComparer.OrdinalIgnoreCase
     )
     {
-        ["/query"] = UpstreamUrl[1].CleanUri(),
-        ["/autocomplete"] = UpstreamUrl[1].CleanUri(),
+        ["/query"] = CleanedAzureSearchUpstream,
+        ["/autocomplete"] = CleanedAzureSearchUpstream,
     };
 
     public ApiNugetOrgJsonIndexTransformer(
@@ -102,15 +104,15 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
     private NugetResource RewriteResource(NugetResource resource)
     {
-        foreach (Uri uri in UpstreamUrl)
+        for (int index = 0; index < UpstreamUrl.Count; ++index)
         {
-            string cleanedUpstreamUrl = uri.CleanUri();
+            string cleanedUpstreamUrl = UpstreamUrl[index].CleanUri();
 
             if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 string rewrittenPath = resource.Id[cleanedUpstreamUrl.Length..];
 
-                if (!ReferenceEquals(uri, UpstreamUrl[0]))
+                if (index != 0)
                 {
                     this._rewrittenPathUpstreams.TryAdd(rewrittenPath, cleanedUpstreamUrl);
                 }
@@ -131,7 +133,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         // Rewritten search/autocomplete resources can be served from an upstream host (e.g. azuresearch-ussc.nuget.org)
         // other than UpstreamUrls[0]; known paths are seeded above, others are learned as /v3/index.json rewrites them.
         return this._rewrittenPathUpstreams.TryGetValue(path, out string? upstream)
-            ? new(upstream + path + queryString)
+            ? BuildUri(upstreamBase: upstream, path: path, queryString: queryString)
             : base.GetRequestUri(path: path, queryString: queryString);
     }
 
