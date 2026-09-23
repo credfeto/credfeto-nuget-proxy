@@ -43,10 +43,12 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
     // Seeded with the search/autocomplete paths this transformer whitelists so routing is correct even
     // before /v3/index.json has been fetched once to learn the full mapping below.
-    private readonly ConcurrentDictionary<string, Uri> _rewrittenPathUpstreams = new(StringComparer.OrdinalIgnoreCase)
+    private readonly ConcurrentDictionary<string, string> _rewrittenPathUpstreams = new(
+        StringComparer.OrdinalIgnoreCase
+    )
     {
-        ["/query"] = UpstreamUrl[1],
-        ["/autocomplete"] = UpstreamUrl[1],
+        ["/query"] = UpstreamUrl[1].CleanUri(),
+        ["/autocomplete"] = UpstreamUrl[1].CleanUri(),
     };
 
     public ApiNugetOrgJsonIndexTransformer(
@@ -107,7 +109,11 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
             if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 string rewrittenPath = resource.Id[cleanedUpstreamUrl.Length..];
-                this._rewrittenPathUpstreams.TryAdd(rewrittenPath, uri);
+
+                if (!ReferenceEquals(uri, UpstreamUrl[0]))
+                {
+                    this._rewrittenPathUpstreams.TryAdd(rewrittenPath, cleanedUpstreamUrl);
+                }
 
                 return new(
                     new Uri(this.Config.PublicUrl).CleanUri() + rewrittenPath,
@@ -124,8 +130,8 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     {
         // Rewritten search/autocomplete resources can be served from an upstream host (e.g. azuresearch-ussc.nuget.org)
         // other than UpstreamUrls[0]; known paths are seeded above, others are learned as /v3/index.json rewrites them.
-        return this._rewrittenPathUpstreams.TryGetValue(path, out Uri? upstream)
-            ? new(upstream.CleanUri() + path + queryString)
+        return this._rewrittenPathUpstreams.TryGetValue(path, out string? upstream)
+            ? new(upstream + path + queryString)
             : base.GetRequestUri(path: path, queryString: queryString);
     }
 
