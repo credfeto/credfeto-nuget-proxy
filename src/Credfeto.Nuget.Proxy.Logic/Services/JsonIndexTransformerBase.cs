@@ -20,6 +20,7 @@ public abstract class JsonIndexTransformerBase
     private readonly IJsonDownloader _jsonDownloader;
     private readonly bool _indexReplacement;
     private readonly ILogger _logger;
+    private readonly string _upstreamBaseUrl;
 
     protected JsonIndexTransformerBase(
         IOptions<ProxyServerConfig> config,
@@ -32,6 +33,7 @@ public abstract class JsonIndexTransformerBase
         this._jsonDownloader = jsonDownloader;
         this._indexReplacement = indexReplacement;
         this._logger = logger;
+        this._upstreamBaseUrl = new Uri(this.Config.UpstreamUrls[0]).CleanUri();
     }
 
     protected ProxyServerConfig Config { get; }
@@ -108,7 +110,12 @@ public abstract class JsonIndexTransformerBase
 
     protected virtual Uri GetRequestUri(string path, string queryString)
     {
-        return new(new Uri(this.Config.UpstreamUrls[0]).CleanUri() + path + queryString);
+        return BuildUri(upstreamBase: this._upstreamBaseUrl, path: path, queryString: queryString);
+    }
+
+    protected static Uri BuildUri(string upstreamBase, string path, string queryString)
+    {
+        return new(upstreamBase + path + queryString);
     }
 
     protected string ReplaceUrls(string json)
