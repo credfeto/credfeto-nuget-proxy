@@ -28,7 +28,7 @@
     <OptimizationPreference>speed</OptimizationPreference>
     <OutputType>Exe</OutputType>
     <RunAOTCompilation>false</RunAOTCompilation>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <TieredCompilation>true</TieredCompilation>
     <TieredPGO>true</TieredPGO>
@@ -57,7 +57,6 @@
   <ItemGroup>
     <PackageReference Include="FunFair.Test.Common" Version="6.4.6.2749" IncludeAssets="compile;runtime" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" IncludeAssets="compile;runtime" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" IncludeAssets="compile;runtime" />
     <PackageReference Include="xunit.v3.aot.mtp-v2" Version="4.0.0" IncludeAssets="all" />
   </ItemGroup>
   <ItemGroup>

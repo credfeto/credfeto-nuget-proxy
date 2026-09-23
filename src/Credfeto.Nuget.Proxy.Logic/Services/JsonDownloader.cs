@@ -226,7 +226,11 @@ public sealed class JsonDownloader : IJsonDownloader
 
     private static string EnsureQuoted(string source)
     {
-        return source.StartsWith('"') && source.EndsWith('"') ? source : "\"" + source + "\"";
+        return
+            source.StartsWith(value: '"', comparisonType: StringComparison.Ordinal)
+            && source.EndsWith(value: '"', comparisonType: StringComparison.Ordinal)
+            ? source
+            : "\"" + source + "\"";
     }
 
     private async ValueTask SaveToCacheAsync(
