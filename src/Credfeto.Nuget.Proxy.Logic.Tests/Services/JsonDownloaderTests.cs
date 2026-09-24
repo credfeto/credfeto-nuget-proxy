@@ -48,6 +48,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -71,6 +72,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: userAgent,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -98,6 +100,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -126,6 +129,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -147,6 +151,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -167,7 +172,12 @@ public sealed class JsonDownloaderTests : LoggingTestBase
 
         await Assert.ThrowsAsync<HttpRequestException>(() =>
             downloader
-                .ReadUpstreamAsync(requestUri: RequestUri, userAgent: null, cancellationToken: cancellationToken)
+                .ReadUpstreamAsync(
+                    requestUri: RequestUri,
+                    userAgent: null,
+                    useCache: true,
+                    cancellationToken: cancellationToken
+                )
                 .AsTask()
         );
     }
@@ -195,6 +205,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 

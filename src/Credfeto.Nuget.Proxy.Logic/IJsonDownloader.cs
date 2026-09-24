@@ -10,7 +10,7 @@ public interface IJsonDownloader
     ValueTask<JsonResponse> ReadUpstreamAsync(
         Uri requestUri,
         ProductInfoHeaderValue? userAgent,
-        bool useCache = true,
-        CancellationToken cancellationToken = default
+        bool useCache,
+        CancellationToken cancellationToken
     );
 }

@@ -41,8 +41,8 @@ public abstract class JsonIndexTransformerBase
     public async ValueTask<JsonResult?> GetFromUpstreamAsync(
         string path,
         ProductInfoHeaderValue? userAgent,
-        string queryString = "",
-        CancellationToken cancellationToken = default
+        string queryString,
+        CancellationToken cancellationToken
     )
     {
         if (this._indexReplacement)
