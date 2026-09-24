@@ -24,6 +24,6 @@ internal static class HttpContextExtensions
 
     public static string GetQueryString(this HttpContext context)
     {
-        return context.Request.QueryString.HasValue ? context.Request.QueryString.Value : string.Empty;
+        return context.Request.QueryString.ToUriComponent();
     }
 }

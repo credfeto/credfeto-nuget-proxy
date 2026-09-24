@@ -33,7 +33,7 @@ public abstract class JsonIndexTransformerBase
         this._jsonDownloader = jsonDownloader;
         this._indexReplacement = indexReplacement;
         this._logger = logger;
-        this._upstreamBaseUrl = new Uri(this.Config.UpstreamUrls[0]).CleanUri();
+        this._upstreamBaseUrl = CleanUpstreamUrl(this.Config.UpstreamUrls[0]);
     }
 
     protected ProxyServerConfig Config { get; }
