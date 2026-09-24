@@ -25,12 +25,10 @@ namespace Credfeto.Nuget.Proxy.Middleware;
 
 public sealed class JsonMiddleware : IMiddleware
 {
-    private static readonly IReadOnlyList<string> WhiteListedPaths =
-    [
-        "/autocomplete/query",
-        "/search/query",
-        .. SearchAutocompletePaths.Paths,
-    ];
+    private static readonly IReadOnlySet<string> WhiteListedPaths = new HashSet<string>(
+        ["/autocomplete/query", "/search/query", .. SearchAutocompletePaths.Paths],
+        StringComparer.OrdinalIgnoreCase
+    );
     private readonly ICurrentTimeSource _currentTimeSource;
     private readonly ILogger<JsonMiddleware> _logger;
     private readonly IJsonTransformer _jsonTransformer;
@@ -173,7 +171,7 @@ public sealed class JsonMiddleware : IMiddleware
     private static bool IsMatchingPath(string path)
     {
         return path.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase)
-            || WhiteListedPaths.Contains(value: path, comparer: StringComparer.OrdinalIgnoreCase);
+            || WhiteListedPaths.Contains(path);
     }
 
     private async ValueTask SuccessAsync(
