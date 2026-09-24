@@ -105,15 +105,15 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
     private NugetResource RewriteResource(NugetResource resource)
     {
-        for (int index = 0; index < UpstreamUrl.Count; ++index)
+        foreach (Uri upstreamUrl in UpstreamUrl)
         {
-            string cleanedUpstreamUrl = UpstreamUrl[index].CleanUri();
+            string cleanedUpstreamUrl = upstreamUrl.CleanUri();
 
             if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 string rewrittenPath = resource.Id[cleanedUpstreamUrl.Length..];
 
-                if (index != 0)
+                if (StringComparer.OrdinalIgnoreCase.Equals(x: cleanedUpstreamUrl, y: CleanedAzureSearchUpstream))
                 {
                     this._rewrittenPaths.TryAdd(key: rewrittenPath, value: 0);
                 }
