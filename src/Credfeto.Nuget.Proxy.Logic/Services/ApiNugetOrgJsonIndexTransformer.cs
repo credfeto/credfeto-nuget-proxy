@@ -44,21 +44,22 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     private static readonly string CleanedAzureSearchUpstream = UpstreamUrl[1].CleanUri();
 
     // Seeded with the search/autocomplete paths this transformer whitelists so routing is correct even
-    // before /v3/index.json has been fetched once to learn the full mapping below.
-    private readonly ConcurrentDictionary<string, string> _rewrittenPathUpstreams = new(
-        StringComparer.OrdinalIgnoreCase
-    )
-    {
-        ["/query"] = CleanedAzureSearchUpstream,
-        ["/autocomplete"] = CleanedAzureSearchUpstream,
-    };
+    // before /v3/index.json has been fetched once to learn the full mapping below. All rewritten paths
+    // route to the same azuresearch upstream, so this only needs to track membership.
+    private readonly ConcurrentDictionary<string, byte> _rewrittenPaths = new(StringComparer.OrdinalIgnoreCase);
 
     public ApiNugetOrgJsonIndexTransformer(
         IOptions<ProxyServerConfig> config,
         IJsonDownloader jsonDownloader,
         ILogger<ApiNugetOrgJsonIndexTransformer> logger
     )
-        : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: true, logger: logger) { }
+        : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: true, logger: logger)
+    {
+        foreach (string path in SearchAutocompletePaths.Paths)
+        {
+            this._rewrittenPaths.TryAdd(key: path, value: 0);
+        }
+    }
 
     protected override async ValueTask<(bool Match, JsonResult? Result)> DoIndexReplacementAsync(
         string path,
@@ -114,7 +115,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
                 if (index != 0)
                 {
-                    this._rewrittenPathUpstreams.TryAdd(rewrittenPath, cleanedUpstreamUrl);
+                    this._rewrittenPaths.TryAdd(key: rewrittenPath, value: 0);
                 }
 
                 return new(
@@ -132,8 +133,9 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     {
         // Rewritten search/autocomplete resources can be served from an upstream host (e.g. azuresearch-ussc.nuget.org)
         // other than UpstreamUrls[0]; known paths are seeded above, others are learned as /v3/index.json rewrites them.
-        return this._rewrittenPathUpstreams.TryGetValue(path, out string? upstream)
-            ? BuildUri(upstreamBase: upstream, path: path, queryString: queryString)
+        // All such paths route to the same azuresearch host, so only membership needs to be tracked.
+        return this._rewrittenPaths.ContainsKey(path)
+            ? BuildUri(upstreamBase: CleanedAzureSearchUpstream, path: path, queryString: queryString)
             : base.GetRequestUri(path: path, queryString: queryString);
     }
 

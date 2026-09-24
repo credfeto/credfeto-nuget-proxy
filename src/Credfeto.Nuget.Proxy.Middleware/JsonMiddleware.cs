@@ -29,8 +29,7 @@ public sealed class JsonMiddleware : IMiddleware
     [
         "/autocomplete/query",
         "/search/query",
-        "/query",
-        "/autocomplete",
+        .. SearchAutocompletePaths.Paths,
     ];
     private readonly ICurrentTimeSource _currentTimeSource;
     private readonly ILogger<JsonMiddleware> _logger;
