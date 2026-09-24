@@ -34,13 +34,15 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         "VulnerabilityInfo/6.7.0",
     ];
 
+    private const string AZURE_SEARCH_UPSTREAM_URL = "https://azuresearch-ussc.nuget.org";
+
     private static readonly IReadOnlyList<string> CleanedUpstreamUrls =
     [
         new Uri("https://api.nuget.org").CleanUri(),
-        new Uri("https://azuresearch-ussc.nuget.org").CleanUri(),
+        new Uri(AZURE_SEARCH_UPSTREAM_URL).CleanUri(),
     ];
 
-    private static readonly string CleanedAzureSearchUpstream = CleanedUpstreamUrls[1];
+    private static readonly string CleanedAzureSearchUpstream = new Uri(AZURE_SEARCH_UPSTREAM_URL).CleanUri();
 
     public ApiNugetOrgJsonIndexTransformer(
         IOptions<ProxyServerConfig> config,
@@ -97,10 +99,8 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         {
             if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
-                string rewrittenPath = resource.Id[cleanedUpstreamUrl.Length..];
-
                 return new(
-                    new Uri(this.Config.PublicUrl).CleanUri() + rewrittenPath,
+                    new Uri(this.Config.PublicUrl).CleanUri() + resource.Id[cleanedUpstreamUrl.Length..],
                     type: resource.Type,
                     comment: resource.Comment
                 );
