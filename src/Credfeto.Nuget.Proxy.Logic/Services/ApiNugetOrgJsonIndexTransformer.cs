@@ -36,13 +36,13 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
     private const string AZURE_SEARCH_UPSTREAM_URL = "https://azuresearch-ussc.nuget.org";
 
+    private static readonly string CleanedAzureSearchUpstream = new Uri(AZURE_SEARCH_UPSTREAM_URL).CleanUri();
+
     private static readonly IReadOnlyList<string> CleanedUpstreamUrls =
     [
         new Uri("https://api.nuget.org").CleanUri(),
-        new Uri(AZURE_SEARCH_UPSTREAM_URL).CleanUri(),
+        CleanedAzureSearchUpstream,
     ];
-
-    private static readonly string CleanedAzureSearchUpstream = new Uri(AZURE_SEARCH_UPSTREAM_URL).CleanUri();
 
     public ApiNugetOrgJsonIndexTransformer(
         IOptions<ProxyServerConfig> config,
@@ -113,7 +113,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     protected override Uri GetRequestUri(string path, string queryString)
     {
         // Search/autocomplete requests are served from the azuresearch upstream rather than UpstreamUrls[0].
-        return SearchAutocompletePaths.Paths.Contains(path, StringComparer.OrdinalIgnoreCase)
+        return SearchAutocompletePaths.Paths.Contains(path)
             ? BuildUri(upstreamBase: CleanedAzureSearchUpstream, path: path, queryString: queryString)
             : base.GetRequestUri(path: path, queryString: queryString);
     }
