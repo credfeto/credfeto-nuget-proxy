@@ -54,6 +54,7 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag1\""));
@@ -61,6 +62,7 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/catalog/data.json",
             userAgent: null,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
@@ -77,6 +79,7 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: """{}""", ETag: "\"etag2\""));
@@ -84,6 +87,7 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/vulnerabilties/index.json",
             userAgent: null,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
@@ -99,6 +103,7 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: """{"data":"test"}""", ETag: "\"etag3\""));
@@ -108,6 +113,7 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/catalog/data.json",
             userAgent: userAgent,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
@@ -176,6 +182,7 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
             .ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag4\""));
@@ -189,6 +196,7 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await transformer.GetFromUpstreamAsync(
             path: "/v3/something.json",
             userAgent: null,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 

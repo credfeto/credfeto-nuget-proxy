@@ -43,8 +43,8 @@ public sealed class JsonDownloader : IJsonDownloader
     public async ValueTask<JsonResponse> ReadUpstreamAsync(
         Uri requestUri,
         ProductInfoHeaderValue? userAgent,
-        bool useCache = true,
-        CancellationToken cancellationToken = default
+        bool useCache,
+        CancellationToken cancellationToken
     )
     {
         HttpClient client = this.GetClient(userAgent);

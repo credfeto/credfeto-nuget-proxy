@@ -175,6 +175,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns((JsonResult?)null);
@@ -204,6 +205,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
@@ -236,6 +238,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: UNQUOTED_ETAG));
@@ -265,6 +268,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: "\"etag\""));
@@ -367,6 +371,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: "\"etag\""));
@@ -396,6 +401,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: "\"etag\""));
@@ -426,6 +432,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
@@ -462,6 +469,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
@@ -496,6 +504,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
@@ -530,6 +539,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
@@ -566,6 +576,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResult(Json: JSON, CacheMaxAgeSeconds: 60, ETag: ETAG));
@@ -604,6 +615,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .ThrowsAsync(
@@ -633,6 +645,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .ThrowsAsync(
@@ -662,6 +675,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .ThrowsAsync(new JsonException("bad json"));
@@ -689,6 +703,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .ThrowsAsync(new TimeoutRejectedException("timeout"));
@@ -716,6 +731,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .ThrowsAsync(new BulkheadRejectedException("bulkhead"));
@@ -743,6 +759,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
             .GetFromUpstreamAsync(
                 path: Arg.Any<string>(),
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .ThrowsAsync(new InvalidOperationException("unexpected error"));

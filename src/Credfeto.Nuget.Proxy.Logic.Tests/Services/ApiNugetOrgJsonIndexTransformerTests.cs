@@ -57,6 +57,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag1\""));
@@ -64,6 +65,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/index.json",
             userAgent: null,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
@@ -85,6 +87,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag6\""));
@@ -92,6 +95,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/index.json",
             userAgent: null,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
@@ -111,6 +115,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag2\""));
@@ -118,6 +123,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/index.json",
             userAgent: null,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
@@ -137,6 +143,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag3\""));
@@ -144,6 +151,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/index.json",
             userAgent: null,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
@@ -162,6 +170,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag4\""));
@@ -169,6 +178,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/catalog/0.json",
             userAgent: null,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
@@ -220,6 +230,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         this._jsonDownloader.ReadUpstreamAsync(
                 requestUri: Arg.Any<Uri>(),
                 userAgent: Arg.Any<ProductInfoHeaderValue?>(),
+                useCache: Arg.Any<bool>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
             .Returns(new JsonResponse(Json: UPSTREAM_JSON, ETag: "\"etag5\""));
@@ -229,6 +240,7 @@ public sealed class ApiNugetOrgJsonIndexTransformerTests : LoggingTestBase
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
             path: "/v3/index.json",
             userAgent: userAgent,
+            queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
