@@ -157,7 +157,7 @@ public sealed class JsonMiddleware : IMiddleware
         )
         {
             path = context.Request.Path.Value;
-            queryString = context.GetQueryString();
+            queryString = WhiteListedPaths.Contains(path) ? context.GetQueryString() : string.Empty;
 
             return true;
         }
