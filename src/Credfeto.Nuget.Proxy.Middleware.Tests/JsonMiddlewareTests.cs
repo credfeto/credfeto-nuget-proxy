@@ -319,6 +319,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
     [Theory]
     [InlineData("/search/query?q=Newtonsoft&prerelease=false", "/search/query", "?q=Newtonsoft&prerelease=false")]
     [InlineData("/v3/index.json", "/v3/index.json", "")]
+    [InlineData("/v3/index.json?utm_source=test", "/v3/index.json", "")]
     public async Task InvokeAsync_ForwardsQueryString_ToTransformerAsync(
         string requestUri,
         string expectedPath,
