@@ -12,7 +12,6 @@ using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NonBlocking;
 using AppJsonContexts = Credfeto.Nuget.Proxy.Models.Models.AppJsonContexts;
 
 namespace Credfeto.Nuget.Proxy.Logic.Services;
@@ -35,31 +34,20 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         "VulnerabilityInfo/6.7.0",
     ];
 
-    private static readonly IReadOnlyList<Uri> UpstreamUrl =
+    private static readonly IReadOnlyList<string> CleanedUpstreamUrls =
     [
-        new("https://api.nuget.org"),
-        new("https://azuresearch-ussc.nuget.org"),
+        new Uri("https://api.nuget.org").CleanUri(),
+        new Uri("https://azuresearch-ussc.nuget.org").CleanUri(),
     ];
 
-    private static readonly string CleanedAzureSearchUpstream = UpstreamUrl[1].CleanUri();
-
-    // Seeded with the search/autocomplete paths this transformer whitelists so routing is correct even
-    // before /v3/index.json has been fetched once to learn the full mapping below. All rewritten paths
-    // route to the same azuresearch upstream, so this only needs to track membership.
-    private readonly ConcurrentDictionary<string, byte> _rewrittenPaths = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly string CleanedAzureSearchUpstream = CleanedUpstreamUrls[1];
 
     public ApiNugetOrgJsonIndexTransformer(
         IOptions<ProxyServerConfig> config,
         IJsonDownloader jsonDownloader,
         ILogger<ApiNugetOrgJsonIndexTransformer> logger
     )
-        : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: true, logger: logger)
-    {
-        foreach (string path in SearchAutocompletePaths.Paths)
-        {
-            this._rewrittenPaths.TryAdd(key: path, value: 0);
-        }
-    }
+        : base(config: config, jsonDownloader: jsonDownloader, indexReplacement: true, logger: logger) { }
 
     protected override async ValueTask<(bool Match, JsonResult? Result)> DoIndexReplacementAsync(
         string path,
@@ -105,18 +93,11 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
     private NugetResource RewriteResource(NugetResource resource)
     {
-        foreach (Uri upstreamUrl in UpstreamUrl)
+        foreach (string cleanedUpstreamUrl in CleanedUpstreamUrls)
         {
-            string cleanedUpstreamUrl = upstreamUrl.CleanUri();
-
             if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 string rewrittenPath = resource.Id[cleanedUpstreamUrl.Length..];
-
-                if (StringComparer.OrdinalIgnoreCase.Equals(x: cleanedUpstreamUrl, y: CleanedAzureSearchUpstream))
-                {
-                    this._rewrittenPaths.TryAdd(key: rewrittenPath, value: 0);
-                }
 
                 return new(
                     new Uri(this.Config.PublicUrl).CleanUri() + rewrittenPath,
@@ -131,10 +112,8 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
     protected override Uri GetRequestUri(string path, string queryString)
     {
-        // Rewritten search/autocomplete resources can be served from an upstream host (e.g. azuresearch-ussc.nuget.org)
-        // other than UpstreamUrls[0]; known paths are seeded above, others are learned as /v3/index.json rewrites them.
-        // All such paths route to the same azuresearch host, so only membership needs to be tracked.
-        return this._rewrittenPaths.ContainsKey(path)
+        // Search/autocomplete requests are served from the azuresearch upstream rather than UpstreamUrls[0].
+        return SearchAutocompletePaths.Paths.Contains(path, StringComparer.OrdinalIgnoreCase)
             ? BuildUri(upstreamBase: CleanedAzureSearchUpstream, path: path, queryString: queryString)
             : base.GetRequestUri(path: path, queryString: queryString);
     }
