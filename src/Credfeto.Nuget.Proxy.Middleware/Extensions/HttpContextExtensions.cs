@@ -21,4 +21,9 @@ internal static class HttpContextExtensions
 
         return null;
     }
+
+    public static string GetQueryString(this HttpContext context)
+    {
+        return context.Request.QueryString.ToUriComponent();
+    }
 }

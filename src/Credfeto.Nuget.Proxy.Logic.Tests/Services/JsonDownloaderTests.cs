@@ -48,6 +48,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -71,6 +72,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: userAgent,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -98,6 +100,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -126,6 +129,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -147,6 +151,7 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
@@ -167,7 +172,12 @@ public sealed class JsonDownloaderTests : LoggingTestBase
 
         await Assert.ThrowsAsync<HttpRequestException>(() =>
             downloader
-                .ReadUpstreamAsync(requestUri: RequestUri, userAgent: null, cancellationToken: cancellationToken)
+                .ReadUpstreamAsync(
+                    requestUri: RequestUri,
+                    userAgent: null,
+                    useCache: true,
+                    cancellationToken: cancellationToken
+                )
                 .AsTask()
         );
     }
@@ -195,11 +205,50 @@ public sealed class JsonDownloaderTests : LoggingTestBase
         JsonResponse result = await downloader.ReadUpstreamAsync(
             requestUri: RequestUri,
             userAgent: null,
+            useCache: true,
             cancellationToken: cancellationToken
         );
 
         Assert.Equal(expected: NEW_JSON, actual: result.Json);
         Assert.Equal(expected: NEW_ETAG, actual: result.ETag);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ReadUpstreamAsync_RespectsUseCacheFlagAsync(bool useCache)
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        if (useCache)
+        {
+            MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: null);
+        }
+
+        using TestHttpMessageHandler handler = new(CreateJsonResponse(SAMPLE_JSON, etag: "\"etag-usecache\""));
+        using HttpClient client = new(handler);
+        IJsonDownloader downloader = this.CreateDownloader(client);
+
+        JsonResponse result = await downloader.ReadUpstreamAsync(
+            requestUri: RequestUri,
+            userAgent: null,
+            useCache: useCache,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: SAMPLE_JSON, actual: result.Json);
+        int expectedCalls = useCache ? 1 : 0;
+        await this
+            ._jsonStorage.Received(expectedCalls)
+            .LoadMetadataAsync(requestUri: Arg.Any<Uri>(), cancellationToken: Arg.Any<CancellationToken>());
+        await this
+            ._jsonStorage.Received(expectedCalls)
+            .SaveAsync(
+                requestUri: Arg.Any<Uri>(),
+                metadata: Arg.Any<JsonMetadata>(),
+                jsonContent: Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            );
     }
 
     private static void MockJsonStorageLoadMetadata(IJsonStorage storage, JsonMetadata? result)

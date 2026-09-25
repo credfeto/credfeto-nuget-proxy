@@ -34,10 +34,14 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         "VulnerabilityInfo/6.7.0",
     ];
 
-    private static readonly IReadOnlyList<Uri> UpstreamUrl =
+    private const string AZURE_SEARCH_UPSTREAM_URL = "https://azuresearch-ussc.nuget.org";
+
+    private static readonly string CleanedAzureSearchUpstream = new Uri(AZURE_SEARCH_UPSTREAM_URL).CleanUri();
+
+    private static readonly IReadOnlyList<string> CleanedUpstreamUrls =
     [
-        new("https://api.nuget.org"),
-        new("https://azuresearch-ussc.nuget.org"),
+        new Uri("https://api.nuget.org").CleanUri(),
+        CleanedAzureSearchUpstream,
     ];
 
     public ApiNugetOrgJsonIndexTransformer(
@@ -57,6 +61,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         {
             JsonResult? result = await this.GetJsonFromUpstreamWithReplacementsAsync(
                 path: path,
+                queryString: string.Empty,
                 userAgent: userAgent,
                 transformer: this.ReplaceIndex,
                 cancellationToken: cancellationToken
@@ -90,10 +95,8 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
     [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
     private NugetResource RewriteResource(NugetResource resource)
     {
-        foreach (Uri uri in UpstreamUrl)
+        foreach (string cleanedUpstreamUrl in CleanedUpstreamUrls)
         {
-            string cleanedUpstreamUrl = uri.CleanUri();
-
             if (resource.Id.StartsWith(cleanedUpstreamUrl, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 return new(
@@ -105,6 +108,14 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
         }
 
         return resource;
+    }
+
+    protected override Uri GetRequestUri(string path, string queryString)
+    {
+        // Search/autocomplete requests are served from the azuresearch upstream rather than UpstreamUrls[0].
+        return SearchAutocompletePaths.Paths.Contains(path)
+            ? BuildUri(upstreamBase: CleanedAzureSearchUpstream, path: path, queryString: queryString)
+            : base.GetRequestUri(path: path, queryString: queryString);
     }
 
     public bool IsNuget => true;
