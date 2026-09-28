@@ -46,7 +46,7 @@ public sealed class NupkgSource : INupkgSource
         }
 
         return await this.TryToGetFromCacheAsync(sourcePath: path, cancellationToken: cancellationToken)
-            ?? await this.GetFromUpstream2Async(
+            ?? await this.DownloadAndCacheAsync(
                 sourcePath: path,
                 userAgent: userAgent,
                 cancellationToken: cancellationToken
@@ -75,7 +75,7 @@ public sealed class NupkgSource : INupkgSource
         return PackageResult.FromCache(path: path, size: size);
     }
 
-    private async ValueTask<PackageResult?> GetFromUpstream2Async(
+    private async ValueTask<PackageResult?> DownloadAndCacheAsync(
         string sourcePath,
         ProductInfoHeaderValue? userAgent,
         CancellationToken cancellationToken
