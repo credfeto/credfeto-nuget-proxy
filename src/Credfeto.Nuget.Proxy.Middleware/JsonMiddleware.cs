@@ -181,11 +181,7 @@ public sealed class JsonMiddleware : IMiddleware
 
         context.Response.StatusCode = (int)HttpStatusCode.OK;
         context.Response.Headers.Append(key: "Content-Type", value: "application/json; charset=utf-8");
-        context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
-        context.Response.Headers.Expires = this
-            ._currentTimeSource.UtcNow()
-            .AddSeconds(ageSeconds)
-            .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
+        this.ApplyPublicCacheHeaders(context: context, ageSeconds: ageSeconds);
         context.Response.Headers.Append(key: "ETag", value: quotedETag);
 
         await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
@@ -204,11 +200,7 @@ public sealed class JsonMiddleware : IMiddleware
     private void NotModified(HttpContext context, int ageSeconds, string eTag)
     {
         context.Response.StatusCode = (int)HttpStatusCode.NotModified;
-        context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
-        context.Response.Headers.Expires = this
-            ._currentTimeSource.UtcNow()
-            .AddSeconds(ageSeconds)
-            .ToString(format: "ddd, dd MMM yyyy HH:mm:ss 'GMT'", formatProvider: CultureInfo.InvariantCulture);
+        this.ApplyPublicCacheHeaders(context: context, ageSeconds: ageSeconds);
         context.Response.Headers.Append(key: "ETag", value: eTag);
     }
 
@@ -231,6 +223,11 @@ public sealed class JsonMiddleware : IMiddleware
     {
         const int ageSeconds = 300;
         context.Response.StatusCode = (int)result;
+        this.ApplyPublicCacheHeaders(context: context, ageSeconds: ageSeconds);
+    }
+
+    private void ApplyPublicCacheHeaders(HttpContext context, int ageSeconds)
+    {
         context.Response.Headers.CacheControl = $"public, must-revalidate, max-age={ageSeconds}";
         context.Response.Headers.Expires = this
             ._currentTimeSource.UtcNow()
