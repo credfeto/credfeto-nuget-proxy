@@ -19,7 +19,7 @@ internal static class HttpClientSetup
         return services
             .AddHttpClient(
                 name: HttpClientNames.Json,
-                configureClient: httpClient => InitializeJsonClient(httpClient: httpClient, httpTimeout: HttpTimeout)
+                configureClient: httpClient => InitializeClient(httpClient: httpClient, mediaType: "application/json")
             )
             .SetHandlerLifetime(TimeSpan.FromMinutes(5))
             .ConfigurePrimaryHttpMessageHandler(configureHandler: _ => new HttpClientHandler
@@ -41,7 +41,8 @@ internal static class HttpClientSetup
         return services
             .AddHttpClient(
                 name: HttpClientNames.NugetPackage,
-                configureClient: httpClient => InitializeNupkgClient(httpClient: httpClient, httpTimeout: HttpTimeout)
+                configureClient: httpClient =>
+                    InitializeClient(httpClient: httpClient, mediaType: "application/octet-stream")
             )
             .SetHandlerLifetime(TimeSpan.FromMinutes(5))
             .ConfigurePrimaryHttpMessageHandler(configureHandler: _ => new HttpClientHandler
@@ -58,25 +59,14 @@ internal static class HttpClientSetup
             .Services;
     }
 
-    private static void InitializeJsonClient(HttpClient httpClient, in TimeSpan httpTimeout)
+    private static void InitializeClient(HttpClient httpClient, string mediaType)
     {
         httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
         httpClient.DefaultRequestVersion = HttpVersion.Version11;
-        httpClient.DefaultRequestHeaders.Accept.Add(new(mediaType: "application/json"));
+        httpClient.DefaultRequestHeaders.Accept.Add(new(mediaType: mediaType));
         httpClient.DefaultRequestHeaders.UserAgent.Add(
             new(new ProductHeaderValue(name: VersionInformation.Product, version: VersionInformation.Version))
         );
-        httpClient.Timeout = httpTimeout;
-    }
-
-    private static void InitializeNupkgClient(HttpClient httpClient, in TimeSpan httpTimeout)
-    {
-        httpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
-        httpClient.DefaultRequestVersion = HttpVersion.Version11;
-        httpClient.DefaultRequestHeaders.Accept.Add(new(mediaType: "application/octet-stream"));
-        httpClient.DefaultRequestHeaders.UserAgent.Add(
-            new(new ProductHeaderValue(name: VersionInformation.Product, version: VersionInformation.Version))
-        );
-        httpClient.Timeout = httpTimeout;
+        httpClient.Timeout = HttpTimeout;
     }
 }
