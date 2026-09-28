@@ -20,15 +20,8 @@ internal static class ApplicationConfigLocator
 
     private static string LookupConfigurationFilesPath()
     {
-        string? path = LookupAppSettingsLocationByAssemblyName();
-
-        if (path is null)
-        {
-            // https://stackoverflow.com/questions/57222718/how-to-configure-self-contained-single-file-program
-            return Environment.CurrentDirectory;
-        }
-
-        return path;
+        // https://stackoverflow.com/questions/57222718/how-to-configure-self-contained-single-file-program
+        return LookupAppSettingsLocationByAssemblyName() ?? Environment.CurrentDirectory;
     }
 
     private static string? LookupAppSettingsLocationByAssemblyName()
