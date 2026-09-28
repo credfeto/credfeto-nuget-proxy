@@ -125,10 +125,7 @@ public sealed class FileSystemPackageStorage : IPackageStorage
     {
         try
         {
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
+            Directory.CreateDirectory(folder);
         }
         catch (Exception exception)
         {
