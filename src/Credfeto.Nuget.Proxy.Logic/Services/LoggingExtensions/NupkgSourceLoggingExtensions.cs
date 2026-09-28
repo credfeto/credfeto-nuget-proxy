@@ -7,17 +7,6 @@ namespace Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 internal static partial class NupkgSourceLoggingExtensions
 {
     [LoggerMessage(
-        LogLevel.Error,
-        EventId = 1,
-        Message = "Failed to retrieve NUPKG from {upstream} Received Http {statusCode}"
-    )]
-    public static partial void UpstreamPackageFailed(
-        this ILogger<NupkgSource> logger,
-        Uri upstream,
-        HttpStatusCode statusCode
-    );
-
-    [LoggerMessage(
         LogLevel.Information,
         EventId = 2,
         Message = "Retrieved NUPKG from {upstream} Received Http {statusCode} Length: {length}"
