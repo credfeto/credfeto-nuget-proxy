@@ -121,7 +121,6 @@ internal static class PathContainment
             return true;
         }
 
-        return path.Split('/')
-            .Any(segment => string.Equals(a: segment, b: "..", comparisonType: StringComparison.Ordinal));
+        return path.Split('/').Any(segment => StringComparer.Ordinal.Equals(x: segment, y: ".."));
     }
 }
