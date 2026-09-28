@@ -485,8 +485,8 @@ public sealed class FileSystemJsonStorageTests : LoggingFolderCleanupTestBase
 
         Assert.NotNull(result);
         Assert.True(
-            condition: string.Equals(a: result.Value.content, b: JSON_CONTENT_1, StringComparison.Ordinal)
-                || string.Equals(a: result.Value.content, b: JSON_CONTENT_2, StringComparison.Ordinal),
+            condition: StringComparer.Ordinal.Equals(x: result.Value.content, y: JSON_CONTENT_1)
+                || StringComparer.Ordinal.Equals(x: result.Value.content, y: JSON_CONTENT_2),
             userMessage: "Concurrent writes must not produce a corrupt mix of both payloads"
         );
     }
