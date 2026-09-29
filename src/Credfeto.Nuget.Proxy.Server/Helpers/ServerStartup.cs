@@ -41,20 +41,13 @@ internal static class ServerStartup
         ThreadPool.GetMinThreads(out int minWorker, out int minIoc);
         Console.WriteLine($"Min worker threads {minWorker}, Min IOC threads {minIoc}");
 
-        if (minWorker < minThreads && minIoc < minThreads)
+        int workerThreads = Math.Max(val1: minWorker, val2: minThreads);
+        int completionPortThreads = Math.Max(val1: minIoc, val2: minThreads);
+
+        if (workerThreads != minWorker || completionPortThreads != minIoc)
         {
-            Console.WriteLine($"Setting min worker threads {minThreads}, Min IOC threads {minThreads}");
-            ThreadPool.SetMinThreads(workerThreads: minThreads, completionPortThreads: minThreads);
-        }
-        else if (minWorker < minThreads)
-        {
-            Console.WriteLine($"Setting min worker threads {minThreads}, Min IOC threads {minIoc}");
-            ThreadPool.SetMinThreads(workerThreads: minThreads, completionPortThreads: minIoc);
-        }
-        else if (minIoc < minThreads)
-        {
-            Console.WriteLine($"Setting min worker threads {minWorker}, Min IOC threads {minThreads}");
-            ThreadPool.SetMinThreads(workerThreads: minWorker, completionPortThreads: minThreads);
+            Console.WriteLine($"Setting min worker threads {workerThreads}, Min IOC threads {completionPortThreads}");
+            ThreadPool.SetMinThreads(workerThreads: workerThreads, completionPortThreads: completionPortThreads);
         }
 
         ThreadPool.GetMaxThreads(out int maxWorker, out int maxIoc);

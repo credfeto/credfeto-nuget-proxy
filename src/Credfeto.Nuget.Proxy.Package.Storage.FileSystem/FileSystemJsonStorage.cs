@@ -292,7 +292,7 @@ public sealed class FileSystemJsonStorage : IJsonStorage
 
     private static bool IsMagicValid(byte[] header)
     {
-        return header[0] == Magic[0] && header[1] == Magic[1] && header[2] == Magic[2] && header[3] == Magic[3];
+        return header.AsSpan(start: 0, length: Magic.Length).SequenceEqual(Magic);
     }
 
     private static async ValueTask<bool> ReadExactAsync(
@@ -373,11 +373,6 @@ public sealed class FileSystemJsonStorage : IJsonStorage
     {
         try
         {
-            if (Directory.Exists(folder))
-            {
-                return;
-            }
-
             Directory.CreateDirectory(folder);
         }
         catch (Exception exception)

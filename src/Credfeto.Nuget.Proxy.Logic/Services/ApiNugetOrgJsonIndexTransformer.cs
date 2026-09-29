@@ -84,7 +84,7 @@ public sealed class ApiNugetOrgJsonIndexTransformer : JsonIndexTransformerBase, 
 
     private static bool IsNeeded(NugetResource resource)
     {
-        return NeededResources.Any(n => StringComparer.Ordinal.Equals(x: n, y: resource.Type));
+        return NeededResources.Contains(value: resource.Type, comparer: StringComparer.Ordinal);
     }
 
     [SuppressMessage(category: "SonarAnalyzer.CSharp", checkId: "S3267: Use Linq", Justification = "Not Here")]
