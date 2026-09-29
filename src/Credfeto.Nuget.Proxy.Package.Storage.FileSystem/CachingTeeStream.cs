@@ -8,12 +8,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
 
-/// <summary>
-///     Reads from <c>source</c> and, as a side effect of each read, writes the same bytes to a temp cache file,
-///     renaming it into place once <c>source</c> is fully consumed. Never disposes <c>source</c> - the caller owns
-///     that lifetime. A failure writing the cache copy is logged and abandoned; it never prevents bytes reaching
-///     the caller.
-/// </summary>
 internal sealed class CachingTeeStream : Stream
 {
     [SuppressMessage(
