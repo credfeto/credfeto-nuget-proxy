@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -11,6 +11,7 @@ using Credfeto.Nuget.Proxy.Middleware;
 using Credfeto.Nuget.Proxy.Models.Config;
 using Credfeto.Nuget.Proxy.Models.Models;
 using Credfeto.Nuget.Proxy.Package.Storage.FileSystem;
+using Credfeto.Nuget.Proxy.Server.Helpers.LoggingExtensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -18,6 +19,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
@@ -58,13 +60,27 @@ internal static class ServerStartup
     {
         string configPath = ApplicationConfigLocator.ConfigurationFilesPath;
 
-        return WebApplication
+        WebApplication app = WebApplication
             .CreateSlimBuilder(args)
             .ConfigureSettings(configPath)
             .ConfigureServices()
             .ConfigureAppHost()
             .ConfigureWebHost(configPath: configPath)
             .Build();
+
+        WarnIfPlaceholderPublicUrl(app);
+
+        return app;
+    }
+
+    private static void WarnIfPlaceholderPublicUrl(WebApplication app)
+    {
+        ProxyServerConfig config = app.Services.GetRequiredService<IOptions<ProxyServerConfig>>().Value;
+
+        if (ProxyServerConfigValidation.IsPlaceholderPublicUrl(config))
+        {
+            app.Logger.PlaceholderPublicUrl(config.PublicUrl);
+        }
     }
 
     private static WebApplicationBuilder ConfigureAppHost(this WebApplicationBuilder builder)
@@ -79,8 +95,24 @@ internal static class ServerStartup
         IConfigurationSection section = builder.Configuration.GetSection("Proxy");
 
         builder
-            .Services.Configure<ProxyServerConfig>(section)
-            .AddDate()
+            .Services.AddOptions<ProxyServerConfig>()
+            .Bind(section)
+            .Validate(
+                validation: ProxyServerConfigValidation.HasUpstreamUrls,
+                failureMessage: "Proxy:UpstreamUrls must contain at least one upstream URL"
+            )
+            .Validate(
+                validation: ProxyServerConfigValidation.UpstreamUrlsAreAbsolute,
+                failureMessage: "Proxy:UpstreamUrls must all be absolute URIs"
+            )
+            .Validate(
+                validation: ProxyServerConfigValidation.PublicUrlIsAbsolute,
+                failureMessage: "Proxy:PublicUrl must be an absolute URI"
+            )
+            .ValidateOnStart();
+
+        builder
+            .Services.AddDate()
             .AddFileSystemStorage()
             .AddLogic()
             .AddMiddleware()
