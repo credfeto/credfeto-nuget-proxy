@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -214,6 +215,72 @@ public sealed class JsonDownloaderTests : LoggingTestBase
     }
 
     [Theory]
+    [InlineData("W/\"abc\"", "W/\"abc\"")]
+    [InlineData("abc", "\"abc\"")]
+    [InlineData("\"abc\"", "\"abc\"")]
+    public async Task ReadUpstreamAsync_WithCachedEtag_SendsNormalisedIfNoneMatchHeaderAsync(
+        string cachedETag,
+        string expectedIfNoneMatch
+    )
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        JsonMetadata cachedMetadata = new(
+            Etag: cachedETag,
+            ContentLength: SAMPLE_JSON.Length,
+            ContentType: "application/json"
+        );
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: cachedMetadata);
+        MockJsonStorageLoadResult(storage: this._jsonStorage, result: (cachedMetadata, SAMPLE_JSON));
+
+        using TestHttpMessageHandler handler = new(new HttpResponseMessage(HttpStatusCode.NotModified));
+        using HttpClient client = new(handler);
+        IJsonDownloader downloader = this.CreateDownloader(client);
+
+        JsonResponse result = await downloader.ReadUpstreamAsync(
+            requestUri: RequestUri,
+            userAgent: null,
+            useCache: true,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: expectedIfNoneMatch, actual: handler.IfNoneMatch);
+        Assert.Equal(expected: SAMPLE_JSON, actual: result.Json);
+        Assert.Equal(expected: cachedETag, actual: result.ETag);
+    }
+
+    [Fact]
+    public async Task ReadUpstreamAsync_WithUnparseableCachedEtag_FetchesUnconditionallyAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        JsonMetadata cachedMetadata = new(
+            Etag: "ab\"c",
+            ContentLength: SAMPLE_JSON.Length,
+            ContentType: "application/json"
+        );
+        MockJsonStorageLoadMetadata(storage: this._jsonStorage, result: cachedMetadata);
+        MockJsonStorageLoadResult(storage: this._jsonStorage, result: null);
+
+        const string NEW_JSON = """{"version":"3.0.2"}""";
+        const string NEW_ETAG = "\"fresh-etag\"";
+        using TestHttpMessageHandler handler = new(CreateJsonResponse(NEW_JSON, etag: NEW_ETAG));
+        using HttpClient client = new(handler);
+        IJsonDownloader downloader = this.CreateDownloader(client);
+
+        JsonResponse result = await downloader.ReadUpstreamAsync(
+            requestUri: RequestUri,
+            userAgent: null,
+            useCache: true,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Null(handler.IfNoneMatch);
+        Assert.Equal(expected: NEW_JSON, actual: result.Json);
+        Assert.Equal(expected: NEW_ETAG, actual: result.ETag);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task ReadUpstreamAsync_RespectsUseCacheFlagAsync(bool useCache)
@@ -300,11 +367,17 @@ public sealed class JsonDownloaderTests : LoggingTestBase
             this._response = response;
         }
 
+        public string? IfNoneMatch { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken
         )
         {
+            this.IfNoneMatch = request.Headers.TryGetValues(name: "If-None-Match", out IEnumerable<string>? values)
+                ? string.Join(separator: ", ", values: values)
+                : null;
+
             return Task.FromResult(this._response);
         }
 

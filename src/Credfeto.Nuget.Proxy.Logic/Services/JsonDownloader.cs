@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Logic.Extensions;
 using Credfeto.Nuget.Proxy.Logic.Services.LoggingExtensions;
 using Credfeto.Nuget.Proxy.Models.Config;
@@ -221,23 +222,11 @@ public sealed class JsonDownloader : IJsonDownloader
 
     private static void AddEtag(HttpClient client, in JsonMetadata cached)
     {
-        if (string.IsNullOrWhiteSpace(cached.Etag))
+        // An unparseable stored ETag falls back to an unconditional fetch rather than failing the request
+        if (cached.Etag.TryNormaliseETag(out string? etag))
         {
-            return;
+            client.DefaultRequestHeaders.TryAddWithoutValidation(name: "If-None-Match", value: etag);
         }
-
-        string etag = EnsureQuoted(cached.Etag);
-
-        client.DefaultRequestHeaders.Add(name: "If-None-Match", value: etag);
-    }
-
-    private static string EnsureQuoted(string source)
-    {
-        return
-            source.StartsWith(value: '"', comparisonType: StringComparison.Ordinal)
-            && source.EndsWith(value: '"', comparisonType: StringComparison.Ordinal)
-            ? source
-            : "\"" + source + "\"";
     }
 
     private async ValueTask SaveToCacheAsync(
