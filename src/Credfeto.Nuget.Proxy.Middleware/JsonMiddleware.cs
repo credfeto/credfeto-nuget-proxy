@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Date.Interfaces;
+using Credfeto.Nuget.Proxy.Extensions;
 using Credfeto.Nuget.Proxy.Index.Transformer.Interfaces;
 using Credfeto.Nuget.Proxy.Middleware.Extensions;
 using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
@@ -182,24 +183,60 @@ public sealed class JsonMiddleware : IMiddleware
         CancellationToken cancellationToken
     )
     {
-        string quotedETag = EnsureQuoted(eTag);
-
-        if (
-            EntityTagHeaderValue.TryParse(input: quotedETag, parsedValue: out EntityTagHeaderValue? responseETag)
-            && IsNotModified(context: context, eTag: responseETag)
-        )
+        // An ETag that cannot be made valid is omitted so the content is still served, just without revalidation
+        if (!eTag.TryNormaliseETag(out string? normalisedETag))
         {
-            this.NotModified(context: context, ageSeconds: ageSeconds, eTag: quotedETag);
+            await this.OkAsync(
+                context: context,
+                json: json,
+                ageSeconds: ageSeconds,
+                eTag: null,
+                cancellationToken: cancellationToken
+            );
 
             return;
         }
 
+        if (IsNotModified(context: context, eTag: normalisedETag))
+        {
+            this.NotModified(context: context, ageSeconds: ageSeconds, eTag: normalisedETag);
+
+            return;
+        }
+
+        await this.OkAsync(
+            context: context,
+            json: json,
+            ageSeconds: ageSeconds,
+            eTag: normalisedETag,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async ValueTask OkAsync(
+        HttpContext context,
+        string json,
+        int ageSeconds,
+        string? eTag,
+        CancellationToken cancellationToken
+    )
+    {
         context.Response.StatusCode = (int)HttpStatusCode.OK;
         context.Response.Headers.Append(key: "Content-Type", value: "application/json; charset=utf-8");
         this.ApplyPublicCacheHeaders(context: context, ageSeconds: ageSeconds);
-        context.Response.Headers.Append(key: "ETag", value: quotedETag);
+
+        if (eTag is not null)
+        {
+            context.Response.Headers.Append(key: "ETag", value: eTag);
+        }
 
         await context.Response.WriteAsync(text: json, cancellationToken: cancellationToken);
+    }
+
+    private static bool IsNotModified(HttpContext context, string eTag)
+    {
+        return EntityTagHeaderValue.TryParse(input: eTag, parsedValue: out EntityTagHeaderValue? responseETag)
+            && IsNotModified(context: context, eTag: responseETag);
     }
 
     private static bool IsNotModified(HttpContext context, EntityTagHeaderValue eTag)
@@ -217,15 +254,6 @@ public sealed class JsonMiddleware : IMiddleware
         context.Response.StatusCode = (int)HttpStatusCode.NotModified;
         this.ApplyPublicCacheHeaders(context: context, ageSeconds: ageSeconds);
         context.Response.Headers.Append(key: "ETag", value: eTag);
-    }
-
-    private static string EnsureQuoted(string source)
-    {
-        return
-            source.StartsWith(value: '"', comparisonType: StringComparison.Ordinal)
-            && source.EndsWith(value: '"', comparisonType: StringComparison.Ordinal)
-            ? source
-            : "\"" + source + "\"";
     }
 
     private static void Failed(HttpContext context, HttpStatusCode result)

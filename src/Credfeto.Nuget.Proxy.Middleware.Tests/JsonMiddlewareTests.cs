@@ -256,6 +256,106 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
         Assert.True(response.Headers.Contains("ETag"), userMessage: "ETag header should be present");
     }
 
+    [Theory]
+    [InlineData("W/\"abc\"", "W/\"abc\"", true)]
+    [InlineData("abc", "\"abc\"", false)]
+    [InlineData("\"abc\"", "\"abc\"", false)]
+    public async Task InvokeAsync_Returns200WithNormalisedETagAsync(
+        string upstreamETag,
+        string expectedETag,
+        bool expectedWeak
+    )
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        IJsonTransformer transformer = CreateTransformer(json: JSON, eTag: upstreamETag);
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative),
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.OK, actual: response.StatusCode);
+        string body = await response.Content.ReadAsStringAsync(cancellationToken);
+        Assert.Equal(expected: JSON, actual: body);
+
+        System.Net.Http.Headers.EntityTagHeaderValue? eTag = response.Headers.ETag;
+        Assert.NotNull(eTag);
+        Assert.Equal(expected: expectedETag, actual: eTag.ToString());
+        Assert.Equal(expected: expectedWeak, actual: eTag.IsWeak);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Returns304_WhenIfNoneMatchMatchesWeakETagAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        const string WEAK_ETAG = "W/\"abc123\"";
+        IJsonTransformer transformer = CreateTransformer(json: JSON, eTag: WEAK_ETAG);
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpRequestMessage request = new(
+            method: HttpMethod.Get,
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative)
+        );
+        request.Headers.TryAddWithoutValidation(name: "If-None-Match", value: WEAK_ETAG);
+        using HttpResponseMessage response = await client.SendAsync(
+            request: request,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.NotModified, actual: response.StatusCode);
+        Assert.Equal(expected: WEAK_ETAG, actual: response.Headers.ETag?.ToString());
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Returns200WithoutETag_WhenETagIsUnparseableAsync()
+    {
+        CancellationToken cancellationToken = this.CancellationToken();
+
+        const string JSON = """{"version":"3.0.0"}""";
+        IJsonTransformer transformer = CreateTransformer(json: JSON, eTag: "ab\"c");
+
+        using IHost host = BuildHost(transformer);
+        await host.StartAsync(cancellationToken);
+
+        using HttpClient client = host.GetTestClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            requestUri: new Uri(uriString: "/v3/index.json", UriKind.Relative),
+            cancellationToken: cancellationToken
+        );
+
+        Assert.Equal(expected: HttpStatusCode.OK, actual: response.StatusCode);
+        string body = await response.Content.ReadAsStringAsync(cancellationToken);
+        Assert.Equal(expected: JSON, actual: body);
+        Assert.False(response.Headers.Contains("ETag"), userMessage: "ETag header should not be present");
+    }
+
+    private static IJsonTransformer CreateTransformer(string json, string eTag)
+    {
+        IJsonTransformer transformer = Substitute.For<IJsonTransformer>();
+        transformer.IsNuget.Returns(false);
+        transformer
+            .GetFromUpstreamAsync(
+                path: Arg.Any<string>(),
+                userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
+                queryString: Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>()
+            )
+            .Returns(new JsonResult(Json: json, CacheMaxAgeSeconds: 60, ETag: eTag));
+
+        return transformer;
+    }
+
     [Fact]
     public async Task InvokeAsync_Returns200_WhenWhitelistedPathMatchesAsync()
     {
