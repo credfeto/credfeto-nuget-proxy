@@ -28,6 +28,12 @@ public static class ProxyServerConfigValidation
 
     private static bool IsAbsoluteUri(string value)
     {
-        return Uri.TryCreate(uriString: value, uriKind: UriKind.Absolute, out _);
+        return Uri.TryCreate(uriString: value, uriKind: UriKind.Absolute, out Uri? uri) && IsHttpScheme(uri);
+    }
+
+    private static bool IsHttpScheme(Uri uri)
+    {
+        return StringComparer.Ordinal.Equals(x: uri.Scheme, y: Uri.UriSchemeHttps)
+            || StringComparer.Ordinal.Equals(x: uri.Scheme, y: Uri.UriSchemeHttp);
     }
 }

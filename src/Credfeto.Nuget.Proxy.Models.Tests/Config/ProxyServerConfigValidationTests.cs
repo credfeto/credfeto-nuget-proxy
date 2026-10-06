@@ -67,6 +67,49 @@ public sealed class ProxyServerConfigValidationTests : LoggingTestBase
         );
     }
 
+    [Theory]
+    [InlineData("localhost:8080")]
+    [InlineData("htps://api.nuget.org/v3/index.json")]
+    [InlineData("ftp://api.nuget.org/v3/index.json")]
+    [InlineData("/nuget")]
+    public static void UpstreamUrlsAreAbsolute_IsFalse_WhenUpstreamUrlIsNotHttpOrHttps(string upstreamUrl)
+    {
+        ProxyServerConfig config = new() { UpstreamUrls = [upstreamUrl] };
+
+        Assert.False(
+            ProxyServerConfigValidation.UpstreamUrlsAreAbsolute(config),
+            userMessage: "Expected validation to fail for an upstream URL that is not an absolute http(s) URI"
+        );
+    }
+
+    [Theory]
+    [InlineData("http://nuget.example.org")]
+    [InlineData("https://nuget.example.org")]
+    public static void PublicUrlIsAbsolute_IsTrue_WhenPublicUrlIsHttpOrHttps(string publicUrl)
+    {
+        ProxyServerConfig config = new() { UpstreamUrls = [VALID_UPSTREAM], PublicUrl = publicUrl };
+
+        Assert.True(
+            ProxyServerConfigValidation.PublicUrlIsAbsolute(config),
+            userMessage: "Expected validation to pass for an absolute http(s) public URL"
+        );
+    }
+
+    [Theory]
+    [InlineData("localhost:8080")]
+    [InlineData("htps://nuget.example.org")]
+    [InlineData("ftp://nuget.example.org")]
+    [InlineData("/nuget")]
+    public static void PublicUrlIsAbsolute_IsFalse_WhenPublicUrlIsNotHttpOrHttps(string publicUrl)
+    {
+        ProxyServerConfig config = new() { UpstreamUrls = [VALID_UPSTREAM], PublicUrl = publicUrl };
+
+        Assert.False(
+            ProxyServerConfigValidation.PublicUrlIsAbsolute(config),
+            userMessage: "Expected validation to fail for a public URL that is not an absolute http(s) URI"
+        );
+    }
+
     [Fact]
     public void PublicUrlIsAbsolute_IsFalse_WhenPublicUrlIsMalformed()
     {

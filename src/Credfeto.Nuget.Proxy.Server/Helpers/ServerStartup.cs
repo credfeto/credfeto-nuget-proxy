@@ -103,11 +103,11 @@ internal static class ServerStartup
             )
             .Validate(
                 validation: ProxyServerConfigValidation.UpstreamUrlsAreAbsolute,
-                failureMessage: "Proxy:UpstreamUrls must all be absolute URIs"
+                failureMessage: "Proxy:UpstreamUrls must all be absolute http(s) URIs"
             )
             .Validate(
                 validation: ProxyServerConfigValidation.PublicUrlIsAbsolute,
-                failureMessage: "Proxy:PublicUrl must be an absolute URI"
+                failureMessage: "Proxy:PublicUrl must be an absolute http(s) URI"
             )
             .ValidateOnStart();
 
