@@ -17,6 +17,9 @@ namespace Credfeto.Nuget.Proxy.Logic.Services;
 
 public abstract class JsonIndexTransformerBase
 {
+    // nuget.org serves the vulnerability index under /v3/vulnerabilities/ and its data pages under /v3-vulnerabilities/
+    private static readonly string[] VulnerabilityPathPrefixes = ["/v3/vulnerabilities/", "/v3-vulnerabilities/"];
+
     private readonly IJsonDownloader _jsonDownloader;
     private readonly bool _indexReplacement;
     private readonly ILogger _logger;
@@ -175,8 +178,13 @@ public abstract class JsonIndexTransformerBase
 
     private int GetJsonCacheMaxAge(string path)
     {
-        return path.StartsWith("/v3/vulnerabilties/", comparisonType: StringComparison.OrdinalIgnoreCase)
-            ? this.Config.JsonMaxAgeSeconds * 10
-            : this.Config.JsonMaxAgeSeconds;
+        return IsVulnerabilityPath(path) ? this.Config.JsonMaxAgeSeconds * 10 : this.Config.JsonMaxAgeSeconds;
+    }
+
+    private static bool IsVulnerabilityPath(string path)
+    {
+        return VulnerabilityPathPrefixes.Any(prefix =>
+            path.StartsWith(prefix, comparisonType: StringComparison.OrdinalIgnoreCase)
+        );
     }
 }

@@ -71,8 +71,15 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
         Assert.Equal(expected: 60, actual: result.Value.CacheMaxAgeSeconds);
     }
 
-    [Fact]
-    public async Task GetFromUpstreamAsync_ReturnsHigherMaxAge_WhenPathIsVulnerabilitiesAsync()
+    [Theory]
+    [InlineData("/v3/vulnerabilities/index.json", 600)]
+    [InlineData("/V3/VULNERABILITIES/index.json", 600)]
+    [InlineData("/v3-vulnerabilities/2024.01.01/vulnerability.base.json", 600)]
+    [InlineData("/v3/registration5-gz-semver2/newtonsoft.json/index.json", 60)]
+    public async Task GetFromUpstreamAsync_ReturnsMaxAge_BasedOnVulnerabilityPathAsync(
+        string path,
+        int expectedMaxAgeSeconds
+    )
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
@@ -85,14 +92,14 @@ public sealed class StandardJsonIndexTransformerTests : LoggingTestBase
             .Returns(new JsonResponse(Json: """{}""", ETag: "\"etag2\""));
 
         JsonResult? result = await this._transformer.GetFromUpstreamAsync(
-            path: "/v3/vulnerabilties/index.json",
+            path: path,
             userAgent: null,
             queryString: string.Empty,
             cancellationToken: cancellationToken
         );
 
         Assert.NotNull(result);
-        Assert.Equal(expected: 600, actual: result.Value.CacheMaxAgeSeconds);
+        Assert.Equal(expected: expectedMaxAgeSeconds, actual: result.Value.CacheMaxAgeSeconds);
     }
 
     [Fact]
