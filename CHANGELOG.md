@@ -26,6 +26,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Fixed a HIGH severity OpenSSL vulnerability (CVE-2026-45447) in the published container image by switching the base image from the frozen 10.0-preview-noble-chiseled tag to the actively rebuilt 10.0-noble-chiseled GA tag
 - Search and autocomplete requests through the proxy now forward the client's query string and route to the correct nuget.org search upstream, instead of returning unfiltered results or a 405 (#98)
 - Weak upstream ETag handling in JsonDownloader and JsonMiddleware - normalise ETags (including weak W/"...") via shared ETagExtensions helper to prevent malformed headers causing 500s (#97)
+- Proxy configuration is now validated at startup, so a misconfigured server fails fast with a clear error instead of returning 500 on every request: at least one upstream URL is required, and all upstream URLs and the public URL must be absolute http(s) URIs; the default settings now use the correct Proxy:UpstreamUrls key (#105)
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.0.1978

@@ -11,7 +11,7 @@ public sealed class ProxyServerConfig
     public ProxyServerConfig()
     {
         this.UpstreamUrls = [];
-        this.PublicUrl = "https://example.com";
+        this.PublicUrl = ProxyServerConfigValidation.PlaceholderPublicUrl;
         this.Metadata = "/data/.json";
         this.Packages = "/data/packages";
         this.JsonMaxAgeSeconds = 60;
