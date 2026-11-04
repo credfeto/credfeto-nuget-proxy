@@ -39,10 +39,10 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Microsoft.Extensions to 10.0.8
 - perf: Replace JSON+Base64Url cache format with binary format to eliminate per-request decompression overhead
 - perf: Stream .nupkg package downloads and cache reads instead of buffering whole files in memory (#100)
-- SDK - Updated DotNet SDK to 11.0.100-rc.1.26425.128
 - Target .NET 11 (net11.0) in all projects
 - Container base image moved to the .NET 11 runtime-deps 11.0-resolute-chiseled image
 - Enable the runtime-async compiler feature across all projects, allowing the runtime to schedule async state machines more efficiently
+- SDK - Updated DotNet SDK to 11.0.100-rc.3.26522.148
 ### Deprecated
 ### Removed
 - Serilog.Enrichers.Demystifier as Ben.Demystifier is incompatible with Native AOT (IL2104/IL3000/IL3002)
