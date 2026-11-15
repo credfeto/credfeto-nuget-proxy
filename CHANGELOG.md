@@ -17,7 +17,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Tests to achieve 100% line coverage across all testable projects
 - Enable Native AOT compilation for published service
 - Return 304 Not Modified from JsonMiddleware when the client's If-None-Match header matches the response ETag, avoiding a full re-transformed body on repeat metadata requests (#101)
-- Added a --self-test command-line switch to the server, run at Docker build time so a binary that cannot start fails the image build
+- Added a --self-test command-line switch to the server and run it in the Docker final stage at build time, so an image whose server binary cannot start fails the build (#136)
 ### Fixed
 - Use EphemeralKeySet when loading HTTPS certificate to fix Docker container startup failure
 - Re-enabled Native AOT compilation and trimming by adding SuppressTrimAnalysisWarnings to suppress third-party IL2104 warnings blocking dotnet publish
@@ -30,6 +30,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Proxy configuration is now validated at startup, so a misconfigured server fails fast with a clear error instead of returning 500 on every request: at least one upstream URL is required, and all upstream URLs and the public URL must be absolute http(s) URIs; the default settings now use the correct Proxy:UpstreamUrls key (#105)
 - Corrected misspelled vulnerability path prefix so extended JSON cache max-age is applied (#103)
 - Build check errors by removing the redundant pre-release ILCompiler pin and the obsolete binder source generator property
+- Benchmark test now runs in-process so the net11.0 toolchain no longer fails the pre-commit build
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.0.1978
