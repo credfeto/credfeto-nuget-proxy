@@ -21,4 +21,5 @@
   <Project Path="Credfeto.Nuget.Proxy.Package.Storage.FileSystem/Credfeto.Nuget.Proxy.Package.Storage.FileSystem.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Package.Storage.Interfaces/Credfeto.Nuget.Proxy.Package.Storage.Interfaces.csproj" />
   <Project Path="Credfeto.Nuget.Proxy.Server/Credfeto.Nuget.Proxy.Server.csproj" />
+  <Project Path="Credfeto.Nuget.Proxy.Server.Tests/Credfeto.Nuget.Proxy.Server.Tests.csproj" />
 </Solution>

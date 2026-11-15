@@ -20,8 +20,18 @@ public static class Program
     )]
     public static async Task<int> Main(string[] args)
     {
-        return HealthCheckClient.IsHealthCheck(args: args, out string? checkUrl)
-            ? await HealthCheckClient.ExecuteAsync(targetUrl: checkUrl, cancellationToken: CancellationToken.None)
+        if (HealthCheckClient.IsHealthCheck(args: args, out string? checkUrl))
+        {
+            return await HealthCheckClient.ExecuteAsync(targetUrl: checkUrl, cancellationToken: CancellationToken.None);
+        }
+
+        return SelfTest.IsSelfTest(args)
+            ? await SelfTest.RunAsync(
+                args: args,
+                configPath: ApplicationConfigLocator.ConfigurationFilesPath,
+                output: Console.Out,
+                cancellationToken: CancellationToken.None
+            )
             : await RunServerAsync(args);
     }
 

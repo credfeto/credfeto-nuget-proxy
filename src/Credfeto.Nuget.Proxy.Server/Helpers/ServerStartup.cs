@@ -60,10 +60,7 @@ internal static class ServerStartup
     {
         string configPath = ApplicationConfigLocator.ConfigurationFilesPath;
 
-        WebApplication app = WebApplication
-            .CreateSlimBuilder(args)
-            .ConfigureSettings(configPath)
-            .ConfigureServices()
+        WebApplication app = CreateBuilder(args: args, configPath: configPath)
             .ConfigureAppHost()
             .ConfigureWebHost(configPath: configPath)
             .Build();
@@ -71,6 +68,25 @@ internal static class ServerStartup
         WarnIfPlaceholderPublicUrl(app);
 
         return app;
+    }
+
+    public static WebApplication CreateSelfTestApp(string[] args, string configPath)
+    {
+        WebApplicationBuilder builder = CreateBuilder(args: args, configPath: configPath);
+
+        builder.Logging.ClearProviders();
+        builder.Host.UseDefaultServiceProvider(options =>
+        {
+            options.ValidateOnBuild = true;
+            options.ValidateScopes = true;
+        });
+
+        return builder.Build();
+    }
+
+    private static WebApplicationBuilder CreateBuilder(string[] args, string configPath)
+    {
+        return WebApplication.CreateSlimBuilder(args).ConfigureSettings(configPath).ConfigureServices();
     }
 
     private static void WarnIfPlaceholderPublicUrl(WebApplication app)
@@ -239,10 +255,8 @@ internal static class ServerStartup
         if (httpsPort != 0 && File.Exists(certFile))
         {
             Console.WriteLine($"Listening on HTTPS port: {httpsPort}");
-            options.Listen(
-                address: IPAddress.Any,
-                port: httpsPort,
-                configure: o => SetHttpsListenOptions(listenOptions: o, certFile: certFile)
+            options.Listen(address: IPAddress.Any, port: httpsPort, configure: o =>
+                SetHttpsListenOptions(listenOptions: o, certFile: certFile)
             );
         }
 
