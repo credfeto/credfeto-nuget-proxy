@@ -40,6 +40,8 @@
   - any: ['src/Credfeto.Nuget.Proxy.Package.Storage.Interfaces/**/*']
 "credfeto-nuget-proxy-server":
   - any: ['src/Credfeto.Nuget.Proxy.Server/**/*']
+"credfeto-nuget-proxy-server-tests":
+  - any: ['src/Credfeto.Nuget.Proxy.Server.Tests/**/*']
 "dotnet":
   - any: ['src/**/*.csproj']
 "Editorconfig":
