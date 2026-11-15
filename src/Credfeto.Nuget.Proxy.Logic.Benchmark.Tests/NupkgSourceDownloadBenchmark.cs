@@ -16,7 +16,9 @@ using Microsoft.Extensions.Options;
 namespace Credfeto.Nuget.Proxy.Logic.Benchmark.Tests;
 
 [MemoryDiagnoser]
-[SimpleJob(warmupCount: 3, iterationCount: 10)]
+[InProcess]
+[WarmupCount(3)]
+[IterationCount(10)]
 [SuppressMessage(
     category: "FunFair.CodeAnalysis",
     checkId: "FFS0012: Classes should be static, sealed or abstract",

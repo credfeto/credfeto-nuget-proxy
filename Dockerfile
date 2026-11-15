@@ -6,6 +6,9 @@ WORKDIR /usr/src/app
 COPY Credfeto.Nuget.Proxy.Server .
 COPY appsettings.json .
 
+# Fail the image build if the binary cannot start in this runtime base
+RUN [ "/usr/src/app/Credfeto.Nuget.Proxy.Server", "--self-test" ]
+
 EXPOSE 8080
 ENTRYPOINT [ "/usr/src/app/Credfeto.Nuget.Proxy.Server" ]
 
