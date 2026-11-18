@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -26,10 +27,9 @@ namespace Credfeto.Nuget.Proxy.Middleware;
 
 public sealed class JsonMiddleware : IMiddleware
 {
-    private static readonly IReadOnlySet<string> WhiteListedPaths = new HashSet<string>(
-        ["/autocomplete/query", "/search/query", .. SearchAutocompletePaths.Paths],
-        StringComparer.OrdinalIgnoreCase
-    );
+    private static readonly FrozenSet<string> WhiteListedPaths = new[] { "/autocomplete/query", "/search/query" }
+        .Concat(SearchAutocompletePaths.Paths)
+        .ToFrozenSet(StringComparer.OrdinalIgnoreCase);
     private readonly ICurrentTimeSource _currentTimeSource;
     private readonly ILogger<JsonMiddleware> _logger;
     private readonly IJsonTransformer _jsonTransformer;
