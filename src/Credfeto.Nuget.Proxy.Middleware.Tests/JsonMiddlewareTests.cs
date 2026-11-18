@@ -17,7 +17,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Polly.Bulkhead;
+using Polly.RateLimiting;
 using Polly.Timeout;
 using Xunit;
 
@@ -104,10 +104,8 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
                     app.UseRouting();
                     app.UseMiddleware<JsonMiddleware>();
                     app.UseEndpoints(endpoints =>
-                        endpoints.MapGet(
-                            "/v3/index.json",
-                            async ctx =>
-                                await ctx.Response.WriteAsync(text: "endpoint", cancellationToken: ctx.RequestAborted)
+                        endpoints.MapGet("/v3/index.json", async ctx =>
+                            await ctx.Response.WriteAsync(text: "endpoint", cancellationToken: ctx.RequestAborted)
                         )
                     );
                 });
@@ -822,7 +820,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
     }
 
     [Fact]
-    public async Task InvokeAsync_Returns429_WhenBulkheadRejectedExceptionIsThrownAsync()
+    public async Task InvokeAsync_Returns429_WhenRateLimiterRejectedExceptionIsThrownAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
@@ -835,7 +833,7 @@ public sealed class JsonMiddlewareTests : LoggingTestBase
                 queryString: Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
-            .ThrowsAsync(new BulkheadRejectedException("bulkhead"));
+            .ThrowsAsync(new RateLimiterRejectedException("rate limited"));
 
         using IHost host = BuildHost(transformer);
         await host.StartAsync(cancellationToken);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -15,7 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Polly.Bulkhead;
+using Polly.RateLimiting;
 using Polly.Timeout;
 using Xunit;
 
@@ -91,10 +91,8 @@ public sealed class NuPkgMiddlewareTests : LoggingTestBase
                     app.UseRouting();
                     app.UseMiddleware<NuPkgMiddleware>();
                     app.UseEndpoints(endpoints =>
-                        endpoints.MapGet(
-                            "/packages/test.nupkg",
-                            async ctx =>
-                                await ctx.Response.WriteAsync(text: "endpoint", cancellationToken: ctx.RequestAborted)
+                        endpoints.MapGet("/packages/test.nupkg", async ctx =>
+                            await ctx.Response.WriteAsync(text: "endpoint", cancellationToken: ctx.RequestAborted)
                         )
                     );
                 });
@@ -315,7 +313,7 @@ public sealed class NuPkgMiddlewareTests : LoggingTestBase
     }
 
     [Fact]
-    public async Task InvokeAsync_Returns429_WhenBulkheadRejectedExceptionIsThrownAsync()
+    public async Task InvokeAsync_Returns429_WhenRateLimiterRejectedExceptionIsThrownAsync()
     {
         CancellationToken cancellationToken = this.CancellationToken();
 
@@ -326,7 +324,7 @@ public sealed class NuPkgMiddlewareTests : LoggingTestBase
                 userAgent: Arg.Any<System.Net.Http.Headers.ProductInfoHeaderValue?>(),
                 cancellationToken: Arg.Any<CancellationToken>()
             )
-            .ThrowsAsync(new BulkheadRejectedException("bulkhead"));
+            .ThrowsAsync(new RateLimiterRejectedException("rate limited"));
 
         using IHost host = BuildHost(nupkgSource);
         await host.StartAsync(cancellationToken);

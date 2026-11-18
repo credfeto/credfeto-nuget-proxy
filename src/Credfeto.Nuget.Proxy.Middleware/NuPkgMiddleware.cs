@@ -15,7 +15,7 @@ using Credfeto.Nuget.Proxy.Middleware.LoggingExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
-using Polly.Bulkhead;
+using Polly.RateLimiting;
 using Polly.Timeout;
 
 namespace Credfeto.Nuget.Proxy.Middleware;
@@ -80,7 +80,7 @@ public sealed class NuPkgMiddleware : IMiddleware
         {
             Failed(context: context, result: HttpStatusCode.InternalServerError);
         }
-        catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
+        catch (Exception exception) when (exception is TimeoutRejectedException or RateLimiterRejectedException)
         {
             this._logger.TooManyRequests(path: path, message: exception.Message, exception: exception);
             TooManyRequests(context);
