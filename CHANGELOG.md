@@ -31,6 +31,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Corrected misspelled vulnerability path prefix so extended JSON cache max-age is applied (#103)
 - Build check errors by removing the redundant pre-release ILCompiler pin and the obsolete binder source generator property
 - Benchmark test now runs in-process so the net11.0 toolchain no longer fails the pre-commit build
+- Duplicate logging EventId for CachedPackage - #139
 ### Changed
 - Dependencies - Updated Credfeto.Version.Information.Generator to 1.0.125.1199
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.0.1978
@@ -45,7 +46,8 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Container base image moved to the .NET 11 runtime-deps 11.0-resolute-chiseled image
 - Enable the runtime-async compiler feature across all projects, allowing the runtime to schedule async state machines more efficiently
 - SDK - Updated DotNet SDK to 11.0.100
-- Replaced deprecated Microsoft.Extensions.Http.Polly bulkhead and timeout with Microsoft.Extensions.Http.Resilience; froze path sets - #139
+- Replaced Microsoft.Extensions.Http.Polly with Microsoft.Extensions.Http.Resilience for HTTP concurrency limiting and timeouts; resilience middleware now handles rate limiter and timeout rejections - #139
+- Path lookup sets now use FrozenSet for faster, immutable lookups - #139
 ### Deprecated
 ### Removed
 - Serilog.Enrichers.Demystifier as Ben.Demystifier is incompatible with Native AOT (IL2104/IL3000/IL3002)
