@@ -20,7 +20,7 @@ internal static partial class NupkgSourceLoggingExtensions
 
     [LoggerMessage(
         LogLevel.Information,
-        EventId = 2,
+        EventId = 3,
         Message = "Retrieved Cached NUPKG from {upstream} Length: {length}"
     )]
     public static partial void CachedPackage(this ILogger<NupkgSource> logger, Uri upstream, long length);
