@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -18,7 +19,7 @@ using Credfeto.Nuget.Proxy.Models.Config;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Polly.Bulkhead;
+using Polly.RateLimiting;
 using Polly.Timeout;
 using EntityTagHeaderValue = Microsoft.Net.Http.Headers.EntityTagHeaderValue;
 
@@ -26,10 +27,9 @@ namespace Credfeto.Nuget.Proxy.Middleware;
 
 public sealed class JsonMiddleware : IMiddleware
 {
-    private static readonly IReadOnlySet<string> WhiteListedPaths = new HashSet<string>(
-        ["/autocomplete/query", "/search/query", .. SearchAutocompletePaths.Paths],
-        StringComparer.OrdinalIgnoreCase
-    );
+    private static readonly FrozenSet<string> WhiteListedPaths = new[] { "/autocomplete/query", "/search/query" }
+        .Concat(SearchAutocompletePaths.Paths)
+        .ToFrozenSet(StringComparer.OrdinalIgnoreCase);
     private readonly ICurrentTimeSource _currentTimeSource;
     private readonly ILogger<JsonMiddleware> _logger;
     private readonly IJsonTransformer _jsonTransformer;
@@ -82,7 +82,7 @@ public sealed class JsonMiddleware : IMiddleware
             this._logger.InvalidJson(path: path, message: exception.Message, exception: exception);
             Failed(context: context, result: HttpStatusCode.InternalServerError);
         }
-        catch (Exception exception) when (exception is TimeoutRejectedException or BulkheadRejectedException)
+        catch (Exception exception) when (exception is TimeoutRejectedException or RateLimiterRejectedException)
         {
             this._logger.TooManyRequests(path: path, message: exception.Message, exception: exception);
             TooManyRequests(context);
